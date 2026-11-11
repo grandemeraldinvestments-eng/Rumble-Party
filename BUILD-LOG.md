@@ -20,6 +20,7 @@ A 3D party board game for 2 to 4 players. Players roll a dice, move around a 60-
 | Items | Twin Dice, Magnet, Kite |
 | Music | Lobby, board and mini-game tracks, with separate music and sound switches |
 | Controls | Touch, keyboard, game controller |
+| Graphics | Smooth (default) or sharp, in Settings |
 
 ## Build history
 
@@ -119,6 +120,12 @@ A 3D party board game for 2 to 4 players. Players roll a dice, move around a 60-
 - Game controller support:
   - Walk-around games: left stick or d-pad runs, A jumps or dashes.
   - Everywhere else: the stick moves a pointer and A presses what is under it. The d-pad hops between buttons, B opens the map, Start opens the menu.
+
+### 16. Smoothness pass
+- New Graphics setting, **smooth** by default: no live shadows, no edge smoothing, lower sharpness, and a soft blob under each character in place of its shadow. Switch to **sharp** in Settings to get the old look back.
+- Path planks and space rims are baked into a few meshes (they were about 120 separate ones).
+- In walk-around games, other players' movement is replayed a beat behind and glides between updates, so they no longer jerk toward each new position.
+- On the test machine (no graphics chip) the board went from about 5 to about 40 frames a second.
 
 ## Mini games
 

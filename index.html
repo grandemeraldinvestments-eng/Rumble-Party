@@ -325,6 +325,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
     <div class="stack" id="setMain"><h2>Settings</h2>
       <button class="btn alt" id="sndBtn">Sound effects: on</button>
       <button class="btn alt" id="musBtn">Music: on</button>
+      <button class="btn alt" id="gfxBtn">Graphics: smooth</button>
       <button class="btn alt" id="quitBtn">Leave game</button>
       <button class="btn" id="setClose">Back to the game</button></div>
     <div class="stack" id="setLeave" hidden><h2>Leave the game?</h2><p class="lede" id="leaveNote"></p>
@@ -344,7 +345,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const $=s=>document.querySelector(s);
-let SPEED=1, MSPEED=1, gen=0;
+let SPEED=1, MSPEED=1, gen=0, SMOOTH=true; try{SMOOTH=localStorage.getItem('rumble-gfx')!=='sharp';}catch(e){}
 const sleep=ms=>{const g=gen; return new Promise(r=>setTimeout(()=>{if(g===gen)r();},ms/SPEED));};
 const rand=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const r2=v=>Math.round(v*100)/100;
@@ -475,7 +476,11 @@ const dist=(a,b)=>bfs(a,b).d;
 
 /* ---------- shared state: the host owns S, every screen draws V ---------- */
 let S=null, V=null;
-const net={room:null,nr:null,host:false,me:'',av:{},hadHost:false,lostAt:0};
+const net={room:null,nr:null,host:false,me:'',av:{},buf:{},hadHost:false,lostAt:0};
+function avIn(k,a){net.av[k]=a; const b=net.buf[k]||(net.buf[k]=[]), l=b[b.length-1], now=performance.now();
+  if(l&&l.a[0]===a[0]&&l.a[1]===a[1]&&l.a[2]===a[2])return; if(l&&now-l.t>220)b.push({t:now-80,a:l.a}); b.push({t:now,a}); while(b.length>8)b.shift();}
+function avAt(k){const b=net.buf[k]; if(!b||!b.length)return net.av[k]; const T=performance.now()-110; if(T<=b[0].t)return b[0].a;
+  for(let i=b.length-1;i>0;i--)if(b[i-1].t<=T){if(T>=b[i].t)return b[i].a; const u=(T-b[i-1].t)/(b[i].t-b[i-1].t||1),p=b[i-1].a,q=b[i].a; return[p[0]+(q[0]-p[0])*u,p[1]+(q[1]-p[1])*u,p[2]+(q[2]-p[2])*u];} return b[b.length-1].a;}
 const myId=()=>net.host?'host':net.me;
 const myK=()=>V&&V.p?V.p.findIndex(p=>p.seat===myId()):-1;
 const nameOf=k=>CAST[V.p[k].i].name;
@@ -490,12 +495,12 @@ function tex(draw,s){s=s||64; const c=document.createElement('canvas'), g=c.getC
 function label(g,s,txt,col,size){g.font=`800 ${size}px ${FONT}`; g.textAlign='center'; g.textBaseline='middle'; g.fillStyle=col; g.fillText(txt,s/2,s/2+3);}
 function lights(sc){
   sc.add(new THREE.HemisphereLight(0xffffff,0x9fd3b0,.85));
-  const sun=new THREE.DirectionalLight(0xffffff,.6); sun.position.set(12,26,14); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); sun.shadow.bias=-.002;
+  const sun=new THREE.DirectionalLight(0xffffff,.6); sun.position.set(12,26,14); sun.castShadow=!SMOOTH; sc.sun=sun; sun.shadow.mapSize.set(2048,2048); sun.shadow.bias=-.002;
   const c=sun.shadow.camera; c.left=-28; c.right=28; c.top=28; c.bottom=-28; c.near=1; c.far=90; sc.add(sun);
 }
 function init3D(){
-  R=new THREE.WebGLRenderer({canvas:$('#gl'),antialias:true,alpha:true}); R.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-  PR=Math.min(window.devicePixelRatio||1,2); R.shadowMap.enabled=true; R.shadowMap.type=THREE.PCFShadowMap; R.shadowMap.autoUpdate=false;
+  R=new THREE.WebGLRenderer({canvas:$('#gl'),antialias:!SMOOTH,alpha:true}); R.setPixelRatio(Math.min(window.devicePixelRatio||1,SMOOTH?1.5:2));
+  PR=Math.min(window.devicePixelRatio||1,SMOOTH?1.5:2); R.shadowMap.enabled=true; R.shadowMap.type=THREE.PCFShadowMap; R.shadowMap.autoUpdate=false;
   scene=new THREE.Scene(); cam=new THREE.PerspectiveCamera(50,1,1,320); lights(scene);
   // pearl with a light beam
   pearl=mesh(new THREE.SphereGeometry(.4,24,16),new THREE.MeshLambertMaterial({color:0xf3e6ff,emissive:0x7a55c7}),0,1.9,0);
@@ -550,6 +555,15 @@ function coast(shallow,sand,inner){
   COAST=(x,z,R)=>{flat(cyl,shallow,x,-.62,z,R+1.2,.2,R+1.2); flat(cyl,sand,x,-.4,z,R,.8,R);};
   // a bridge that leaves the land stands on posts in the water
   NODES.forEach(n=>{if(n.bridge&&!inLoop(n.x,n.z))flat(cyl,0x5a4636,n.x,-.3,n.z,.2,.9,.2);});
+}
+/* many copies of simple shapes baked into one mesh: items are [geometry, x, y, z, turn, sx, sy, sz] */
+function bake(items,col){
+  const pos=[],nor=[],m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),P=new THREE.Vector3(),Sc=new THREE.Vector3(),flatG=new Map();
+  for(const it of items){let src=flatG.get(it[0]); if(!src){src=it[0].index?it[0].toNonIndexed():it[0]; flatG.set(it[0],src);} const g=src.clone();
+    q.setFromEuler(e.set(0,it[4]||0,0)); m4.compose(P.set(it[1],it[2],it[3]),q,Sc.set(it[5]||1,it[6]||1,it[7]||1)); g.applyMatrix4(m4);
+    const a=g.attributes.position.array,b=g.attributes.normal.array; for(let i=0;i<a.length;i++){pos.push(a[i]); nor.push(b[i]);}}
+  const G=new THREE.BufferGeometry(); G.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); G.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));
+  const o=mesh(G,col,0,0,0); o.castShadow=false; o.receiveShadow=true; return o;
 }
 function grp(x,y,z){const g=new THREE.Group(); g.position.set(x,y,z); world.add(g); return g;}
 function ringOut(n,k,fn){const d=(k-1)*14; for(let i=0;i<n;i++){const j=Math.floor(i*45/n),q=NODES[j],o=outN(j),x=q.x+o[0]*d,z=q.z+o[1]*d; if(clearOf(x,z,.3)&&!inLoop(x,z))fn(x,z,i,z>MAPX.b*.45);}}
@@ -670,7 +684,7 @@ function buildWorld(id){
   THEME[id in THEME?id:'island'](m);
   const box=new THREE.BoxGeometry(1,1,1), tideMap=m.sp.includes('T');
   if(tideMap){FXP.flood=grp(0,-.6,0); FXP.spans=grp(0,0,0); FXP.spans.visible=false;}
-  NODES.forEach(a=>a.next.forEach(j=>{const b=NODES[j],dx=b.x-a.x,dz=b.z-a.z, pl=flat(box,a.bridge||b.bridge?m.bridge:m.path,(a.x+b.x)/2,.07,(a.z+b.z)/2,Math.hypot(dx,dz),.12,.85); pl.rotation.y=Math.atan2(-dz,dx);}));
+  {const pk={}; NODES.forEach(a=>a.next.forEach(j=>{const b=NODES[j],dx=b.x-a.x,dz=b.z-a.z,c=a.bridge||b.bridge?m.bridge:m.path; (pk[c]=pk[c]||[]).push([box,(a.x+b.x)/2,.07,(a.z+b.z)/2,Math.atan2(-dz,dx),Math.hypot(dx,dz),.12,.85]);})); for(const c in pk)bake(pk[c],+c);}
   if(tideMap){
     // the flood is one smooth ribbon of water: in from the sea, along the shortcut, and back out to the sea on the far side
     const jn=NODES.join, A=NODES[m.fork], B=NODES[jn], oa=outN(m.fork), ob=outN(jn), far=(n,o,d)=>[n.x+o[0]*d,n.z+o[1]*d];
@@ -694,7 +708,8 @@ function buildWorld(id){
       const cy=new THREE.CylinderGeometry(1,1,1,32), r=mesh(cy,0xffffff,0,.43,0,g), d=mesh(cy,colOf(n.t),0,.435,0,g); r.scale.set(.78,.03,.78); d.scale.set(.64,.04,.64); r.castShadow=d.castShadow=false;});
   }
   const disc=new THREE.CylinderGeometry(.68,.68,.16,32), rim=new THREE.CylinderGeometry(.84,.84,.1,32), pln=new THREE.PlaneGeometry(1.05,1.05);
-  NODES.forEach((n,ni)=>{mesh(rim,NODES.spots.includes(ni)?0xa978ff:0xffffff,n.x,.15,n.z).castShadow=false; n.col=colOf(n.t); n.disc=mesh(disc,n.col,n.x,.2,n.z); n.disc.castShadow=false; n.disc.receiveShadow=true;
+  {const rk={}; NODES.forEach((n,ni)=>{const c=NODES.spots.includes(ni)?0xa978ff:0xffffff; (rk[c]=rk[c]||[]).push([rim,n.x,.15,n.z]);}); for(const c in rk)bake(rk[c],+c).receiveShadow=false;}
+  NODES.forEach((n,ni)=>{n.col=colOf(n.t); n.disc=mesh(disc,n.col,n.x,.2,n.z); n.disc.castShadow=false; n.disc.receiveShadow=true;
     if(n.t!=='+'&&n.t!=='-'){const i=mesh(pln,ICONS[n.t]||ICONS[CAT[n.t]],n.x,.295,n.z); n.ic=i; i.rotation.x=-Math.PI/2; i.castShadow=false;}});
   while(arrows.children.length)arrows.remove(arrows.children[0]);
   const a=NODES[m.fork]; a.next.forEach(j=>{const b=NODES[j],g=new THREE.Group(),l=Math.hypot(b.x-a.x,b.z-a.z);
@@ -714,6 +729,7 @@ function burst(x,z){const P=conf.geometry.attributes.position.array,Vv=conf.v;
   conf.life=1.8; conf.visible=true;}
 
 /* blocky characters with legs and arms that swing when they run */
+const BLOB=new THREE.CircleGeometry(.36,20), BLOBM=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.22,depthWrite:false});
 function makeChar(i,parent){
   const hex=CAST[i].hex, dark=new THREE.Color(hex).multiplyScalar(.62).getHex(), g=new THREE.Group(), f=new THREE.Group(), B=(w,h,d)=>new THREE.BoxGeometry(w,h,d);
   g.add(f); g.fig=f; g.scale.setScalar(1.15);
@@ -729,6 +745,7 @@ function makeChar(i,parent){
   if(i===0)[-1,1].forEach(s=>mesh(B(.18,.14,.1),hex,s*.25,.31,0,hd));
   if(i===1){mesh(B(.22,.1,.14),0xffc531,0,-.05,.3,hd); mesh(B(.1,.16,.22),0xffc531,0,.33,0,hd);}
   if(i===2)[-1,1].forEach(s=>mesh(B(.14,.24,.1),hex,s*.2,.36,0,hd));
+  g.blob=mesh(BLOB,BLOBM,0,.03,0,g); g.blob.rotation.x=-Math.PI/2; g.blob.castShadow=false; g.blob.visible=SMOOTH;   // a soft blob stands in for the shadow in smooth mode
   g.ph=Math.random()*6; g.run=0; g.jy=0; g.air=false; g.sc=parent||scene; g.sc.add(g); chars.add(g); return g;
 }
 function animChar(c,dt){
@@ -974,7 +991,7 @@ function onPeers(ch){
       if(pr.res&&S.mini&&pr.res.mid===S.mini.mid&&typeof pr.res.v==='number')miniRes[k]=pr.res.v;
       if(pr.vote&&S.mini&&pr.vote.mid===S.mini.mid&&pr.vote.i>=0&&pr.vote.i<3)votes[k]={i:pr.vote.i|0,lock:!!pr.vote.lock};
       if(pr.rdy&&S.mini&&pr.rdy===S.mini.mid)ready[k]=1;
-      if(Array.isArray(pr.a))net.av[k]=pr.a;
+      if(Array.isArray(pr.a))avIn(k,pr.a);
     }
     for(const p of ch.left){
       const s=S.seats.indexOf(p.peer); if(s>0)S.seats[s]=null;
@@ -984,7 +1001,7 @@ function onPeers(ch){
     const h=ch.peers.find(p=>!p.sameTab&&p.presence&&p.presence.host);
     if(h){net.hadHost=true; net.lostAt=0; V=h.presence.s||null;
       if(V&&V.p)for(const p of ch.peers){if(p.sameTab)continue; const pr=p.presence||{}, k=V.p.findIndex(q=>q.seat===(p===h?'host':p.peer));
-        if(k>=0&&Array.isArray(pr.a))net.av[k]=pr.a; if(p===h&&pr.cpu)for(const kk in pr.cpu)net.av[kk]=pr.cpu[kk];}
+        if(k>=0&&Array.isArray(pr.a))avIn(k,pr.a); if(p===h&&pr.cpu)for(const kk in pr.cpu)avIn(kk,pr.cpu[kk]);}
     }else if(net.hadHost&&!net.lostAt)net.lostAt=Date.now();
   }
 }
@@ -993,7 +1010,7 @@ setInterval(()=>{
   if(!net.host&&net.nr&&net.lostAt&&Date.now()-net.lostAt>5000){toast('The host left the game.'); leave();}
 },90);
 const CODE_CH='ABCDEFGHJKLMNPQRSTUVWXYZ';
-async function openRoom(code){net.nr=await net.room.join('pier-'+code.toLowerCase()); net.av={}; net.hadHost=false; net.lostAt=0; net.nr.onPeers(onPeers);}
+async function openRoom(code){net.nr=await net.room.join('pier-'+code.toLowerCase()); net.av={}; net.buf={}; net.hadHost=false; net.lostAt=0; net.nr.onPeers(onPeers);}
 function newLobby(code){net.host=true; S={phase:'lobby',code,gid:0,seats:['host',null,null,null],ncpu:code?1:2,rounds:10,map:'island',p:[],ui:{},mini:null,res:null}; V=S; lobbyKey='';}
 function leave(){
   gen++; if(MS)MS.end(); pad(false); miniBusy=false; miniMid=0; miniPh=''; $('#mini').hidden=true; stage.innerHTML='';
@@ -1181,7 +1198,7 @@ async function gameLoop(){
 async function runMini(){
   // three candidates, a 10-second vote, then the winner is played
   const opts=[]; while(opts.length<3){if(!S.deck.length)S.deck=GAMES.map((_,i)=>i).filter(i=>!opts.includes(i)).sort(()=>Math.random()-.5); opts.push(S.deck.pop());}
-  miniRes={}; net.av={}; votes={};
+  miniRes={}; net.av={}; net.buf={}; votes={};
   S.mini={mid:++S.mid,g:opts[0],opts,tally:[0,0,0],left:10,seed:rand(1,1e9),phase:'vote',rows:null}; S.phase='mini';
   S.p.forEach(p=>{if(p.cpu)votes[p.k]={i:rand(0,2),lock:true};});
   for(const t0=Date.now();;){
@@ -1321,7 +1338,7 @@ function arena(G){return async function(ctx){
   const st=G.init(sc,rng,sh,V.p.length);
   const avs=V.p.map((p,k)=>{const a=k/V.p.length*6.283+.6, av={k,x:Math.sin(a)*1.5,z:Math.cos(a)*1.5,y:0,vy:0,alive:true,gone:0,fell:false,score:0,face:0,moving:false,kx:0,kz:0,bump:0,dash:0,cd:0,spd:0,ly:0,dy:0,col:CAST[p.i].hex,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
     av.ch.position.set(av.x,0,av.z); return av;});
-  const me=avs[ctx.k]; st.avs=avs; net.av={}; pad(true,G.jump||G.dash,G.dash?'Dash':'Jump');
+  const me=avs[ctx.k]; st.avs=avs; net.av={}; net.buf={}; pad(true,G.jump||G.dash,G.dash?'Dash':'Jump');
   const out=(av,t,fell)=>{av.alive=false; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); $('#hint').textContent=fell?'You fell off!':'You are out!';}};
   await countdown($('#n'));
   let t=0,pubT=0,endT=-1;
@@ -1351,7 +1368,7 @@ function arena(G){return async function(ctx){
         }
       }else{
         const a=net.av[av.k];
-        if(a){const dx=a[0]-av.x,dz=a[1]-av.z,d=Math.hypot(dx,dz); av.moving=d>.06&&av.alive; if(av.moving)av.face=Math.atan2(dx,dz); const kk=Math.min(1,dt*14); av.x+=dx*kk; av.z+=dz*kk; av.y=a[2]; av.score=a[4];
+        if(a){const q=avAt(av.k),dx=q[0]-av.x,dz=q[1]-av.z,d=Math.hypot(dx,dz); av.moving=d>dt*.9&&av.alive; if(d>dt*.9)av.face=Math.atan2(dx,dz); av.x=q[0]; av.z=q[1]; av.y=q[2]; av.score=a[4];
           if(av.alive&&!a[3]){av.alive=false; av.gone=.6; av.fell=!sh.inside(av.x,av.z);}}
         if(av.alive)G.check(av,st,t,false,dt);
       }
@@ -1744,6 +1761,9 @@ $('#spInfo').onclick=hideInfo;
 })();
 const sndLbl=()=>{$('#sndBtn').textContent=muted?'Sound effects: off':'Sound effects: on';}; sndLbl();
 const musLbl=()=>{$('#musBtn').textContent=musicOff?'Music: off':'Music: on';}; musLbl();
+const gfxLbl=()=>{$('#gfxBtn').textContent=SMOOTH?'Graphics: smooth':'Graphics: sharp';}; gfxLbl();
+$('#gfxBtn').onclick=()=>{SMOOTH=!SMOOTH; try{localStorage.setItem('rumble-gfx',SMOOTH?'smooth':'sharp');}catch(e){} gfxLbl();
+  if(scene.sun)scene.sun.castShadow=!SMOOTH; if(MS&&MS.scene.sun)MS.scene.sun.castShadow=!SMOOTH; chars.forEach(c=>{if(c.blob)c.blob.visible=SMOOTH;}); PR=Math.min(window.devicePixelRatio||1,SMOOTH?1.5:2); R.setPixelRatio(PR); resize(); R.shadowMap.needsUpdate=true;};
 $('#musBtn').onclick=()=>{musicOff=!musicOff; try{localStorage.setItem('pier-music',musicOff?'0':'1');}catch(e){} audioOn(); musLbl(); musicTick();};
 $('#sndBtn').onclick=()=>{muted=!muted; try{localStorage.setItem('pier-mute',muted?'1':'0');}catch(e){} audioOn(); sndLbl();};
 $('#quitBtn').onclick=()=>{
