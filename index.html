@@ -418,15 +418,15 @@ function tone(f,d,type,v,to){
 }
 const seq=(notes,step,type,v)=>notes.forEach((f,i)=>setTimeout(()=>tone(f,step*1.7/1000,type,v),i*step));
 const SFX={hop:()=>tone(520,.06,'square',.03,700), hit:()=>tone(300,.13,'square',.05,900), gain:()=>seq([880,1320],70,'square',.035),
-  loss:()=>tone(330,.25,'sawtooth',.04,140), item:()=>seq([660,880,1100,1320],55,'square',.04), pearl:()=>seq([523,659,784,1047,1319],110,'square',.05),
+  loss:()=>tone(330,.25,'sawtooth',.04,140), bump:()=>tone(170,.1,'square',.06,80), item:()=>seq([660,880,1100,1320],55,'square',.04), pearl:()=>seq([523,659,784,1047,1319],110,'square',.05),
   fly:()=>tone(300,.7,'triangle',.06,1200), win:()=>seq([523,523,659,784,659,784,1047],140,'square',.05)};
 
 /* ---------- maps: a 45-space loop plus a 15-space bridge shortcut, 60 spaces each. Every loop is its own irregular outline, drawn through the points in pts ---------- */
 const MAPS={
   island:{name:'Island',pts:[[1,10.5],[-8,10.5],[-15,7],[-16.5,0],[-13.5,-8],[-8.5,-10],[-5,-4.5],[1,-1.5],[6.5,-4.5],[9.5,-10],[14,-9],[16.5,-2],[14.5,6],[8,10]],fork:2,join:30,amp:3.2,seed:11,sky:['#58c4f6','#c8f0ff'],path:0xc98f55,bridge:0xe5745f,sp:['T','K','C','J','W','T','K','C','J','W']},
-  carnival:{name:'Carnival',pts:[[-1,10.5],[-9,10],[-15,5.5],[-16.5,-2],[-12.5,-9],[-4,-11],[5,-10.5],[12.5,-9.5],[15.5,-5],[9,-2.5],[3.5,0],[9,3],[15.5,5.5],[13,9.5],[6,10.5]],fork:3,join:26,amp:-3,seed:23,sky:['#6a4fc0','#ffb98a'],path:0xe0566b,bridge:0xffc531,sp:['F','D','G','R','Y','F','D','G','R','Y']},
+  carnival:{name:'Carnival',pts:[[-1,10.5],[-9,10],[-15,5.5],[-16.5,-2],[-12.5,-9],[-4,-11],[5,-10.5],[12.5,-9.5],[15.5,-5],[9,-2.5],[3.5,0],[9,3],[15.5,5.5],[13,9.5],[6,10.5]],via:[[-10,3],[-8,-4],[-1,-5]],fork:3,join:31,amp:-3,seed:23,sky:['#6a4fc0','#ffb98a'],path:0xe0566b,bridge:0xffc531,sp:['F','D','G','R','Y','F','D','G','R','Y']},
   farm:{name:'Farm',pts:[[0,5.5],[-6,9.5],[-13,10],[-16.5,4],[-15,-5],[-9,-10],[-3,-7.5],[0,-3.5],[4,-7],[10,-10.5],[16,-6],[16.5,2],[12,9],[5,9.5]],fork:4,join:28,amp:3.4,seed:37,sky:['#7fd0ff','#e6f7ff'],path:0xb98a5a,bridge:0x8a5a2b,sp:['V','P','M','B','U','V','P','M','B','U']},
-  volcano:{name:'Volcano',pts:[[-9.0,-0.9],[-8.7,4.6],[-11.5,7.8],[-14.3,4.6],[-14.7,-1.8],[-11.5,-8.3],[-3.7,-11.0],[3.7,-11.0],[11.5,-8.3],[14.7,-1.8],[14.3,4.6],[11.5,7.8],[8.7,4.6],[9.0,-0.9],[6.4,-5.5],[0.0,-7.4],[-6.4,-5.5]],core:[0,-1.5],via:[[-8.5,12.6],[-1,15.6],[7,12.8]],fork:4,join:30,amp:4,seed:53,sky:['#3b2a55','#ff9a6a'],path:0x6a5a5a,bridge:0x9a3a2a,sp:['E','X','L','Q','E','X','L','Q','X','Q'],secs:[[32,4],[37,7]]}
+  volcano:{name:'Volcano',pts:[[-9.0,-0.9],[-8.7,4.6],[-11.5,7.8],[-14.3,4.6],[-14.7,-1.8],[-11.5,-8.3],[-3.7,-11.0],[3.7,-11.0],[11.5,-8.3],[14.7,-1.8],[14.3,4.6],[11.5,7.8],[8.7,4.6],[9.0,-0.9],[6.4,-5.5],[0.0,-7.4],[-6.4,-5.5]],core:[0,-1.5],via:[[-8.5,12.6],[-1,15.6],[7,12.8]],fork:4,join:30,amp:4,seed:53,sky:['#3b2a55','#ff9a6a'],path:0x6a5a5a,bridge:0x9a3a2a,sp:['E','X','L','Q','E','X','L','Q','X','Q'],secs:[[32,4],[37,7],[15,6,1]]}
 };
 let NODES=[];
 function buildGraph(m){
@@ -475,7 +475,7 @@ const nameOf=k=>CAST[V.p[k].i].name;
 
 /* ---------- 3D scene ---------- */
 const FONT='"Rubik","Arial Black",Arial,sans-serif';
-let R,scene,cam,pawns=[],dice,num,numC,numT,pearl,clouds=[],boats=[],spin=[],upright=[],world=null,curMap='',defParent=null,MAPX=MAPS.island,ICONS=null,introT=0,FXP={tong:[],boost:0,erupt:0},lava=null,trapG=null,shownBurn=-2,trapKey='',arrows,conf,mapView=false,T=0,camD=13,MS=null,camMode='follow',mark=null,panelMin=false;
+let R,scene,cam,pawns=[],dice,num,numC,numT,pearl,clouds=[],boats=[],spin=[],upright=[],world=null,curMap='',defParent=null,MAPX=MAPS.island,ICONS=null,introT=0,FXP={tong:[],boost:0,erupt:0},lava=null,trapG=null,shownBurn=-2,trapKey='',arrows,conf,mapView=false,T=0,camD=13,MS=null,camMode='follow',mark=null,panelMin=false,mapD=0;
 const camT=new THREE.Vector3(), chars=new Set();
 const mat=c=>new THREE.MeshLambertMaterial({color:c});
 function mesh(g,c,x,y,z,parent){const m=new THREE.Mesh(g,typeof c==='number'?mat(c):c); m.position.set(x||0,y||0,z||0); m.castShadow=true; (parent||defParent||scene).add(m); return m;}
@@ -616,8 +616,8 @@ THEME.volcano=function(m){
   const pl=new THREE.PointLight(0xff6a00,1.1,24); pl.position.set(0,4.6,0); g.add(pl);
   const smoke=[]; for(let i=0;i<4;i++){const sm=mesh(new THREE.SphereGeometry(.5+i*.12,10,8),new THREE.MeshBasicMaterial({color:0x6b6470,transparent:true,opacity:.5}),0,4+i,0,g); sm.castShadow=false; smoke.push(sm);}
   FXP.volc={x:q[0],z:q[1],top:3.3,g,pl,smoke};
-  m.secs.forEach(([s0,len])=>{const mid=NODES[(s0+Math.floor(len/2))%45],dx=mid.x-q[0],dz=mid.z-q[1],L=Math.hypot(dx,dz)-.3,geo=new THREE.BoxGeometry(L,.08,2.4); geo.translate(L/2,0,0);
-    const t=mesh(geo,new THREE.MeshBasicMaterial({color:0xff6a00,transparent:true,opacity:.92}),q[0],.11,q[1]); t.rotation.y=Math.atan2(-dz,dx); t.scale.x=.001; t.visible=false; t.castShadow=false; FXP.tong.push(t);});
+  m.secs.forEach(([s0,len,far])=>{const mid=NODES[(s0+Math.floor(len/2))%45],dx=mid.x-q[0],dz=mid.z-q[1],D=Math.hypot(dx,dz),L=far?2.6:D-.3,geo=new THREE.BoxGeometry(L,.08,far?len*1.9:2.4); geo.translate(L/2,0,0);   // far zones crack open beside the path instead of flowing from the crater
+    const o=far?(D-2.6)/D:0, t=mesh(geo,new THREE.MeshBasicMaterial({color:0xff6a00,transparent:true,opacity:.92}),q[0]+dx*o,.11,q[1]+dz*o); t.rotation.y=Math.atan2(-dz,dx); t.scale.x=.001; t.visible=false; t.castShadow=false; FXP.tong.push(t);});
   [.5,1.8,2.9,4.3,5.5].map(a=>[q[0]+Math.sin(a)*5.3,q[1]+Math.cos(a)*5.3]).forEach(([x,z],i)=>{if(NODES.every(n=>Math.hypot(n.x-x,n.z-z)>2.5)){const lp=mesh(new THREE.CylinderGeometry(.9+i*.15,.9+i*.15,.05,20),new THREE.MeshBasicMaterial({color:0xff7a10}),x,.06,z); lp.castShadow=false; lp.scale.z=.7;}});
   ringOut(16,1.17,(x,z,i,front)=>{if(front||i%2){const rk=mesh(new THREE.DodecahedronGeometry(.5+(i%3)*.2),new THREE.MeshLambertMaterial({color:0x3a3238,flatShading:true}),x,.3,z); rk.rotation.set(i,i*2,0);}
     else{const tg=grp(x,0,z); mesh(new THREE.CylinderGeometry(.07,.13,1.9,6),0x2e2528,0,.95,0,tg); [[.35,1.5,.5],[-.3,1.2,-.6]].forEach(([bx,by,rz])=>{mesh(new THREE.CylinderGeometry(.04,.06,.8,5),0x2e2528,bx,by,0,tg).rotation.z=-rz*1.6;});}});
@@ -866,7 +866,9 @@ function frame(now){
   const board=V&&V.phase==='board'&&pawns.length;
   if(board&&introT>0)introCam(dt);
   else if(!board){const a=T*.1,r=MAPX.a*(cam.aspect<1?2.4:1.7); cam.position.set(Math.sin(a)*r,r*.6,Math.cos(a)*r); cam.lookAt(0,0,0);}
-  else if(mapView){const pt=cam.aspect<1, tv=Math.tan(cam.fov*Math.PI/360), u=pt?MAPX.a:MAPX.b, w=pt?MAPX.b:MAPX.a; cam.up.set(pt?-1:0,0,pt?0:-1); cam.position.set(0,Math.max((u+5)/tv,(w+3)/(tv*cam.aspect)),0); cam.lookAt(0,0,0);}
+  else if(mapView){const pt=cam.aspect<1, tv=Math.tan(cam.fov*Math.PI/360), u=pt?MAPX.a:MAPX.b, w=pt?MAPX.b:MAPX.a; const H=window.innerHeight, top=$('#roundLbl').getBoundingClientRect().bottom, bot=Math.min(H,$('#panel').getBoundingClientRect().top), f=Math.min(1,Math.max(.55,(bot-top)/H)), c=((top+bot)/2-H/2)/H,
+      D=Math.max((u+1.6)/(tv*f),(w+1.8)/(tv*cam.aspect)); mapD+=(D-mapD)*(mapD?Math.min(1,dt*6):1); const sh=-c*2*mapD*tv;
+    cam.up.set(pt?-1:0,0,pt?0:-1); cam.position.set(pt?sh:0,mapD,pt?0:sh); cam.lookAt(pt?sh:0,0,pt?0:sh);}
   else{const f=V.ui.follow, kk=1-Math.exp(-dt*4), cz=V.ui.cam, tg=camMode==='free'?null:cz?{x:cz[0],z:cz[1]}:camMode==='me'?(pawns[myK()]||pawns[0]).position:f<0?pearl.position:(pawns[f]||pawns[0]).position;
     if(tg){camT.x+=(tg.x-camT.x)*kk; camT.z+=(tg.z-camT.z)*kk;} camD+=((cz&&camMode!=='free'?19:12.5)-camD)*(1-Math.exp(-dt*2.5));
     cam.position.set(camT.x,camD*.84,camT.z+camD*.8); cam.lookAt(camT.x,.3,camT.z+.4);}
@@ -1222,7 +1224,7 @@ function deckShape(sc,sh){
 function arena(G){return async function(ctx){
   const m=miniStage(G.hint,[0,11.5,8.6],[0,0,.6]), sc=m.scene, rng=rng32(ctx.seed), sh=mkShape(rng); deckShape(sc,sh);
   const st=G.init(sc,rng,sh);
-  const avs=V.p.map((p,k)=>{const a=k/V.p.length*6.283+.6, av={k,x:Math.sin(a)*1.5,z:Math.cos(a)*1.5,y:0,vy:0,alive:true,gone:0,fell:false,score:0,face:0,moving:false,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
+  const avs=V.p.map((p,k)=>{const a=k/V.p.length*6.283+.6, av={k,x:Math.sin(a)*1.5,z:Math.cos(a)*1.5,y:0,vy:0,alive:true,gone:0,fell:false,score:0,face:0,moving:false,kx:0,kz:0,bump:0,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
     av.ch.position.set(av.x,0,av.z); return av;});
   const me=avs[ctx.k]; net.av={}; pad(true,G.jump);
   const out=(av,t,fell)=>{av.alive=false; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); $('#hint').textContent=fell?'You fell off!':'You are out!';}};
@@ -1238,10 +1240,11 @@ function arena(G){return async function(ctx){
           else{G.ai(av,st,t,dt); ix=av.ai.dx; iz=av.ai.dz; j=av.ai.jump; av.ai.jump=false;
             const rr=Math.hypot(av.x,av.z)||.01; if(rr>sh.R(Math.atan2(av.x,av.z))-.8){ix-=av.x/rr*1.6; iz-=av.z/rr*1.6;}}
           const l=Math.hypot(ix,iz); if(l>1){ix/=l; iz/=l;}
-          av.x+=ix*4.6*dt; av.z+=iz*4.6*dt; av.moving=l>.15; if(av.moving)av.face=Math.atan2(ix,iz);
+          av.bump-=dt; av.x+=(ix*4.6+av.kx)*dt; av.z+=(iz*4.6+av.kz)*dt; {const f=Math.exp(-dt*7); av.kx*=f; av.kz*=f;} av.moving=l>.15; if(av.moving)av.face=Math.atan2(ix,iz);
           // shoving: whoever is walking pushes whoever is standing; two walkers push each other
           for(const o of avs){if(o===av||!o.alive||Math.abs(av.y-o.y)>.6)continue; const dx=av.x-o.x,dz=av.z-o.z,d=Math.hypot(dx,dz);
-            if(d<.8){const ov=.8-d,k=o.moving?(av.moving?.5:1):(av.moving?.3:.5),nx=d>.01?dx/d:1,nz=d>.01?dz/d:0; av.x+=nx*ov*k; av.z+=nz*ov*k;}}
+            if(d<.8){const ov=.8-d,k=o.moving?(av.moving?.5:1):(av.moving?.3:.5),nx=d>.01?dx/d:1,nz=d>.01?dz/d:0; av.x+=nx*ov*k; av.z+=nz*ov*k;
+              if(av.bump<=0&&(o.moving||av.moving)){av.bump=.4; if(o.moving){av.kx=nx*3.4; av.kz=nz*3.4;} if(av.mine)SFX.bump();}}}
           const r=Math.hypot(av.x,av.z); if(G.post&&r<.9){if(r<.01){av.x=.9; av.z=0;} else{av.x*=.9/r; av.z*=.9/r;}}
           if(j&&av.y===0&&G.jump){av.vy=6.5; if(av.mine)SFX.hop();}
           if(av.y>0||av.vy>0){av.y+=av.vy*dt; av.vy-=18*dt; if(av.y<=0){av.y=0; av.vy=0;}}
@@ -1348,13 +1351,13 @@ const GAMES=[
     await new Promise(r=>{(function f(){const k=(performance.now()-t0)/5000; bar.style.transform=`scaleX(${Math.max(0,1-k)})`; k<1?requestAnimationFrame(f):r();})();});
     bell.disabled=true; bell.onpointerdown=null; return c;
   }},
- {name:'Ring Toss',unit:'pts',max:25,how:'Stop the ring over the centre line. Three throws, and each one moves faster.',cpu:()=>rand(40,95)+rand(40,95)+rand(35,90),
+ {name:'Ring Toss',unit:'pts',max:40,how:'Stop the ring over the centre line. Five throws, and each one moves faster.',cpu:()=>rand(40,95)+rand(40,95)+rand(35,90)+rand(30,90)+rand(25,85),
   async play(){
-    stage.innerHTML=`<div class="big" id="n">0</div><div class="lane"><span class="mid"></span><i id="mk"></i></div><div class="sub" id="info">Throw 1 of 3</div><button class="btn" id="toss">Toss</button>`;
+    stage.innerHTML=`<div class="big" id="n">0</div><div class="lane"><span class="mid"></span><i id="mk"></i></div><div class="sub" id="info">Throw 1 of 5</div><button class="btn" id="toss">Toss</button>`;
     const mk=$('#mk'),btn=$('#toss'); let total=0;
-    for(let k=0;k<3;k++){
-      $('#info').textContent=`Throw ${k+1} of 3`;
-      const period=1500-k*330, ph=Math.random()*period; let x=0,run=true; const t0=performance.now();
+    for(let k=0;k<5;k++){
+      $('#info').textContent=`Throw ${k+1} of 5`;
+      const period=1500-k*220, ph=Math.random()*period; let x=0,run=true; const t0=performance.now();
       (function f(){if(!run)return; const u=((performance.now()-t0+ph)%period)/period; x=u<.5?u*2:2-u*2; mk.style.left=(6+x*88)+'%'; requestAnimationFrame(f);})();
       await Promise.race([new Promise(r=>{btn.onpointerdown=e=>{e.preventDefault(); r();};}),sleep(6000*SPEED)]);
       run=false; btn.onpointerdown=null;
@@ -1398,21 +1401,21 @@ const GAMES=[
         else{const ms=Math.round(performance.now()-t0); lamp.textContent=ms+' ms'; res(ms);}};
     });
   }},
- {name:'Signal Flags',unit:'rounds',max:60,how:'Watch the flags light up, then tap them in the same order. The pattern grows by one each round.',cpu:()=>rand(3,8),
+ {name:'Signal Flags',unit:'rounds',max:75,how:'Watch the flags light up, then tap them in the same order. The pattern grows by one each round. You can slip up twice.',cpu:()=>rand(3,8),
   async play(){
     const cols=['#ff4d4d','#2f8fff','#35c98a','#ffc531'];
     stage.innerHTML=`<div class="big" id="n">0</div><div class="sub" id="info">Watch</div><div class="flags">${cols.map((c,i)=>`<button class="flag" id="f${i}" style="--c:${c}" aria-label="Flag ${i+1}" disabled></button>`).join('')}</div>`;
-    const fl=[0,1,2,3].map(i=>$('#f'+i)), order=[], t0=Date.now(); let score=0;
+    const fl=[0,1,2,3].map(i=>$('#f'+i)), order=[], t0=Date.now(); let score=0,lives=3,again=false;
     const flash=async i=>{fl[i].classList.add('lit'); tone(330+i*110,.18,'square',.04); await sleep(330); fl[i].classList.remove('lit'); await sleep(120);};
     for(;;){
-      order.push(rand(0,3)); $('#info').textContent='Watch'; fl.forEach(b=>{b.disabled=true;}); await sleep(500);
+      if(!again)order.push(rand(0,3)); again=false; $('#info').textContent='Watch'; fl.forEach(b=>{b.disabled=true;}); await sleep(500);
       for(const i of order)await flash(i);
       $('#info').textContent='Your turn'; fl.forEach(b=>{b.disabled=false;});
       const ok=await new Promise(res=>{let k=0; const to=setTimeout(()=>res(false),4000+order.length*1500);
         fl.forEach((b,i)=>{b.onpointerdown=e=>{e.preventDefault(); b.classList.add('lit'); setTimeout(()=>b.classList.remove('lit'),150); tone(330+i*110,.12,'square',.04);
           if(i!==order[k]){clearTimeout(to); res(false);} else if(++k===order.length){clearTimeout(to); res(true);}};});});
       fl.forEach(b=>{b.onpointerdown=null;});
-      if(!ok){SFX.loss(); break;} score++; $('#n').textContent=score; SFX.gain(); if(score>=10||Date.now()-t0>50000)break;
+      if(!ok){SFX.loss(); lives--; if(lives<=0||Date.now()-t0>60000)break; again=true; $('#info').textContent=lives===1?'Miss! Last try':'Miss! '+lives+' tries left'; fl.forEach(b=>{b.disabled=true;}); await sleep(900); continue;} score++; $('#n').textContent=score; SFX.gain(); if(score>=10||Date.now()-t0>60000)break;
     }
     await sleep(600); return score;
   }},
@@ -1477,21 +1480,21 @@ const GAMES=[
     });
     live=false; await sleep(600); m.end(); return out;
   }},
- {name:'Crate Stack',unit:'crates',max:50,how:'Tap to drop each crate onto the tower. Anything hanging over the edge is cut off. Miss the tower and it’s over.',cpu:()=>rand(3,12),
+ {name:'Crate Stack',unit:'crates',max:50,how:'Tap to drop each crate onto the tower. Anything hanging over the edge is cut off. The third miss ends it.',cpu:()=>rand(4,13),
   async play(){
     const m=miniStage('Tap to drop',[0,4,10.5],[0,1,0]), sc=m.scene, H=.55, cols=[0xff4d4d,0xffc531,0x35c98a,0x2f8fff,0x8b5cf6], geo=new THREE.BoxGeometry(1,H,1.8);
     mesh(new THREE.BoxGeometry(2.6,1.4,2.2),0xc98f55,0,-.7,0,sc).receiveShadow=true;
-    let w=2,cx=0,n=0,t=0,dir=1,tap=false,over=-1,cur=null;
+    let w=2,cx=0,n=0,t=0,dir=1,tap=false,over=-1,cur=null,lives=3;
     const next=()=>{cur=mesh(geo,cols[n%5],-2.1*dir,n*H+H/2+.12,0,sc); cur.scale.x=w; cur.receiveShadow=true;}; next();
     m.on('pointerdown',()=>{tap=true;});
     await countdown($('#n')); $('#n').textContent='0'; tap=false;
     const out=await m.run(dt=>{
       t+=dt; $('#bar').style.transform=`scaleX(${Math.max(0,1-n/20)})`;
       m.cam.position.y+=(n*H+4-m.cam.position.y)*Math.min(1,dt*4); m.cam.lookAt(0,m.cam.position.y-3,0);
-      if(over>=0){over+=dt; cur.position.y-=dt*9*over; cur.rotation.z+=dt*3; if(over>.8)return n; return;}
+      if(over>=0){over+=dt; cur.position.y-=dt*9*over; cur.rotation.z+=dt*3; if(over>.8){if(lives<=0)return n; sc.remove(cur); over=-1; tap=false; dir=-dir; next();} return;}
       cur.position.x+=dir*(3+n*.25)*dt; if(Math.abs(cur.position.x)>2.1){cur.position.x=2.1*Math.sign(cur.position.x); dir=-dir;}
       if(tap){tap=false; let dx=cur.position.x-cx; const ov=w-Math.abs(dx);
-        if(ov<.06){over=0; SFX.loss(); return;}
+        if(ov<.06){over=0; lives--; SFX.loss(); $('#hint').textContent=lives>1?lives+' misses left':lives===1?'Last miss left':'Tower lost'; return;}
         if(Math.abs(dx)<.12)dx=0; else w=ov;
         cx+=dx/2; cur.position.set(cx,n*H+H/2,0); cur.scale.x=w; n++; $('#n').textContent=n; SFX.gain();
         if(n>=20)return 20; dir=-dir; next();}
