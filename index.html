@@ -640,11 +640,16 @@ function buildWorld(id){
     const burst=col=>mk(g=>{g.fillStyle=col; g.beginPath(); for(let i=0;i<16;i++){const a=i*Math.PI/8,r=i%2?13:26; g.lineTo(32+Math.cos(a)*r,32+Math.sin(a)*r);} g.closePath(); g.fill(); g.fillStyle='#fff'; g.beginPath(); g.arc(32,32,7,0,7); g.fill();});
     ICONS.T=burst('#0e8fa8'); ICONS.F=burst('#ff5fa8'); ICONS.V=burst('#d98a00'); ICONS.E=burst('#e0401a');}
   THEME[id in THEME?id:'island'](m);
-  const box=new THREE.BoxGeometry(1,1,1), tideMap=m.sp.includes('T'), wm=new THREE.MeshBasicMaterial({color:0x2a9fe0,transparent:true,opacity:.7,depthWrite:false});
-  if(tideMap)FXP.flood=grp(0,-.6,0);
+  const box=new THREE.BoxGeometry(1,1,1), tideMap=m.sp.includes('T'), wm=new THREE.MeshLambertMaterial({color:0x1fa3d4});   // flood water is the same blue as the sea and hides the spaces under it
+  if(tideMap){FXP.flood=grp(0,-.6,0); FXP.spans=grp(0,0,0); FXP.spans.visible=false;}
   NODES.forEach(a=>a.next.forEach(j=>{const b=NODES[j],dx=b.x-a.x,dz=b.z-a.z, pl=flat(box,a.bridge||b.bridge?m.bridge:m.path,(a.x+b.x)/2,.07,(a.z+b.z)/2,Math.hypot(dx,dz),.12,.85); pl.rotation.y=Math.atan2(-dz,dx);
     if(tideMap&&(a.bridge||b.bridge)){const w=mesh(box,wm,(a.x+b.x)/2,0,(a.z+b.z)/2,FXP.flood); w.scale.set(Math.hypot(dx,dz)+1.2,.3,2.6); w.rotation.y=pl.rotation.y; w.castShadow=false;}}));
-  if(tideMap)[m.fork,NODES.join].forEach(j=>{const n=NODES[j],o=outN(j),w=mesh(box,wm,n.x+o[0]*3.2,0,n.z+o[1]*3.2,FXP.flood); w.scale.set(7.6,.3,2.6); w.rotation.y=Math.atan2(-o[1],o[0]); w.castShadow=false;});
+  if(tideMap)[m.fork,NODES.join].forEach(j=>{const n=NODES[j],o=outN(j),w=mesh(box,wm,n.x+o[0]*3.2,0,n.z+o[1]*3.2,FXP.flood); w.scale.set(7.6,.3,2.6); w.rotation.y=Math.atan2(-o[1],o[0]); w.castShadow=false;
+    // a footbridge carries the main path over the flood at each end of the river; it only stands while the flood is in
+    const a=NODES[(j+44)%45],b=NODES[(j+1)%45],g=new THREE.Group(), wood=0x8a5a2b; g.position.set(n.x,0,n.z); g.rotation.y=Math.atan2(-(b.z-a.z),b.x-a.x); FXP.spans.add(g);
+    const pc=(x,y,z,sx,sy,sz,c)=>{const q=mesh(box,c,x,y,z,g); q.scale.set(sx,sy,sz); q.castShadow=false; return q;};
+    pc(0,.4,0,3.3,.08,1.7,0xc98f55); [-.8,.8].forEach(z=>{pc(0,.69,z,3.3,.07,.08,wood); [-1.55,0,1.55].forEach(x=>pc(x,.55,z,.09,.3,.09,wood));});
+    const cy=new THREE.CylinderGeometry(1,1,1,32), r=mesh(cy,0xffffff,0,.43,0,g), d=mesh(cy,colOf(n.t),0,.435,0,g); r.scale.set(.8,.03,.8); d.scale.set(.66,.04,.66); r.castShadow=d.castShadow=false;});
   const disc=new THREE.CylinderGeometry(.68,.68,.16,32), rim=new THREE.CylinderGeometry(.84,.84,.1,32), pln=new THREE.PlaneGeometry(1.05,1.05);
   NODES.forEach((n,ni)=>{mesh(rim,NODES.spots.includes(ni)?0xa978ff:0xffffff,n.x,.15,n.z).castShadow=false; n.col=colOf(n.t); n.disc=mesh(disc,n.col,n.x,.2,n.z); n.disc.castShadow=false; n.disc.receiveShadow=true;
     if(n.t!=='+'&&n.t!=='-'){const i=mesh(pln,ICONS[n.t]||ICONS[CAT[n.t]],n.x,.295,n.z); i.rotation.x=-Math.PI/2; i.castShadow=false;}});
@@ -845,7 +850,7 @@ function fxFrame(dt){
   FXP.tong.forEach((t,i)=>{const goal=bs===i?1:0; t.scale.x+=(goal-t.scale.x)*Math.min(1,dt*1.6); t.visible=t.scale.x>.02; t.material.opacity=.8+Math.sin(T*5)*.12;});
   if(bs!==shownBurn){shownBurn=bs; const sec=bs>=0?MAPX.secs[bs]:null; NODES.forEach((n,i)=>{const hot=sec&&i<45&&((i-sec[0]+45)%45)<sec[1]; n.hot=!!hot; n.disc.material.color.setHex(hot?0x2a1e1e:n.col); if(!hot)n.disc.material.emissive.setHex(0);});}
   if(bs>=0)NODES.forEach(n=>{if(n.hot)n.disc.material.emissive.setRGB(.55+Math.sin(T*4+n.x)*.3,.14,0);});
-  if(FXP.flood){const up=st&&st.tide&&st.round<=st.tide; FXP.flood.position.y+=((up?.3:-.6)-FXP.flood.position.y)*Math.min(1,dt*1.2); FXP.flood.visible=FXP.flood.position.y>-.5;}
+  if(FXP.flood){const up=st&&st.tide&&st.round<=st.tide; FXP.flood.position.y+=((up?.22:-.6)-FXP.flood.position.y)*Math.min(1,dt*1.2); FXP.flood.visible=FXP.flood.position.y>-.5; FXP.spans.visible=FXP.flood.position.y>.05;}
   const tk=st?JSON.stringify(st.traps||{}):''; if(tk!==trapKey){trapKey=tk; while(trapG.children.length)trapG.remove(trapG.children[0]);
     if(st&&st.traps)for(const i in st.traps){const n=NODES[i],o=st.p[st.traps[i]]; if(!n||!o)continue; mesh(new THREE.CylinderGeometry(.03,.03,1.1,6),0xffffff,n.x+.55,.75,n.z-.45,trapG); mesh(new THREE.BoxGeometry(.4,.26,.03),CAST[o.i].hex,n.x+.75,1.15,n.z-.45,trapG);}}
 }
@@ -1028,6 +1033,7 @@ const SPF={
     else{const id=Math.random()<.4?'kite':Math.random()<.5?'twin':'magnet'; await card(SP.Q[0],itemLine(id),SP.Q[2],'item:'+id); p.it.push(id); say(`The box holds a ${ITEMS[id].name}: ${ITEMS[id].desc}`);}},
   T:async p=>{await spCard('T'); S.tide=S.round+1; S.ui.cam=[NODES[52].x,NODES[52].z]; say('The tide rolls in…'); await sleep(2800);
     for(const q of S.p)if(NODES[q.pos].bridge){q.pos=NODES[59].next[0]; q.fly++; say(`${nm(q)} is swept off the bridge.`); await sleep(1000);}
+    if(NODES[S.pearlAt].bridge){const c=NODES.spots.filter(i=>!NODES[i].bridge&&i!==S.pearlAt); S.pearlAt=c[rand(0,c.length-1)]; S.ui.follow=-1; say('The flood carries the pearl stall to dry land.'); await sleep(2200); S.ui.follow=p.k;}
     S.ui.cam=null; say('The bridge is under water until the end of the next round.');},
   F:async p=>{await spCard('F'); const w=FXP.wheel; S.ui.cam=w?[w.x,w.z]:null; fx('ferris',{k:p.k}); say(`${nm(p)} rides the big wheel…`); await sleep(2700);
     let n; do{n=rand(1,44);}while(n===p.pos); S.ui.cam=null; await flyTo(p,n); say('The big wheel sets you down somewhere new.'); if(p.pos===S.pearlAt)await stall(p);},
