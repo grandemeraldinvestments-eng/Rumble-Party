@@ -171,6 +171,12 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .field .crab{position:absolute; width:9%; aspect-ratio:1; background:var(--coral); border:2px solid var(--ink)}
 #opts{flex:none; width:100%}
 
+.rdy{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; width:100%}
+.rdy span{display:flex; align-items:center; gap:6px; border:3px solid var(--ink); background:var(--card); color:var(--ink); padding:5px 9px; font-weight:800}
+.rdy span:not(.on){background:#d6dbe6}
+.rdy span.on{background:#c9f5df}
+.rdy i{font-style:normal; font-weight:600; font-size:.85rem}
+#gpCur{position:fixed; left:0; top:0; z-index:99; width:28px; height:28px; margin:-14px 0 0 -14px; border:3px solid #fff; border-radius:50%; box-shadow:0 0 0 3px #1b2a4a; background:rgba(255,197,49,.5); pointer-events:none}
 .votes{display:flex; flex-direction:column; gap:10px; width:100%}
 .vote{display:flex; align-items:center; gap:10px; border:3px solid var(--ink); background:var(--card); color:var(--ink); padding:10px 12px; min-height:54px; font-size:1.1rem; font-weight:800; text-align:left; box-shadow:4px 4px 0 var(--ink)}
 .vote b{flex:1; min-width:0}
@@ -237,7 +243,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 <section class="screen center" id="menu">
   <div class="card">
     <h1>Rumble Party</h1>
-    <p class="lede">A party board game for 2 to 4 players. Run around the board, win tickets in mini games and trade them for pearls. Four maps, fifteen mini games.</p>
+    <p class="lede">A party board game for 2 to 4 players. Run around the board, win tickets in mini games and trade them for pearls. Four maps, nineteen mini games.</p>
     <div class="stack">
       <button class="btn" id="hostBtn" disabled>Host a game</button>
       <button class="btn" id="joinBtn" disabled>Join a game</button>
@@ -305,6 +311,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 
 <div id="chance" hidden><p id="chHead"></p><div class="chdisc" id="chDisc"><span id="chG">?</span></div><p id="chText"></p></div>
 
+<div id="gpCur" hidden></div>
 <section id="mini" hidden>
   <header><h2 id="mgTitle"></h2><p id="mgSub"></p></header>
   <div id="stage"></div>
@@ -890,9 +897,40 @@ function fxFrame(dt){
   const tk=st?JSON.stringify(st.traps||{}):''; if(tk!==trapKey){trapKey=tk; while(trapG.children.length)trapG.remove(trapG.children[0]);
     if(st&&st.traps)for(const i in st.traps){const n=NODES[i],o=st.p[st.traps[i]]; if(!n||!o)continue; mesh(new THREE.CylinderGeometry(.03,.03,1.1,6),0xffffff,n.x+.55,.75,n.z-.45,trapG); mesh(new THREE.BoxGeometry(.4,.26,.03),CAST[o.i].hex,n.x+.75,1.15,n.z-.45,trapG);}}
 }
+/* ---------- game controllers (Gamepad API). In walk-around games the stick or d-pad steers and a face button jumps or dashes.
+   Everywhere else the stick moves an on-screen pointer and A presses whatever is under it, so every screen works without touch ---------- */
+const gp={on:false,x:0,y:0,prev:[],down:null,idle:9,steer:false,sig:''};
+window.addEventListener('gamepadconnected',()=>toast('Controller connected'));
+function gpPoll(dt){
+  let p=null; try{const l=navigator.getGamepads?navigator.getGamepads():[]; for(const q of l)if(q&&q.connected&&q.buttons.length){p=q; break;}}catch(e){return;}
+  if(!p)return;
+  const dz=v=>Math.abs(v)<.22?0:v, b=i=>!!(p.buttons[i]&&p.buttons[i].pressed), hit=i=>b(i)&&!gp.prev[i], cur=$('#gpCur');
+  const ax=dz(p.axes[0]||0), ay=dz(p.axes[1]||0), dx=(b(15)?1:0)-(b(14)?1:0), dy=(b(13)?1:0)-(b(12)?1:0), any=ax||ay||dx||dy||p.buttons.some(q=>q.pressed);
+  if(!gp.on&&any){gp.on=true; gp.x=window.innerWidth/2; gp.y=window.innerHeight*.6;}
+  if(gp.on){
+    gp.idle=any?0:gp.idle+dt;
+    if(joy.on){cur.hidden=true; if(joy.id===null&&(ax||ay||dx||dy||gp.steer)){joy.x=ax||dx; joy.y=ay||dy; gp.steer=!!(ax||ay||dx||dy);} if(hit(0)||hit(1)||hit(2)||hit(3))joy.jump=true;}
+    else{
+      const W=window.innerWidth,H=window.innerHeight, fire=(el,type)=>{try{el.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:77,pointerType:'mouse',isPrimary:true,buttons:type==='pointerup'?0:1,clientX:gp.x,clientY:gp.y}));}catch(e){}};
+      const btns=()=>[...document.querySelectorAll('button:not([disabled]),input,a[href]')].map(el=>{const r=el.getBoundingClientRect(); return{el,x:r.left+r.width/2,y:r.top+r.height/2,w:r.width};}).filter(q=>{if(!q.w||q.x<0||q.y<0||q.x>W||q.y>H)return false; const t=document.elementFromPoint(q.x,q.y); return t&&(t===q.el||q.el.contains(t));});
+      cur.hidden=false; gp.steer=false;
+      if(ax||ay){gp.x=Math.max(4,Math.min(W-4,gp.x+ax*dt*640)); gp.y=Math.max(4,Math.min(H-4,gp.y+ay*dt*640)); if(gp.down)fire(gp.down,'pointermove');}
+      for(const [i,ux,uy] of [[12,0,-1],[13,0,1],[14,-1,0],[15,1,0]])if(hit(i)){let best=null,bs=1e9; for(const q of btns()){const rx=q.x-gp.x,ry=q.y-gp.y,al=rx*ux+ry*uy,pe=Math.abs(rx*uy-ry*ux); if(al<8)continue; const sc=al+pe*2.5; if(sc<bs){bs=sc; best=q;}} const on=document.elementFromPoint(gp.x,gp.y); if(!best&&!(on&&on.closest('button,input,a'))){for(const q of btns()){const d=Math.hypot(q.x-gp.x,q.y-gp.y); if(d<bs){bs=d; best=q;}}} if(best){gp.x=best.x; gp.y=best.y;}}
+      // when a new main button appears (roll the dice, ready, a choice), the pointer jumps to it so A is all you need
+      const main=document.querySelector('#rdyBtn:not([disabled])')||[...document.querySelectorAll('.acts .btn:not([disabled])')].find(el=>el.offsetParent), sig=main?main.id+main.textContent:'';
+      if(sig!==gp.sig){gp.sig=sig; if(main&&!gp.down){const r=main.getBoundingClientRect(), t=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2); if(t&&(t===main||main.contains(t))){gp.x=r.left+r.width/2; gp.y=r.top+r.height/2;}}}
+      if(hit(0)){const el=document.elementFromPoint(gp.x,gp.y); if(el){gp.down=el; fire(el,'pointerdown');}}
+      if(!b(0)&&gp.prev[0]&&gp.down){const d=gp.down, el=document.elementFromPoint(gp.x,gp.y); gp.down=null; fire(d,'pointerup'); if(el&&(el===d||d.contains(el)||el.contains(d))){const c=el.closest('button,a,input,label')||el; if(c.tagName==='INPUT')c.focus(); else c.click();}}
+      if(hit(1)){const m=$('#mapBtn'); if(m&&m.offsetParent)m.click();}
+      if(hit(9)){const m=$('#menuBtn'); if(m&&m.offsetParent)m.click();}
+      cur.style.transform=`translate(${gp.x}px,${gp.y}px)`;
+    }
+  }
+  gp.prev=p.buttons.map(q=>q.pressed);
+}
 let last=0, PR=1, ADAPT=true, frT=0, frN=0;
 function frame(now){
-  requestAnimationFrame(frame); const raw=(now-last)/1000||0, dt=Math.min(.05,raw); last=now; T+=dt;
+  requestAnimationFrame(frame); const raw=(now-last)/1000||0, dt=Math.min(.05,raw); last=now; T+=dt; gpPoll(dt);
   if((++frN&1)===0)R.shadowMap.needsUpdate=true;
   if(raw<.5){frT+=raw; if(frN>=60){if(ADAPT&&frT/frN>1/42&&PR>1){PR=Math.max(1,PR-.25); R.setPixelRatio(PR); resize();} frT=0; frN=0;}} else{frT=0; frN=0;}
   sync(dt); mT-=dt; if(mT<=0){mT=.4; musicTick();}
@@ -935,6 +973,7 @@ function onPeers(ch){
       if(pr.ans&&pend&&pr.ans.id===pend.id&&pend.k===k)pend.res(pr.ans.i|0);
       if(pr.res&&S.mini&&pr.res.mid===S.mini.mid&&typeof pr.res.v==='number')miniRes[k]=pr.res.v;
       if(pr.vote&&S.mini&&pr.vote.mid===S.mini.mid&&pr.vote.i>=0&&pr.vote.i<3)votes[k]={i:pr.vote.i|0,lock:!!pr.vote.lock};
+      if(pr.rdy&&S.mini&&pr.rdy===S.mini.mid)ready[k]=1;
       if(Array.isArray(pr.a))net.av[k]=pr.a;
     }
     for(const p of ch.left){
@@ -1151,7 +1190,7 @@ async function runMini(){
   }
   const top=Math.max(...S.mini.tally), tied=[0,1,2].filter(i=>S.mini.tally[i]===top), win=tied[rand(0,tied.length-1)], gi=opts[win], g=GAMES[gi];
   opts.forEach((o,i)=>{if(i!==win)S.deck.unshift(o);});
-  S.mini.g=gi; S.mini.win=win; S.mini.phase='intro'; await sleep(4200); S.mini.phase='play';
+  S.mini.g=gi; S.mini.win=win; S.mini.phase='intro'; await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
   await waitFor(()=>S.p.every(p=>p.k in miniRes||(p.cpu&&!g.arena)),(g.max+14)*1000);
   S.p.forEach(p=>{if(!(p.k in miniRes))miniRes[p.k]=p.cpu?g.cpu():g.low?999:0;});
   const res=S.p.map(p=>({k:p.k,sc:miniRes[p.k]})).sort((a,b)=>g.low?a.sc-b.sc:b.sc-a.sc);
@@ -1159,10 +1198,16 @@ async function runMini(){
   S.mini.rows=res; S.mini.phase='done';
   await ask(0,'Back to the board'); S.mini=null; S.phase='board';
 }
+/* everyone taking part taps Ready before a mini game starts; computers are always ready, and it starts anyway after 30 seconds */
+let ready={};
+async function readyUp(ks){ready={}; S.mini.rdy=[]; S.mini.left=30;
+  for(const t0=Date.now();;){const el=(Date.now()-t0)/1000; ks.forEach(k=>{if(S.p[k].cpu)ready[k]=1;}); S.mini.rdy=ks.filter(k=>ready[k]); S.mini.left=Math.max(0,Math.ceil(30-el)); if(el>=30||S.mini.rdy.length===ks.length)break; await sleep(150*SPEED);}
+  await sleep(700);}
+function setReady(mid){if(net.host)ready[myK()]=1; else if(net.nr)net.nr.presence({rdy:mid}).catch(()=>{});}
 async function runDuel(a,b,stake){
   const pool=GAMES.map((g,i)=>i).filter(i=>['Bell Ringer','Ring Toss','Lighthouse','Crab Count'].includes(GAMES[i].name)), gi=pool[rand(0,pool.length-1)], g=GAMES[gi];
   miniRes={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,only:[a.k,b.k],note:`Duel: ${nm(a)} against ${nm(b)} for ${stake} tickets`}; S.phase='mini';
-  await sleep(4200); S.mini.phase='play';
+  await readyUp([a.k,b.k]); S.mini.phase='play';
   await waitFor(()=>[a,b].every(p=>p.cpu||p.k in miniRes),(g.max+14)*1000);
   [a,b].forEach(p=>{if(!(p.k in miniRes))miniRes[p.k]=p.cpu?g.cpu():g.low?999:0;});
   const res=[a,b].map(p=>({k:p.k,sc:miniRes[p.k]})).sort((x,y)=>g.low?x.sc-y.sc:y.sc-x.sc), tie=res[0].sc===res[1].sc;
@@ -1185,12 +1230,17 @@ function startGame(){
 const stage=$('#stage');
 let miniMid=0, miniPh='', miniBusy=false, myVote=-1, myLock=false;
 const fmt=(g,sc)=>sc===999?'Out':g.surv||g.dec?sc.toFixed(1):sc;
+let rdyKey='';
+function drawReady(m){const row=$('#rdyRow'); if(!row)return; const ks=m.only||V.p.map(p=>p.k), rd=m.rdy||[], key=rd.join()+'|'+m.left; if(key===rdyKey)return; rdyKey=key;
+  row.innerHTML=ks.map(k=>{const p=V.p[k], on=rd.includes(k); return`<span class="${on?'on':''}">${face(p.i)}<b>${CAST[p.i].name}</b><i>${on?'Ready':'\u2026'}</i></span>`;}).join('');
+  $('#rdyNote').textContent=rd.length===ks.length?'Everyone is ready. Here we go!':`Starts when everyone is ready, or in ${m.left} seconds.`;}
 function miniSync(){
   const m=V.mini, el=$('#mini');
   if(!m){if(!el.hidden&&!miniBusy){el.hidden=true; stage.innerHTML=''; miniMid=0; miniPh='';} return;}
   el.hidden=false;
   if(m.mid!==miniMid){miniMid=m.mid; miniPh='';}
   if(m.phase==='vote'&&miniPh==='vote'){const l=$('#vleft'); if(l){l.textContent=m.left; m.tally.forEach((n,i)=>{$('#vc'+i).textContent=n;});}}
+  if(m.phase==='intro'&&miniPh==='intro')drawReady(m);
   if(m.phase===miniPh||miniBusy)return;
   miniPh=m.phase; const g=GAMES[m.g];
   if(m.phase==='vote'){
@@ -1203,7 +1253,8 @@ function miniSync(){
     return;
   }
   $('#mgTitle').textContent=g.name;
-  if(m.phase==='intro'){$('#mgSub').textContent=m.note?'Duel':'The vote is in'; stage.innerHTML=`${m.note?`<p><b>${m.note}</b></p>`:''}<p>${g.how}</p>${m.note?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2.</p>'}${g.arena?'<p class="sub">The deck is a different shape every time. Fall off the edge and you are out. Walk into other players to shove them.</p>':''}<p class="sub">Starting in a moment\u2026</p>`;}
+  if(m.phase==='intro'){$('#mgSub').textContent=m.note?'Duel':'The vote is in'; stage.innerHTML=`${m.note?`<p><b>${m.note}</b></p>`:''}<p>${g.how}</p>${m.note?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2.</p>'}${g.arena?'<p class="sub">The deck is a different shape every time. Fall off the edge and you are out. Walk into other players to shove them.</p>':''}<div class="rdy" id="rdyRow"></div>${myK()>=0&&(!m.only||m.only.includes(myK()))?'<button class="btn" id="rdyBtn">Ready</button>':''}<p class="sub" id="rdyNote"></p>`;
+    const rb=$('#rdyBtn'); if(rb)rb.onclick=()=>{rb.disabled=true; rb.textContent='Ready!'; setReady(m.mid);}; rdyKey=''; drawReady(m);}
   else if(m.phase==='play'){
     const k=myK(); if(k<0||(m.only&&!m.only.includes(k))){stage.innerHTML=`<p>${m.only?'The duel is under way':'Mini game in progress'}\u2026</p>`; return;}
     miniBusy=true; $('#mgSub').textContent=nameOf(k);
@@ -1236,7 +1287,7 @@ function miniStage(hint,pos,look){
 
 /* joystick: drag anywhere to steer, plus a jump button; arrow keys and space on a keyboard */
 const joy={x:0,y:0,jump:false,id:null,ox:0,oy:0,keys:{},on:false};
-function pad(on,jump){$('#jumpBtn').hidden=!(on&&jump); $('#joy').hidden=true; joy.x=joy.y=0; joy.id=null; joy.jump=false; joy.on=on;}
+function pad(on,jump,label){$('#jumpBtn').hidden=!(on&&jump); $('#jumpBtn').textContent=label||'Jump'; $('#joy').hidden=true; joy.x=joy.y=0; joy.id=null; joy.jump=false; joy.on=on;}
 (function(){
   const el=$('#mini'), j=$('#joy'), knob=j.firstElementChild;
   el.addEventListener('pointerdown',e=>{if(!joy.on)return; if(e.target.id==='jumpBtn'){joy.jump=true; e.preventDefault(); return;}
@@ -1266,34 +1317,37 @@ function deckShape(sc,sh){
   const rim=mesh(geo,0xffffff,0,-.62,0,sc); rim.rotation.x=-Math.PI/2; rim.scale.set(1.05,1.05,.5); rim.castShadow=false;
 }
 function arena(G){return async function(ctx){
-  const m=miniStage(G.hint,[0,11.5,8.6],[0,0,.6]), sc=m.scene, rng=rng32(ctx.seed), sh=mkShape(rng); deckShape(sc,sh);
-  const st=G.init(sc,rng,sh);
-  const avs=V.p.map((p,k)=>{const a=k/V.p.length*6.283+.6, av={k,x:Math.sin(a)*1.5,z:Math.cos(a)*1.5,y:0,vy:0,alive:true,gone:0,fell:false,score:0,face:0,moving:false,kx:0,kz:0,bump:0,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
+  const m=miniStage(G.hint,[0,11.5,8.6],[0,0,.6]), sc=m.scene, rng=rng32(ctx.seed), sh=mkShape(rng); if(!G.noDeck)deckShape(sc,sh);
+  const st=G.init(sc,rng,sh,V.p.length);
+  const avs=V.p.map((p,k)=>{const a=k/V.p.length*6.283+.6, av={k,x:Math.sin(a)*1.5,z:Math.cos(a)*1.5,y:0,vy:0,alive:true,gone:0,fell:false,score:0,face:0,moving:false,kx:0,kz:0,bump:0,dash:0,cd:0,spd:0,ly:0,dy:0,col:CAST[p.i].hex,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
     av.ch.position.set(av.x,0,av.z); return av;});
-  const me=avs[ctx.k]; net.av={}; pad(true,G.jump);
+  const me=avs[ctx.k]; st.avs=avs; net.av={}; pad(true,G.jump||G.dash,G.dash?'Dash':'Jump');
   const out=(av,t,fell)=>{av.alive=false; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); $('#hint').textContent=fell?'You fell off!':'You are out!';}};
   await countdown($('#n'));
   let t=0,pubT=0,endT=-1;
   await m.run(dt=>{
     t+=dt; G.step(st,t,dt,sc);
     for(const av of avs){
+      const ox=av.x, oz=av.z;
       if(av.mine||av.cpu){
         if(av.alive){
           let ix=0,iz=0,j=false;
           if(av.mine){ix=joy.x; iz=joy.y; j=joy.jump; joy.jump=false;}
           else{G.ai(av,st,t,dt); ix=av.ai.dx; iz=av.ai.dz; j=av.ai.jump; av.ai.jump=false;
-            const rr=Math.hypot(av.x,av.z)||.01; if(rr>sh.R(Math.atan2(av.x,av.z))-.8){ix-=av.x/rr*1.6; iz-=av.z/rr*1.6;}}
+            const rr=Math.hypot(av.x,av.z)||.01; if(!G.noDeck&&rr>sh.R(Math.atan2(av.x,av.z))-.8){ix-=av.x/rr*1.6; iz-=av.z/rr*1.6;}}
           const l=Math.hypot(ix,iz); if(l>1){ix/=l; iz/=l;}
-          av.bump-=dt; av.x+=(ix*4.6+av.kx)*dt; av.z+=(iz*4.6+av.kz)*dt; {const f=Math.exp(-dt*7); av.kx*=f; av.kz*=f;} av.moving=l>.15; if(av.moving)av.face=Math.atan2(ix,iz);
+          av.dash-=dt; av.cd-=dt; if(j&&G.dash&&av.cd<=0&&l>.15){av.dash=.22; av.cd=1.1; if(av.mine)SFX.fly();}   // a dash is a short burst that hits much harder
+          const sp=4.6*(G.speed||1)*(av.dash>0?2.2:1);
+          av.bump-=dt; av.x+=(ix*sp+av.kx)*dt; av.z+=(iz*sp+av.kz)*dt; {const f=Math.exp(-dt*7); av.kx*=f; av.kz*=f;} av.moving=l>.15; if(av.moving)av.face=Math.atan2(ix,iz);
           // shoving: whoever is walking pushes whoever is standing; two walkers push each other
           for(const o of avs){if(o===av||!o.alive||Math.abs(av.y-o.y)>.6)continue; const dx=av.x-o.x,dz=av.z-o.z,d=Math.hypot(dx,dz);
             if(d<.8){const ov=.8-d,k=o.moving?(av.moving?.5:1):(av.moving?.3:.5),nx=d>.01?dx/d:1,nz=d>.01?dz/d:0; av.x+=nx*ov*k; av.z+=nz*ov*k;
-              if(av.bump<=0&&(o.moving||av.moving)){av.bump=.4; if(o.moving){av.kx=nx*3.4; av.kz=nz*3.4;} if(av.mine)SFX.bump();}}}
+              if(av.bump<=0&&(o.moving||av.moving)){av.bump=.4; if(o.moving){const pw=3.4*Math.min(2,Math.max(1,o.spd/4.6))*(G.shove||1); av.kx=nx*pw; av.kz=nz*pw;} if(av.mine)SFX.bump();}}}
           const r=Math.hypot(av.x,av.z); if(G.post&&r<.9){if(r<.01){av.x=.9; av.z=0;} else{av.x*=.9/r; av.z*=.9/r;}}
           if(j&&av.y===0&&G.jump){av.vy=6.5; if(av.mine)SFX.hop();}
           if(av.y>0||av.vy>0){av.y+=av.vy*dt; av.vy-=18*dt; if(av.y<=0){av.y=0; av.vy=0;}}
           if(av.y<=.02&&!sh.inside(av.x,av.z))out(av,t,true);
-          else{const c=G.check(av,st,t,true,dt); if(c==='hit')out(av,t,false); else if(c>0){av.score+=c; if(av.mine&&!G.quiet)SFX.gain();}}
+          else{const c=G.check(av,st,t,true,dt); if(c==='hit')out(av,t,false); else if(c==='fall')out(av,t,true); else if(c>0){av.score+=c; if(av.mine&&!G.quiet)SFX.gain();}}
         }
       }else{
         const a=net.av[av.k];
@@ -1301,6 +1355,7 @@ function arena(G){return async function(ctx){
           if(av.alive&&!a[3]){av.alive=false; av.gone=.6; av.fell=!sh.inside(av.x,av.z);}}
         if(av.alive)G.check(av,st,t,false,dt);
       }
+      av.spd+=(Math.hypot(av.x-ox,av.z-oz)/Math.max(dt,.001)-av.spd)*Math.min(1,dt*10); if(av.y!==av.ly){av.dy=av.y-av.ly; av.ly=av.y;}
       const ch=av.ch;
       if(av.alive){ch.position.set(av.x,av.y,av.z); ch.run=av.moving?1:0; ch.air=av.y>0; ch.fig.rotation.y=av.face;}
       else if(ch.visible){av.gone-=dt; ch.run=0; ch.air=true; if(av.fell){ch.position.y-=dt*9; ch.fig.rotation.x+=dt*6;} else{ch.scale.setScalar(Math.max(.01,1.15*av.gone/.6)); ch.fig.rotation.y+=dt*14;} if(av.gone<=0)ch.visible=false;}
@@ -1378,6 +1433,61 @@ const SPOT={hint:'Stay in the spotlight',max:25,dec:true,quiet:true,
   check(av,st,t,local,dt){return local&&Math.hypot(av.x-st.x,av.z-st.z)<st.r?dt:0;},
   ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.2+Math.random()*.3; const dx=st.x-av.x,dz=st.z-av.z,d=Math.hypot(dx,dz); if(d>.4){ai.dx=dx/d*.8; ai.dz=dz/d*.8;} else{ai.dx=0; ai.dz=0;}}};
 
+/* ---- player-versus-player deck games ---- */
+const nearest=(av,st)=>{let b=null,bd=99; for(const o of st.avs){if(o===av||!o.alive)continue; const d=Math.hypot(o.x-av.x,o.z-av.z); if(d<bd){bd=d; b=o;}} return b?{o:b,d:bd}:null;};
+const SUMO={hint:'Shove them into the red',surv:true,max:30,dash:true,shove:1.2,
+  init(sc,rng,sh){const geo=new THREE.ShapeGeometry(shapePath(sh,0,Math.PI*2,90,false,.99)), red=mesh(geo,new THREE.MeshBasicMaterial({color:0xff4d4d,side:THREE.DoubleSide}),0,.02,0,sc), safe=mesh(geo,new THREE.MeshLambertMaterial({color:0xd9a066,side:THREE.DoubleSide}),0,.035,0,sc);
+    red.rotation.x=safe.rotation.x=-Math.PI/2; red.castShadow=safe.castShadow=false; safe.receiveShadow=true; return{safe,sh,f:1};},
+  step(st,t){st.f=Math.max(.36,1-Math.max(0,t-2)*.026); st.safe.scale.set(st.f,st.f,1);},
+  check(av,st,t,local,dt){if(!local)return 0; const r=Math.hypot(av.x,av.z); if(av.y<.05&&t>2&&r>st.sh.R(Math.atan2(av.x,av.z))*st.f+.1){av.hot=(av.hot||0)+dt; if(av.hot>.45)return'hit';} else av.hot=0; return 0;},
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.15; const r=Math.hypot(av.x,av.z)||.01, lim=st.sh.R(Math.atan2(av.x,av.z))*st.f, n=nearest(av,st);
+    if(r>lim*.55){ai.dx=-av.x/r*.9; ai.dz=-av.z/r*.9;}
+    else if(t>2.5&&n&&n.d<2.6&&Math.hypot(n.o.x,n.o.z)>=r-.2){ai.dx=(n.o.x-av.x)/n.d*.9; ai.dz=(n.o.z-av.z)/n.d*.9; if(n.d<1.5&&Math.random()<.35)ai.jump=true;}
+    else{ai.dx=-av.x/r*.3; ai.dz=-av.z/r*.3;}}};
+const PADS={hint:'Stand on a pad before it turns red',surv:true,max:32,
+  init(sc,rng,sh,n){const rounds=[]; let t=1.5,k=0; while(t<30){const dur=Math.max(2.6,5-k*.4), cnt=Math.max(1,n-1-Math.floor(k/2)), pads=[]; let g=0;
+      while(pads.length<cnt&&g++<300){const a=rng()*6.283,r=Math.sqrt(rng())*.72*sh.R(a),x=Math.sin(a)*r,z=Math.cos(a)*r; if(pads.every(q=>Math.hypot(q.x-x,q.z-z)>1.9))pads.push({x,z});}
+      rounds.push({t,end:t+dur,pads}); t+=dur+1; k++;}
+    const geo=new THREE.CylinderGeometry(.62,.62,.06,28), pool=[]; for(let i=0;i<Math.max(1,n-1);i++){const m=mesh(geo,new THREE.MeshBasicMaterial({color:0x35c98a}),0,.04,0,sc); m.visible=false; m.castShadow=false; pool.push(m);}
+    return{rounds,pool,cur:null};},
+  step(st,t){const r=st.rounds.find(r=>t>=r.t&&t<r.end+.5); st.cur=r&&t<r.end?r:null;
+    st.pool.forEach((m,i)=>{const q=r&&r.pads[i]; m.visible=!!q; if(q){const u=(t-r.t)/(r.end-r.t), s=t>=r.end?1:1+.08*Math.sin(t*8); m.position.set(q.x,.04,q.z); m.material.color.setHex(t>=r.end?0xff4d4d:u>.7?0xffc531:0x35c98a); m.scale.set(s,1,s);}});},
+  check(av,st,t,local){if(!local)return 0; for(let i=av.pr||0;i<st.rounds.length&&t>=st.rounds[i].end;i++){av.pr=i+1; if(!st.rounds[i].pads.some(q=>Math.hypot(q.x-av.x,q.z-av.z)<.5))return'hit';} return 0;},
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.2; const r=st.cur; if(!r){const d=Math.hypot(av.x,av.z)||1; ai.dx=d>1.2?-av.x/d*.5:0; ai.dz=d>1.2?-av.z/d*.5:0; return;}
+    const ds=q=>Math.hypot(q.x-av.x,q.z-av.z), sorted=r.pads.slice().sort((a,b)=>ds(a)-ds(b)), free=sorted.find(q=>st.avs.every(o=>o===av||!o.alive||Math.hypot(q.x-o.x,q.z-o.z)>ds(q)-.2))||sorted[0], d=ds(free);
+    if(d>.12){ai.dx=(free.x-av.x)/d*.9; ai.dz=(free.z-av.z)/d*.9;} else{ai.dx=0; ai.dz=0;}}};
+const PAINT={hint:'Paint the most tiles',max:25,quiet:true,
+  init(sc,rng,sh){const S=.9,cells=[],map={}; for(let gx=-6;gx<=6;gx++)for(let gz=-6;gz<=6;gz++){const x=gx*S,z=gz*S; if(Math.hypot(x,z)<sh.R(Math.atan2(x,z))-.35){const c={x,z,o:-1,m:null}; cells.push(c); map[gx+','+gz]=c;}}
+    return{S,cells,map,sc,geo:new THREE.BoxGeometry(.84,.05,.84)};},
+  step(){},
+  check(av,st,t,local){if(av.y<.3){const c=st.map[Math.round(av.x/st.S)+','+Math.round(av.z/st.S)];
+      if(c&&c.o!==av.k){c.o=av.k; if(!c.m){c.m=mesh(st.geo,new THREE.MeshLambertMaterial({color:av.col}),c.x,.03,c.z,st.sc); c.m.castShadow=false;} else c.m.material.color.setHex(av.col);}}
+    if(local){let n=0; for(const c of st.cells)if(c.o===av.k)n++; av.score=n;} return 0;},
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.2+Math.random()*.2; let b=null,bd=99; for(const c of st.cells){if(c.o===av.k)continue; const d=Math.hypot(c.x-av.x,c.z-av.z)+Math.random()*.6; if(d<bd){bd=d; b=c;}}
+    if(b){const d=Math.hypot(b.x-av.x,b.z-av.z)||1; ai.dx=(b.x-av.x)/d*.85; ai.dz=(b.z-av.z)/d*.85;} else{ai.dx=0; ai.dz=0;}}};
+const CRUMBLE={hint:'The floor crumbles behind you',surv:true,max:30,noDeck:true,speed:.8,
+  init(sc,rng,sh){const S=.8,cells=[],map={},geo=new THREE.BoxGeometry(S-.05,.4,S-.05); for(let gx=-7;gx<=7;gx++)for(let gz=-7;gz<=7;gz++){const x=gx*S,z=gz*S; if(Math.hypot(x,z)<sh.R(Math.atan2(x,z))-.15){const m=mesh(geo,(gx+gz)&1?0xc98f55:0xd9a066,x,-.2,z,sc); m.castShadow=false; m.receiveShadow=true; const c={x,z,s:0,tm:0,m,mat:m.material}; cells.push(c); map[gx+','+gz]=c;}}
+    return{S,cells,map,at:(x,z)=>map[Math.round(x/S)+','+Math.round(z/S)],crack:new THREE.MeshLambertMaterial({color:0xe0566b})};},
+  step(st,t,dt){for(const c of st.cells){if(c.s===1){c.tm-=dt; c.m.position.y=-.2+Math.sin(t*40)*.025; if(c.tm<=0){c.s=2; c.tm=3+t*.25;}}   // a dropped tile grows back after a few seconds, more slowly as the game goes on
+      else if(c.s===2){c.tm-=dt; c.m.position.y-=dt*8; if(c.m.position.y<-7)c.m.visible=false; if(c.tm<=0){c.s=0; c.m.material=c.mat; c.m.visible=true; c.m.position.y=-.2;}}}},
+  check(av,st,t,local){if(av.y>.05)return 0; const c=st.at(av.x,av.z); if(c&&c.s===0&&t>1.6){c.s=1; c.tm=1.2; c.m.material=st.crack;} return local&&(!c||c.s===2)?'fall':0;},
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.08+Math.random()*.05; let best=-1,bx=0,bz=0; const at=st.at, ok=c=>c&&c.s!==2&&!(c.s===1&&c.tm<.3), S=st.S, here=at(av.x,av.z);
+    if(here&&(here.s===0||(here.s===1&&here.tm>.42+(ai.lag||(ai.lag=Math.random()*.12))))){ai.dx=0; ai.dz=0; return;}   // wait on a tile until it is about to drop, then step off
+    for(let i=0;i<8;i++){const a=i*Math.PI/4,dx=Math.sin(a),dz=Math.cos(a),n1=at(av.x+dx*S*.55,av.z+dz*S*.55),c=at(av.x+dx*S*1.1,av.z+dz*S*1.1); if(!ok(n1)||!ok(c)||(i&1&&(!ok(at(av.x+dx*S*.8,av.z))||!ok(at(av.x,av.z+dz*S*.8)))))continue; let v=c.s===0?4:.5;
+      for(let j=0;j<8;j++){const b=j*Math.PI/4,n=at(c.x+Math.sin(b)*S*1.1,c.z+Math.cos(b)*S*1.1); if(n&&n.s===0)v+=1;}
+      for(const o of st.avs)if(o!==av&&o.alive&&Math.hypot(o.x-c.x,o.z-c.z)<1.2)v-=2;
+      v+=Math.random()+(dx*ai.dx+dz*ai.dz)*1.6; if(v>best){best=v; bx=dx; bz=dz;}}
+    ai.dx=bx*.8; ai.dz=bz*.8;}};
+const STOMP={hint:'Jump on their heads',surv:true,max:30,jump:true,
+  init(){return{};}, step(){},
+  check(av,st,t,local){if(!local)return 0; for(const o of st.avs){if(o===av||!o.alive||Math.hypot(o.x-av.x,o.z-av.z)>.62)continue;
+      if(av.y<.15&&o.y>.25&&o.y<1.05&&o.dy<0&&t>1.5)return'hit';
+      if(o.y<.15&&av.y>.25&&av.y<1.05&&av.vy<0)av.vy=6.5;} return 0;},
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.12+Math.random()*.12; const n=nearest(av,st); if(!n){ai.dx=ai.dz=0; return;}
+    const ux=(n.o.x-av.x)/(n.d||1),uz=(n.o.z-av.z)/(n.d||1);
+    if(n.o.y>.2&&n.d<1.7){ai.dx=-ux*.9; ai.dz=-uz*.9;}
+    else{ai.dx=ux*.75; ai.dz=uz*.75; if(av.y===0&&n.d>1.5&&n.d<2.2&&Math.random()<.5)ai.jump=true;}}};
+
 const GAMES=[
  {name:'Crab Scramble',unit:'sec',surv:true,arena:true,max:34,how:'Everyone shares one deck. Drag to run and dodge the crabs. Whoever lasts longest wins.',cpu:()=>rand(60,230)/10,play:arena(CRAB)},
  {name:'Boom Hop',unit:'sec',surv:true,arena:true,max:34,how:'Everyone shares one deck. Drag to run and tap Jump to clear the swinging boom. It keeps speeding up.',cpu:()=>rand(50,220)/10,play:arena(BOOM)},
@@ -1385,6 +1495,11 @@ const GAMES=[
  {name:'Hot Planks',unit:'sec',surv:true,arena:true,max:34,how:'Everyone shares one deck. Planks flash yellow, then turn red. Run to a safe plank before they do.',cpu:()=>rand(60,230)/10,play:arena(HOT)},
  {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:34,how:'Everyone shares one deck. Coconuts are falling. Watch for the shadows and keep out from under them.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
  {name:'Spotlight',unit:'sec',dec:true,arena:true,max:29,how:'Everyone shares one deck. A spotlight sweeps around. Whoever spends the most time inside it wins.',cpu:()=>rand(40,140)/10,play:arena(SPOT)},
+ {name:'Sumo Shove',unit:'sec',surv:true,arena:true,max:34,how:'Player against player. The safe floor shrinks and the red burns. Walk into the others to shove them out, and tap Dash for a charge that hits much harder.',cpu:()=>rand(60,230)/10,play:arena(SUMO)},
+ {name:'Musical Pads',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. There is always one pad fewer than there are players. Be standing on a pad when it turns red, and shove the others off yours.',cpu:()=>rand(60,230)/10,play:arena(PADS)},
+ {name:'Paint Fight',unit:'tiles',arena:true,max:29,how:'Player against player. Every tile you walk over turns your colour, including tiles the others already painted. Most tiles when time runs out wins.',cpu:()=>rand(10,26),play:arena(PAINT)},
+ {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:34,how:'Player against player. Every tile anyone steps on shakes and drops away, then grows back a few seconds later. Keep moving, cut the others off, and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
+ {name:'Stomp',unit:'sec',surv:true,arena:true,max:34,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},
  {name:'Bell Ringer',unit:'taps',max:10,how:'Hammer the bell as many times as you can in 5 seconds.',cpu:()=>rand(24,40),
   async play(){
     stage.innerHTML=`<div class="big" id="n">3</div><button class="bell" id="bell" disabled>WAIT</button><div class="bar"><i id="bar"></i></div>`;
@@ -1444,24 +1559,6 @@ const GAMES=[
         if(!lit){clearTimeout(to); lamp.textContent='TOO SOON'; res(999);}
         else{const ms=Math.round(performance.now()-t0); lamp.textContent=ms+' ms'; res(ms);}};
     });
-  }},
- {name:'Signal Flags',unit:'rounds',max:75,how:'Watch the flags light up, then tap them in the same order. The pattern grows by one each round. You can slip up twice.',cpu:()=>rand(3,8),
-  async play(){
-    const cols=['#ff4d4d','#2f8fff','#35c98a','#ffc531'];
-    stage.innerHTML=`<div class="big" id="n">0</div><div class="sub" id="info">Watch</div><div class="flags">${cols.map((c,i)=>`<button class="flag" id="f${i}" style="--c:${c}" aria-label="Flag ${i+1}" disabled></button>`).join('')}</div>`;
-    const fl=[0,1,2,3].map(i=>$('#f'+i)), order=[], t0=Date.now(); let score=0,lives=3,again=false;
-    const flash=async i=>{fl[i].classList.add('lit'); tone(330+i*110,.18,'square',.04); await sleep(330); fl[i].classList.remove('lit'); await sleep(120);};
-    for(;;){
-      if(!again)order.push(rand(0,3)); again=false; $('#info').textContent='Watch'; fl.forEach(b=>{b.disabled=true;}); await sleep(500);
-      for(const i of order)await flash(i);
-      $('#info').textContent='Your turn'; fl.forEach(b=>{b.disabled=false;});
-      const ok=await new Promise(res=>{let k=0; const to=setTimeout(()=>res(false),4000+order.length*1500);
-        fl.forEach((b,i)=>{b.onpointerdown=e=>{e.preventDefault(); b.classList.add('lit'); setTimeout(()=>b.classList.remove('lit'),150); tone(330+i*110,.12,'square',.04);
-          if(i!==order[k]){clearTimeout(to); res(false);} else if(++k===order.length){clearTimeout(to); res(true);}};});});
-      fl.forEach(b=>{b.onpointerdown=null;});
-      if(!ok){SFX.loss(); lives--; if(lives<=0||Date.now()-t0>60000)break; again=true; $('#info').textContent=lives===1?'Miss! Last try':'Miss! '+lives+' tries left'; fl.forEach(b=>{b.disabled=true;}); await sleep(900); continue;} score++; $('#n').textContent=score; SFX.gain(); if(score>=10||Date.now()-t0>60000)break;
-    }
-    await sleep(600); return score;
   }},
  {name:'Crab Count',unit:'right',max:45,how:'Crabs flash on screen for a moment. Count them, then pick the right number. Five rounds.',cpu:()=>rand(1,5),
   async play(){
@@ -1574,8 +1671,9 @@ const GUIDE=[
    <li><span class="sw" style="background:#fff">${ITEMS.kite.svg}</span><span><b>Kite, 15 tickets</b>Fly straight to the pearl stall.</span></li></ul>
    <p class="lede">Buy items at a purple shop space. Your bag holds 2.</p>`],
  ['Mini games and the finish',`<ul class="legend">
+   <li><span><b>Game controller.</b>In walk-around games the left stick or d-pad runs and A jumps or dashes. Everywhere else the stick moves a pointer and A presses what is under it, the d-pad hops between buttons, B opens the map and Start opens the menu.</span></li>
    <li><span><b>Shared-deck games.</b>Walk into other players to shove them, do not fall off the edge, and the last one standing ends the game.</span></li>
-   <li><span><b>A mini game ends every round.</b>Players get 10 seconds to vote between three games, then everyone plays at once on their own screen. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2.</span></li>
+   <li><span><b>A mini game ends every round.</b>Players get 10 seconds to vote between three games, everyone taps Ready, then all play at once on their own screen. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2.</span></li>
    <li><span><b>Underdog gift.</b>Before the final round, the player in last place gets 10 tickets.</span></li>
    <li><span><b>Two bonus pearls.</b>At the end, one goes to the best mini game player and one to whoever travelled furthest.</span></li></ul>`],
 ];
