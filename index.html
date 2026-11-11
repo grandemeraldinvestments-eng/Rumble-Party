@@ -1131,7 +1131,7 @@ function miniSync(){
     return;
   }
   $('#mgTitle').textContent=g.name;
-  if(m.phase==='intro'){$('#mgSub').textContent=m.note?'Duel':'The vote is in'; stage.innerHTML=`${m.note?`<p><b>${m.note}</b></p>`:''}<p>${g.how}</p>${m.note?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2.</p>'}<p class="sub">Starting in a moment\u2026</p>`;}
+  if(m.phase==='intro'){$('#mgSub').textContent=m.note?'Duel':'The vote is in'; stage.innerHTML=`${m.note?`<p><b>${m.note}</b></p>`:''}<p>${g.how}</p>${m.note?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2.</p>'}${g.arena?'<p class="sub">The deck is a different shape every time. Fall off the edge and you are out. Walk into other players to shove them.</p>':''}<p class="sub">Starting in a moment\u2026</p>`;}
   else if(m.phase==='play'){
     const k=myK(); if(k<0||(m.only&&!m.only.includes(k))){stage.innerHTML=`<p>${m.only?'The duel is under way':'Mini game in progress'}\u2026</p>`; return;}
     miniBusy=true; $('#mgSub').textContent=nameOf(k);
@@ -1180,12 +1180,26 @@ function pad(on,jump){$('#jumpBtn').hidden=!(on&&jump); $('#joy').hidden=true; j
 
 /* arena games: everyone runs around the same deck at once. Each phone moves its own character;
    hazards come from a shared seed so every phone sees the same thing. The host moves the computers. */
+/* every arena is an irregular blob, different each time but the same on every phone (it comes from the shared seed) */
+function mkShape(rng){
+  const p=[rng()*6.283,rng()*6.283,rng()*6.283], k=2+Math.floor(rng()*2);
+  const R=t=>3.3*(1+.15*Math.cos(k*t+p[0])+.11*Math.cos((k+1)*t+p[1])+.07*Math.cos(5*t+p[2]));
+  return{R,inside:(x,z)=>Math.hypot(x,z)<=R(Math.atan2(x,z))+.12};
+}
+function shapePath(sh,a0,a1,n,fromCentre,k){const q=new THREE.Shape(); k=k||1; if(fromCentre)q.moveTo(0,0);
+  for(let i=0;i<=n;i++){const t=a0+(a1-a0)*i/n,r=sh.R(t)*k,x=Math.sin(t)*r,y=-Math.cos(t)*r; if(i===0&&!fromCentre)q.moveTo(x,y); else q.lineTo(x,y);} return q;}
+function deckShape(sc,sh){
+  const geo=new THREE.ExtrudeGeometry(shapePath(sh,0,Math.PI*2,90),{depth:.5,bevelEnabled:false});
+  const d=mesh(geo,0xc98f55,0,-.5,0,sc); d.rotation.x=-Math.PI/2; d.receiveShadow=true; d.castShadow=false;
+  const rim=mesh(geo,0xffffff,0,-.62,0,sc); rim.rotation.x=-Math.PI/2; rim.scale.set(1.05,1.05,.5); rim.castShadow=false;
+}
 function arena(G){return async function(ctx){
-  const m=miniStage(G.hint,[0,11.5,8.6],[0,0,.6]), sc=m.scene; deck(sc,4.2);
-  const st=G.init(sc,rng32(ctx.seed));
-  const avs=V.p.map((p,k)=>{const a=k/V.p.length*6.283+.6, av={k,x:Math.sin(a)*2.4,z:Math.cos(a)*2.4,y:0,vy:0,alive:true,score:0,face:0,moving:false,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
+  const m=miniStage(G.hint,[0,11.5,8.6],[0,0,.6]), sc=m.scene, rng=rng32(ctx.seed), sh=mkShape(rng); deckShape(sc,sh);
+  const st=G.init(sc,rng,sh);
+  const avs=V.p.map((p,k)=>{const a=k/V.p.length*6.283+.6, av={k,x:Math.sin(a)*1.5,z:Math.cos(a)*1.5,y:0,vy:0,alive:true,gone:0,fell:false,score:0,face:0,moving:false,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
     av.ch.position.set(av.x,0,av.z); return av;});
   const me=avs[ctx.k]; net.av={}; pad(true,G.jump);
+  const out=(av,t,fell)=>{av.alive=false; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); $('#hint').textContent=fell?'You fell off!':'You are out!';}};
   await countdown($('#n'));
   let t=0,pubT=0,endT=-1;
   await m.run(dt=>{
@@ -1194,34 +1208,41 @@ function arena(G){return async function(ctx){
       if(av.mine||av.cpu){
         if(av.alive){
           let ix=0,iz=0,j=false;
-          if(av.mine){ix=joy.x; iz=joy.y; j=joy.jump; joy.jump=false;} else{G.ai(av,st,t,dt); ix=av.ai.dx; iz=av.ai.dz; j=av.ai.jump; av.ai.jump=false;}
+          if(av.mine){ix=joy.x; iz=joy.y; j=joy.jump; joy.jump=false;}
+          else{G.ai(av,st,t,dt); ix=av.ai.dx; iz=av.ai.dz; j=av.ai.jump; av.ai.jump=false;
+            const rr=Math.hypot(av.x,av.z)||.01; if(rr>sh.R(Math.atan2(av.x,av.z))-.8){ix-=av.x/rr*1.6; iz-=av.z/rr*1.6;}}
           const l=Math.hypot(ix,iz); if(l>1){ix/=l; iz/=l;}
           av.x+=ix*4.6*dt; av.z+=iz*4.6*dt; av.moving=l>.15; if(av.moving)av.face=Math.atan2(ix,iz);
-          const r=Math.hypot(av.x,av.z); if(r>3.8){av.x*=3.8/r; av.z*=3.8/r;} else if(G.post&&r<.9){if(r<.01){av.x=.9; av.z=0;} else{av.x*=.9/r; av.z*=.9/r;}}
+          // shoving: whoever is walking pushes whoever is standing; two walkers push each other
+          for(const o of avs){if(o===av||!o.alive||Math.abs(av.y-o.y)>.6)continue; const dx=av.x-o.x,dz=av.z-o.z,d=Math.hypot(dx,dz);
+            if(d<.8){const ov=.8-d,k=o.moving?(av.moving?.5:1):(av.moving?.3:.5),nx=d>.01?dx/d:1,nz=d>.01?dz/d:0; av.x+=nx*ov*k; av.z+=nz*ov*k;}}
+          const r=Math.hypot(av.x,av.z); if(G.post&&r<.9){if(r<.01){av.x=.9; av.z=0;} else{av.x*=.9/r; av.z*=.9/r;}}
           if(j&&av.y===0&&G.jump){av.vy=6.5; if(av.mine)SFX.hop();}
           if(av.y>0||av.vy>0){av.y+=av.vy*dt; av.vy-=18*dt; if(av.y<=0){av.y=0; av.vy=0;}}
-          const c=G.check(av,st,t,true,dt);
-          if(c==='hit'){av.alive=false; av.score=Math.round(t*10)/10; if(av.mine)SFX.loss();}
-          else if(c>0){av.score+=c; if(av.mine&&!G.quiet)SFX.gain();}
-        }else av.moving=false;
+          if(av.y<=.02&&!sh.inside(av.x,av.z))out(av,t,true);
+          else{const c=G.check(av,st,t,true,dt); if(c==='hit')out(av,t,false); else if(c>0){av.score+=c; if(av.mine&&!G.quiet)SFX.gain();}}
+        }
       }else{
         const a=net.av[av.k];
-        if(a){const dx=a[0]-av.x,dz=a[1]-av.z,d=Math.hypot(dx,dz); av.moving=d>.06; if(av.moving)av.face=Math.atan2(dx,dz); const kk=Math.min(1,dt*14); av.x+=dx*kk; av.z+=dz*kk; av.y=a[2]; av.alive=!!a[3]; av.score=a[4];}
+        if(a){const dx=a[0]-av.x,dz=a[1]-av.z,d=Math.hypot(dx,dz); av.moving=d>.06&&av.alive; if(av.moving)av.face=Math.atan2(dx,dz); const kk=Math.min(1,dt*14); av.x+=dx*kk; av.z+=dz*kk; av.y=a[2]; av.score=a[4];
+          if(av.alive&&!a[3]){av.alive=false; av.gone=.6; av.fell=!sh.inside(av.x,av.z);}}
         if(av.alive)G.check(av,st,t,false,dt);
       }
-      const ch=av.ch; ch.position.set(av.x,av.y,av.z); ch.run=av.moving&&av.alive?1:0; ch.air=av.y>0; ch.fig.rotation.y=av.face; ch.fig.rotation.x=av.alive?0:-1.45; ch.jy=av.alive?0:.2;
+      const ch=av.ch;
+      if(av.alive){ch.position.set(av.x,av.y,av.z); ch.run=av.moving?1:0; ch.air=av.y>0; ch.fig.rotation.y=av.face;}
+      else if(ch.visible){av.gone-=dt; ch.run=0; ch.air=true; if(av.fell){ch.position.y-=dt*9; ch.fig.rotation.x+=dt*6;} else{ch.scale.setScalar(Math.max(.01,1.15*av.gone/.6)); ch.fig.rotation.y+=dt*14;} if(av.gone<=0)ch.visible=false;}
     }
     pubT-=dt;
     if(pubT<=0&&net.nr){pubT=.07; const pk=a=>[r2(a.x),r2(a.z),r2(a.y),a.alive?1:0,r2(a.score)], patch={a:pk(me)};
       if(net.host){patch.cpu={}; avs.forEach(a=>{if(a.cpu)patch.cpu[a.k]=pk(a);});} net.nr.presence(patch).catch(()=>{});}
     $('#n').textContent=G.surv?(me.alive?t:me.score).toFixed(1):G.dec?me.score.toFixed(1):me.score; $('#bar').style.transform=`scaleX(${Math.max(0,1-t/G.max)})`;
-    if(G.surv&&endT<0&&avs.every(a=>!a.alive))endT=t+1.2;
+    if(endT<0&&t>1.5&&avs.filter(a=>a.alive).length<=1)endT=t+1.4;   // last one standing ends the game
     if(t>=G.max||(endT>0&&t>=endT))return 1;
   });
   avs.forEach(a=>{if(G.surv&&a.alive)a.score=G.max; if(G.dec)a.score=Math.round(a.score*10)/10;});
   if(net.host)avs.forEach(a=>{if(a.cpu)miniRes[a.k]=a.score;});
   if(net.nr)net.nr.presence({a:[r2(me.x),r2(me.z),0,me.alive?1:0,me.score]}).catch(()=>{});
-  pad(false); if(!G.surv||me.score>=G.max)SFX.win(); await sleep(800); m.end(); return me.score;
+  pad(false); if(me.alive)SFX.win(); await sleep(800); m.end(); return me.score;
 };}
 const wrapA=a=>{a=(a+Math.PI)%(Math.PI*2); if(a<0)a+=Math.PI*2; return a-Math.PI;};
 const CRAB={hint:'Drag to run',surv:true,max:30,
@@ -1239,14 +1260,14 @@ const CRAB={hint:'Drag to run',surv:true,max:30,
     else{const r=Math.hypot(av.x,av.z); if(r>2.3){ai.dx=-av.x/r*.6; ai.dz=-av.z/r*.6;} else{ai.dx=0; ai.dz=0;}}}};
 const BOOM={hint:'Jump the boom',surv:true,max:30,jump:true,post:true,
   init(sc){mesh(new THREE.CylinderGeometry(.24,.3,1.2,16),0x7c8ea3,0,.6,0,sc); mesh(new THREE.SphereGeometry(.3,14,10),0xffc531,0,1.32,0,sc);
-    const arm=new THREE.Group(); arm.position.y=.3; sc.add(arm); mesh(new THREE.BoxGeometry(.2,.2,4.1),0xff4d4d,0,0,2.05,arm); return{arm,th:Math.PI,pth:Math.PI,w:1.8};},
+    const arm=new THREE.Group(); arm.position.y=.3; sc.add(arm); mesh(new THREE.BoxGeometry(.2,.2,4.7),0xff4d4d,0,0,2.35,arm); return{arm,th:Math.PI,pth:Math.PI,w:1.8};},
   step(st,t){st.pth=st.th; st.th=Math.PI+1.8*t+.05*t*t; st.w=1.8+.1*t; st.arm.rotation.y=st.th;},
   check(av,st,t,local){if(!local)return 0; const r=Math.hypot(av.x,av.z); if(r<.5||av.y>.35)return 0; const ph=Math.atan2(av.x,av.z),d0=wrapA(st.pth-ph),d1=wrapA(st.th-ph); return d0<0&&d1>=0&&d1-d0<1?'hit':0;},
   ai(av,st,t,dt){const ai=av.ai, ph=Math.atan2(av.x,av.z), d=wrapA(ph-st.th); ai.t-=dt;
     if(ai.t<=0){ai.t=.8+Math.random(); const a=Math.random()*6.283, r=Math.hypot(av.x,av.z)||1; if(r>3){ai.dx=-av.x/r*.5; ai.dz=-av.z/r*.5;} else if(r<1.6){ai.dx=av.x/r*.5; ai.dz=av.z/r*.5;} else{ai.dx=Math.sin(a)*.3; ai.dz=Math.cos(a)*.3;}}
     if(d>0&&d<st.w*.3){if(!ai.armed){ai.armed=true; if(Math.random()>.03+(st.w-1.8)*.03)ai.jump=true;}} else if(d<0||d>1.5)ai.armed=false;}};
 const GRAB={hint:'Grab the tickets',surv:false,max:25,
-  init(sc,rng){const list=[]; for(let t=.6;t<24;t+=.42){const a=rng()*6.283,r=Math.sqrt(rng())*3.4; list.push({t,x:Math.sin(a)*r,z:Math.cos(a)*r,gold:rng()<.12,got:false,on:false,m:null});}
+  init(sc,rng,sh){const list=[]; for(let t=.6;t<24;t+=.42){const a=rng()*6.283,r=Math.sqrt(rng())*.82*sh.R(a); list.push({t,x:Math.sin(a)*r,z:Math.cos(a)*r,gold:rng()<.12,got:false,on:false,m:null});}
     return{list,geo:new THREE.BoxGeometry(.5,.34,.1)};},
   step(st,t,dt,sc){for(const c of st.list){if(t<c.t)break; c.on=!c.got&&t<c.t+4.5; if(c.on&&!c.m)c.m=mesh(st.geo,c.gold?0xff5fa8:0xffc531,c.x,.5,c.z,sc);
       if(c.m){if(c.on){c.m.rotation.y+=dt*4; c.m.position.y=.5+Math.sin(t*5+c.t)*.08;} else{sc.remove(c.m); c.m=null;}}}},
@@ -1256,7 +1277,7 @@ const GRAB={hint:'Grab the tickets',surv:false,max:25,
     if(b&&bd>.2){ai.dx=(b.x-av.x)/bd*.78; ai.dz=(b.z-av.z)/bd*.78;} else{ai.dx=0; ai.dz=0;}}};
 
 const HOT={hint:'Stay off the red planks',surv:true,max:30,
-  init(sc,rng){const W=[],ev=[]; for(let i=0;i<8;i++){const m=mesh(new THREE.CylinderGeometry(4.15,4.15,.08,8,1,false,i*Math.PI/4+.02,Math.PI/4-.04),0xd9a066,0,.04,0,sc); m.castShadow=false; m.receiveShadow=true; W.push(m);}
+  init(sc,rng,sh){const W=[],ev=[]; for(let i=0;i<8;i++){const m=mesh(new THREE.ShapeGeometry(shapePath(sh,i*Math.PI/4+.02,(i+1)*Math.PI/4-.02,12,true,.985)),new THREE.MeshLambertMaterial({color:0xd9a066,side:THREE.DoubleSide}),0,.04,0,sc); m.rotation.x=-Math.PI/2; m.castShadow=false; m.receiveShadow=true; W.push(m);}
     let t=2; while(t<29){const n=Math.min(6,3+Math.floor(t/8)),set=[]; while(set.length<n){const w=Math.floor(rng()*8); if(!set.includes(w))set.push(w);} const warn=Math.max(.75,1.3-t*.02); ev.push({t,set,warn}); t+=warn+.7+Math.max(.5,1.2-t*.03);}
     return{W,ev,state:new Array(8).fill(0)};},
   step(st,t){st.state.fill(0); for(const e of st.ev){if(t<e.t)break; const d=t-e.t; if(d<e.warn)e.set.forEach(w=>{st.state[w]=1;}); else if(d<e.warn+.7)e.set.forEach(w=>{st.state[w]=2;});}
@@ -1267,7 +1288,7 @@ const HOT={hint:'Stay off the red planks',surv:true,max:30,
       if(best>=0){const ta=(best+.5)*Math.PI/4,tx=Math.sin(ta)*2.4,tz=Math.cos(ta)*2.4,l=Math.hypot(tx-av.x,tz-av.z)||1; ai.dx=(tx-av.x)/l; ai.dz=(tz-av.z)/l; return;}}
     ai.dx=0; ai.dz=0;}};
 const COCO={hint:'Watch the shadows',surv:true,max:30,
-  init(sc,rng){const list=[]; let t=1.2; while(t<29){const a=rng()*6.283,r=Math.sqrt(rng())*3.6; list.push({t,x:Math.sin(a)*r,z:Math.cos(a)*r,m:null,s:null,done:false,hot:false}); t+=Math.max(.22,.75-t*.02);}
+  init(sc,rng,sh){const list=[]; let t=1.2; while(t<29){const a=rng()*6.283,r=Math.sqrt(rng())*.92*sh.R(a); list.push({t,x:Math.sin(a)*r,z:Math.cos(a)*r,m:null,s:null,done:false,hot:false}); t+=Math.max(.22,.75-t*.02);}
     return{list,geo:new THREE.SphereGeometry(.42,14,10),sg:new THREE.CircleGeometry(.78,24)};},
   step(st,t,dt,sc){for(const c of st.list){if(t<c.t)break; if(c.done)continue; const e=(t-c.t)/1.3;
       if(!c.m){c.m=mesh(st.geo,0x8a5a2b,c.x,9,c.z,sc); c.s=mesh(st.sg,new THREE.MeshBasicMaterial({color:0x17304d,transparent:true,opacity:.1}),c.x,.02,c.z,sc); c.s.rotation.x=-Math.PI/2; c.s.castShadow=false;}
@@ -1279,8 +1300,8 @@ const COCO={hint:'Watch the shadows',surv:true,max:30,
     for(const c of st.list){if(c.t>t)break; if(c.done)continue; const dx=av.x-c.x,dz=av.z-c.z,d=Math.hypot(dx,dz)||.01; if(d<1.5){fx+=dx/d*(1.6-d); fz+=dz/d*(1.6-d);}}
     const r=Math.hypot(av.x,av.z); if(r>3){fx-=av.x/r*.8; fz-=av.z/r*.8;} const l=Math.hypot(fx,fz); if(l>.1&&Math.random()>.08){ai.dx=fx/l; ai.dz=fz/l;} else{ai.dx=0; ai.dz=0;}}};
 const SPOT={hint:'Stay in the spotlight',max:25,dec:true,quiet:true,
-  init(sc,rng){const d=mesh(new THREE.CylinderGeometry(1,1,.04,36),new THREE.MeshBasicMaterial({color:0xfff2a8,transparent:true,opacity:.8}),0,.03,0,sc); d.castShadow=false; return{d,p1:rng()*6,p2:rng()*6,x:0,z:0,r:1.3};},
-  step(st,t){st.x=2.3*Math.sin(.9*t+st.p1)+.8*Math.sin(2.3*t); st.z=2.3*Math.cos(.7*t+st.p2)+.8*Math.cos(1.9*t); st.r=Math.max(.85,1.35-t*.02); st.d.position.set(st.x,.03,st.z); st.d.scale.set(st.r,1,st.r);},
+  init(sc,rng,sh){const d=mesh(new THREE.CylinderGeometry(1,1,.04,36),new THREE.MeshBasicMaterial({color:0xfff2a8,transparent:true,opacity:.8}),0,.03,0,sc); d.castShadow=false; return{d,sh,p1:rng()*6,p2:rng()*6,x:0,z:0,r:1.3};},
+  step(st,t){st.x=2.3*Math.sin(.9*t+st.p1)+.8*Math.sin(2.3*t); st.z=2.3*Math.cos(.7*t+st.p2)+.8*Math.cos(1.9*t); st.r=Math.max(.85,1.35-t*.02); {const rr=Math.hypot(st.x,st.z)||.01, lim=st.sh.R(Math.atan2(st.x,st.z))-st.r*.9; if(rr>lim){st.x*=lim/rr; st.z*=lim/rr;}} st.d.position.set(st.x,.03,st.z); st.d.scale.set(st.r,1,st.r);},
   check(av,st,t,local,dt){return local&&Math.hypot(av.x-st.x,av.z-st.z)<st.r?dt:0;},
   ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.2+Math.random()*.3; const dx=st.x-av.x,dz=st.z-av.z,d=Math.hypot(dx,dz); if(d>.4){ai.dx=dx/d*.8; ai.dz=dz/d*.8;} else{ai.dx=0; ai.dz=0;}}};
 
@@ -1480,6 +1501,7 @@ const GUIDE=[
    <li><span class="sw" style="background:#fff">${ITEMS.kite.svg}</span><span><b>Kite, 15 tickets</b>Fly straight to the pearl stall.</span></li></ul>
    <p class="lede">Buy items at a purple shop space. Your bag holds 2.</p>`],
  ['Mini games and the finish',`<ul class="legend">
+   <li><span><b>Shared-deck games.</b>Walk into other players to shove them, do not fall off the edge, and the last one standing ends the game.</span></li>
    <li><span><b>A mini game ends every round.</b>Players get 10 seconds to vote between three games, then everyone plays at once on their own screen. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2.</span></li>
    <li><span><b>Underdog gift.</b>Before the final round, the player in last place gets 10 tickets.</span></li>
    <li><span><b>Two bonus pearls.</b>At the end, one goes to the best mini game player and one to whoever travelled furthest.</span></li></ul>`],
