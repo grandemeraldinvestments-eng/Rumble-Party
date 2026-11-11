@@ -702,7 +702,7 @@ const OFFS=[[-.42,-.3],[.42,-.3],[-.42,.36],[.42,.36]];
 let shownGid=0, shownScreen='menu', hudKey='', askShown='', sh={hit:0,sp:0,cheer:0}, lobbyKey='', resKey='';
 function show(id){shownScreen=id; for(const s of ['menu','join','lobby','guide','game','results'])$('#'+s).hidden=s!==id; if(id!=='game'){mapView=false; $('#mapBtn').textContent='Map'; hideInfo(); $('#settings').hidden=true; $('#chance').hidden=true; introT=0; $('#titleCard').hidden=true; $('#fade').hidden=true;}}
 function showChance(u){const el=$('#chance'), raw=u.chG||'?', it=raw.indexOf('item:')===0?ITEMS[raw.slice(5)]:null, gl=it?'★':raw; el.hidden=false; el.className='spin'; $('#chText').textContent=u.chT; $('#chHead').textContent=u.chH||'Chance';
-  $('#chDisc').style.background=u.chC||''; $('#chG').textContent=gl; $('#chG').style.fontSize=gl.length>1?'3.6rem':''; $('#chG').style.color=u.chC&&u.chC!=='#ffc531'?'#fff':''; setTimeout(()=>{el.className=''; if(it){$('#chG').innerHTML=it.svg; $('#chDisc').style.background='#fff';}},1700/SPEED); setTimeout(()=>{el.hidden=true;},3100/SPEED);}
+  $('#chDisc').style.background=u.chC||''; $('#chG').textContent=gl; $('#chG').style.fontSize=gl.length>1?'3.6rem':''; $('#chG').style.color=u.chC&&u.chC!=='#ffc531'?'#fff':''; setTimeout(()=>{el.className=''; if(it){$('#chG').innerHTML=it.svg; $('#chDisc').style.background='#fff';}},1700/SPEED); setTimeout(()=>{el.hidden=true;},((u.chD||3300)-200)/SPEED);}
 function hideInfo(){$('#spInfo').hidden=true; if(mark)mark.visible=false;}
 function spaceInfo(i){
   const n=NODES[i], amt=V.round>=V.rounds?6:3, me=V.p[myK()];
@@ -992,7 +992,7 @@ function cpuItem(p){
   if(has('magnet')>=0&&S.p.some(o=>o!==p&&o.t>=3))return has('magnet');
   return -1;
 }
-async function card(head,text,col,glyph){const u=S.ui; say(head+'…'); u.ch++; u.chT=text; u.chH=head; u.chC=col; u.chG=glyph; await sleep(3300); say(text);}
+async function card(head,text,col,glyph){const u=S.ui, d=String(glyph).indexOf('item:')===0?6800:3300; say(head+'…'); u.ch++; u.chT=text; u.chH=head; u.chC=col; u.chG=glyph; u.chD=d; await sleep(d); say(text);}   // item cards stay up longer so the description can be read
 const spCard=(t,text)=>card(SP[t][0],text||SP[t][1],SP[t][2],SP[t][3]);
 const fx=(t,o)=>{S.ui.fx=Object.assign({n:S.ui.fx.n+1,t},o||{});};
 async function chance(p){
