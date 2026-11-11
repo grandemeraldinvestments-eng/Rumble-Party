@@ -488,7 +488,7 @@ function lights(sc){
 }
 function init3D(){
   R=new THREE.WebGLRenderer({canvas:$('#gl'),antialias:true,alpha:true}); R.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-  R.shadowMap.enabled=true; R.shadowMap.type=THREE.PCFSoftShadowMap;
+  PR=Math.min(window.devicePixelRatio||1,2); R.shadowMap.enabled=true; R.shadowMap.type=THREE.PCFShadowMap; R.shadowMap.autoUpdate=false;
   scene=new THREE.Scene(); cam=new THREE.PerspectiveCamera(50,1,1,320); lights(scene);
   // pearl with a light beam
   pearl=mesh(new THREE.SphereGeometry(.4,24,16),new THREE.MeshLambertMaterial({color:0xf3e6ff,emissive:0x7a55c7}),0,1.9,0);
@@ -526,13 +526,21 @@ function outN(j){let ar=0; for(let i=0;i<45;i++){const a=NODES[i],b=NODES[(i+1)%
 function spot(list,r){let q=null; for(const c of list)if(clearOf(c[0],c[1],r)){q=c; break;}
   if(!q){let bd=0; for(let x=-MAPX.a;x<=MAPX.a;x+=1)for(let z=-MAPX.b;z<=MAPX.b;z+=1){if(!inLoop(x,z)||!clearOf(x,z,r))continue; const d=Math.min(...NODES.map(n=>Math.hypot(n.x-x,n.z-z))); if(d>bd){bd=d; q=[x,z];}}}
   if(q){USED.push([q[0],q[1],r]); if(COAST&&!inLoop(q[0],q[1]))COAST(q[0],q[1],r+1.6);} return q;}
+/* the loop's outline pushed outward by off (inward when negative), as one smooth closed polygon */
+function loopOutline(off){
+  const n=45, SUB=3, P=[], out=[], cr=(a,b,c,d,t)=>.5*(2*b+(c-a)*t+(2*a-5*b+4*c-d)*t*t+(3*b-a-3*c+d)*t*t*t);
+  for(let i=0;i<n*SUB;i++){const k=Math.floor(i/SUB),t=i/SUB-k,g=q=>NODES[(k+q+n)%n]; P.push([cr(g(-1).x,g(0).x,g(1).x,g(2).x,t),cr(g(-1).z,g(0).z,g(1).z,g(2).z,t)]);}
+  let ar=0; P.forEach((a,i)=>{const b=P[(i+1)%P.length]; ar+=a[0]*b[1]-b[0]*a[1];}); const sg=ar>0?1:-1, L=P.length;
+  P.forEach((q,i)=>{const a=P[(i+L-1)%L],b=P[(i+1)%L],tx=b[0]-a[0],tz=b[1]-a[1],l=Math.hypot(tx,tz)||1,x=q[0]+sg*tz/l*off,z=q[1]-sg*tx/l*off;
+    if(P.every(w=>Math.hypot(w[0]-x,w[1]-z)>=Math.abs(off)*.97))out.push([x,z]);});
+  return out;
+}
 function coast(shallow,sand,inner){
-  const cyl=new THREE.CylinderGeometry(1,1,1,28), sh=new THREE.Shape(); for(let i=0;i<45;i++){const n=NODES[i]; if(i)sh.lineTo(n.x,-n.z); else sh.moveTo(n.x,-n.z);}
-  const fill=new THREE.ExtrudeGeometry(sh,{depth:1,bevelEnabled:false});
-  const layer=(col,top,h,R)=>{NODES.forEach(n=>{if(!n.bridge||inLoop(n.x,n.z))flat(cyl,col,n.x,top-h/2,n.z,R,h,R);}); const f=mesh(fill,col,0,top-h,0); f.rotation.x=-Math.PI/2; f.scale.z=h; f.castShadow=false; f.receiveShadow=true;};
-  layer(shallow,-.52,.2,4.5); layer(sand,0,.8,3.3);
+  const cyl=new THREE.CylinderGeometry(1,1,1,28);
+  const layer=(col,top,h,off)=>{const o=loopOutline(off); if(o.length<8)return; const sh=new THREE.Shape(); o.forEach((q,i)=>{if(i)sh.lineTo(q[0],-q[1]); else sh.moveTo(q[0],-q[1]);});
+    const f=mesh(new THREE.ExtrudeGeometry(sh,{depth:h,bevelEnabled:false}),col,0,top-h,0); f.rotation.x=-Math.PI/2; f.castShadow=false; f.receiveShadow=true;};
+  layer(shallow,-.52,.2,4.5); layer(sand,0,.8,3.3); layer(inner,.05,.06,-2.4);
   COAST=(x,z,R)=>{flat(cyl,shallow,x,-.62,z,R+1.2,.2,R+1.2); flat(cyl,sand,x,-.4,z,R,.8,R);};
-  for(let x=-MAPX.a;x<=MAPX.a;x+=1.7)for(let z=-MAPX.b;z<=MAPX.b;z+=1.7)if(inLoop(x,z)&&NODES.every(n=>Math.hypot(n.x-x,n.z-z)>2.3))flat(cyl,inner,x,.02,z,1.6,.06,1.6);
   // a bridge that leaves the land stands on posts in the water
   NODES.forEach(n=>{if(n.bridge&&!inLoop(n.x,n.z))flat(cyl,0x5a4636,n.x,-.3,n.z,.2,.9,.2);});
 }
@@ -774,7 +782,7 @@ function sync(dt){
       let to=p.pos, fly=p.fly!==g.fly, n=0;
       if(!fly){const r=bfs(g.at,p.pos); if(r.d>13)fly=true; else{to=r.first; n=r.d;}}
       g.fly=p.fly; const t=NODES[to];
-      g.seg={ax:g.position.x,az:g.position.z,bx:t.x,bz:t.z,to,t:0,d:fly?.75:n>2?.13:.23,fly};
+      g.seg={ax:g.position.x,az:g.position.z,bx:t.x,bz:t.z,to,t:0,d:fly?.75:n>=4?.12:n===3?.17:n===2?.22:.28,fly};
       if(fly)SFX.fly(); else g.face=Math.atan2(t.x-g.position.x,t.z-g.position.z);
     }
     if(!g.seg){
@@ -882,9 +890,11 @@ function fxFrame(dt){
   const tk=st?JSON.stringify(st.traps||{}):''; if(tk!==trapKey){trapKey=tk; while(trapG.children.length)trapG.remove(trapG.children[0]);
     if(st&&st.traps)for(const i in st.traps){const n=NODES[i],o=st.p[st.traps[i]]; if(!n||!o)continue; mesh(new THREE.CylinderGeometry(.03,.03,1.1,6),0xffffff,n.x+.55,.75,n.z-.45,trapG); mesh(new THREE.BoxGeometry(.4,.26,.03),CAST[o.i].hex,n.x+.75,1.15,n.z-.45,trapG);}}
 }
-let last=0;
+let last=0, PR=1, ADAPT=true, frT=0, frN=0;
 function frame(now){
-  requestAnimationFrame(frame); const dt=Math.min(.05,(now-last)/1000||0); last=now; T+=dt;
+  requestAnimationFrame(frame); const raw=(now-last)/1000||0, dt=Math.min(.05,raw); last=now; T+=dt;
+  if((++frN&1)===0)R.shadowMap.needsUpdate=true;
+  if(raw<.5){frT+=raw; if(frN>=60){if(ADAPT&&frT/frN>1/42&&PR>1){PR=Math.max(1,PR-.25); R.setPixelRatio(PR); resize();} frT=0; frN=0;}} else{frT=0; frN=0;}
   sync(dt); mT-=dt; if(mT<=0){mT=.4; musicTick();}
   spin.forEach(q=>{q.o.rotation[q.ax]+=dt*q.v;}); upright.forEach(c=>{c.rotation.z=-c.parent.rotation.z;}); fxFrame(dt);
   pearl.position.x+=(pearl.tx-pearl.position.x)*Math.min(1,dt*2.2); pearl.position.z+=(pearl.tz-pearl.position.z)*Math.min(1,dt*2.2);
@@ -979,7 +989,7 @@ async function moveP(p,n){
     if(NODES[p.pos].t==='H'){S.ui.num=-1; await shopStop(p);}
     if(p.pos===S.pearlAt){S.ui.num=-1; await stall(p);}
   }
-  S.ui.num=-1;
+  await sleep(240); S.ui.num=-1;   // let the pawn finish its last stride before the space resolves
 }
 async function stall(p){
   if(p.t<COST){say(`Pearl stall. ${nm(p)} needs ${COST} tickets.`); await sleep(1100); return;}
