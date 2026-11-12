@@ -431,10 +431,10 @@ const SFX={hop:()=>tone(520,.06,'square',.03,700), hit:()=>tone(300,.13,'square'
 
 /* ---------- maps: a 45-space loop plus a 15-space bridge shortcut, 60 spaces each. Every loop is its own irregular outline, drawn through the points in pts ---------- */
 const MAPS={
-  island:{name:'Island',pts:[[1,10.5],[-8,10.5],[-15,7],[-16.5,0],[-13.5,-8],[-8.5,-10],[-5,-4.5],[1,-1.5],[6.5,-4.5],[9.5,-10],[14,-9],[16.5,-2],[14.5,6],[8,10]],fork:2,join:30,amp:3.2,seed:11,sky:['#58c4f6','#c8f0ff'],path:0xc98f55,bridge:0xe5745f,sp:['T','K','C','J','W','T','K','C','J','W']},
-  carnival:{name:'Carnival',pts:[[-1,10.5],[-9,10],[-15,5.5],[-16.5,-2],[-12.5,-9],[-4,-11],[5,-10.5],[12.5,-9.5],[15.5,-5],[9,-2.5],[3.5,0],[9,3],[15.5,5.5],[13,9.5],[6,10.5]],via:[[-10,3],[-8,-4],[-1,-5]],fork:3,join:31,amp:-3,seed:23,sky:['#6a4fc0','#ffb98a'],path:0xe0566b,bridge:0xffc531,sp:['F','D','G','R','Y','F','D','G','R','Y']},
-  farm:{name:'Farm',pts:[[0,5.5],[-6,9.5],[-13,10],[-16.5,4],[-15,-5],[-9,-10],[-3,-7.5],[0,-3.5],[4,-7],[10,-10.5],[16,-6],[16.5,2],[12,9],[5,9.5]],fork:4,join:28,amp:3.4,seed:37,sky:['#7fd0ff','#e6f7ff'],path:0xb98a5a,bridge:0x8a5a2b,sp:['V','P','M','B','U','V','P','M','B','U']},
-  volcano:{name:'Volcano',pts:[[-9.0,-0.9],[-8.7,4.6],[-11.5,7.8],[-14.3,4.6],[-14.7,-1.8],[-11.5,-8.3],[-3.7,-11.0],[3.7,-11.0],[11.5,-8.3],[14.7,-1.8],[14.3,4.6],[11.5,7.8],[8.7,4.6],[9.0,-0.9],[6.4,-5.5],[0.0,-7.4],[-6.4,-5.5]],core:[0,-1.5],via:[[-8.5,12.6],[-1,15.6],[7,12.8]],fork:4,join:30,amp:4,seed:53,sky:['#3b2a55','#ff9a6a'],path:0x6a5a5a,bridge:0x9a3a2a,sp:['E','X','L','Q','E','X','L','Q','X','Q'],secs:[[32,4],[37,7],[15,6,1]]}
+  island:{name:'Island',pts:[[1,10.5],[-8,10.5],[-15,7],[-16.5,0],[-13.5,-8],[-8.5,-10],[-5,-4.5],[1,-1.5],[6.5,-4.5],[9.5,-10],[14,-9],[16.5,-2],[14.5,6],[8,10]],fork:2,join:30,amp:3.2,seed:11,sky:['#58c4f6','#c8f0ff'],path:0xc98f55,bridge:0xe5745f,sp:['T','K','W','C','J','W','T','K','W','C','J','W']},
+  carnival:{name:'Carnival',pts:[[-1,10.5],[-9,10],[-15,5.5],[-16.5,-2],[-12.5,-9],[-4,-11],[5,-10.5],[12.5,-9.5],[15.5,-5],[9,-2.5],[3.5,0],[9,3],[15.5,5.5],[13,9.5],[6,10.5]],via:[[-10,3],[-8,-4],[-1,-5]],fork:3,join:31,amp:-3,seed:23,sky:['#6a4fc0','#ffb98a'],path:0xe0566b,bridge:0xffc531,sp:['F','D','Y','G','R','Y','F','D','Y','G','R','Y']},
+  farm:{name:'Farm',pts:[[0,5.5],[-6,9.5],[-13,10],[-16.5,4],[-15,-5],[-9,-10],[-3,-7.5],[0,-3.5],[4,-7],[10,-10.5],[16,-6],[16.5,2],[12,9],[5,9.5]],fork:4,join:28,amp:3.4,seed:37,sky:['#7fd0ff','#e6f7ff'],path:0xb98a5a,bridge:0x8a5a2b,sp:['V','P','U','M','B','U','V','P','U','M','B','U']},
+  volcano:{name:'Volcano',pts:[[-9.0,-0.9],[-8.7,4.6],[-11.5,7.8],[-14.3,4.6],[-14.7,-1.8],[-11.5,-8.3],[-3.7,-11.0],[3.7,-11.0],[11.5,-8.3],[14.7,-1.8],[14.3,4.6],[11.5,7.8],[8.7,4.6],[9.0,-0.9],[6.4,-5.5],[0.0,-7.4],[-6.4,-5.5]],core:[0,-1.5],via:[[-8.5,12.6],[-1,15.6],[7,12.8]],fork:4,join:30,amp:4,seed:53,sky:['#3b2a55','#ff9a6a'],path:0x6a5a5a,bridge:0x9a3a2a,sp:['E','X','W','L','Q','E','X','L','W','Q','X','Q'],secs:[[32,4],[37,7],[15,6,1]]}
 };
 let NODES=[];
 function buildGraph(m){
@@ -643,13 +643,13 @@ const PROP={
 const THEME={
   island(m){
     const cyl=new THREE.CylinderGeometry(1,1,1,64); PROP.sea(); coast(0xc6f4f4,0xf6dc9a,0x86d86f);
-    let q=spot([[-m.a*.48,-m.b*.05],[-m.a*.3,m.b*.35],[m.a*.1,-m.b*.5],[-m.a*.55,m.b*.1]],2.4); if(q)PROP.ferris(q[0],q[1],1.15);
-    q=spot([[m.a*.45,m.b*.25],[m.a*.25,m.b*.45],[m.a*.5,-m.b*.1],[0,m.b*.45]],1.8); if(q)PROP.tent(q[0],q[1],'#ff4d4d',1.1);
-    q=spot([[m.a*.1,m.b*.1],[-m.a*.1,-m.b*.4],[m.a*.3,-m.b*.45]],1.2); if(q)PROP.balloons(q[0],q[1]);
-    if(MODELS){
-      q=spot([[m.a*.25,-m.b*.3],[-m.a*.2,m.b*.3],[m.a*.4,m.b*.05],[-m.a*.4,-m.b*.3]],1.7); if(q){mdl('home_A_blue',q[0],q[1],2.1,.6); mdl('barrel',q[0]+1.35,q[1]+.9,3,0); mdl('crate_A_big',q[0]+1.5,q[1]+.15,3,.4); mdl('sack',q[0]-1.3,q[1]+1,3,1); mdl('flag_blue',q[0]-1.4,q[1]-.4,4.5,.5);}
-      q=spot([[-m.a*.1,m.b*.45],[m.a*.15,m.b*.35],[-m.a*.5,m.b*.3],[m.a*.5,-m.b*.35]],1.7); if(q){mdl('market_blue',q[0],q[1],1.6,-.4); mdl('crate_long_A',q[0]+1.6,q[1]+.6,2.6,.3);}
-      q=spot([[m.a*.05,-m.b*.2],[-m.a*.3,0],[m.a*.3,m.b*.3]],.9); if(q){mdl('well_blue',q[0],q[1],1.7,.3); mdl('bucket_water',q[0]+.9,q[1]+.5,3,0);}
+    if(MODELS){let q;   // a small beach village; the rides and striped tents belong to the Carnival map
+      q=spot([[-m.a*.45,-m.b*.05],[-m.a*.3,m.b*.35],[m.a*.1,-m.b*.5]],2.3); if(q){mdl('home_B_blue',q[0],q[1],3,.5); mdl('barrel',q[0]+2,q[1]+1.3,3.3,0); mdl('crate_A_big',q[0]+2.2,q[1]+.4,3.2,.4); mdl('flag_blue',q[0]-2,q[1]+1.2,7,.5);}
+      q=spot([[m.a*.45,m.b*.25],[m.a*.25,m.b*.45],[m.a*.5,-m.b*.1]],1.9); if(q){mdl('home_A_blue',q[0],q[1],3,-.5); mdl('sack',q[0]-1.7,q[1]+1.2,3.3,1); mdl('crate_B_small',q[0]+1.7,q[1]+1,3.2,.2);}
+      q=spot([[-m.a*.1,m.b*.45],[m.a*.15,m.b*.35],[-m.a*.5,m.b*.3]],2); if(q){mdl('market_blue',q[0],q[1],2,-.4); mdl('crate_long_A',q[0]+2.1,q[1]+.9,3,.3);}
+      q=spot([[m.a*.1,m.b*.1],[-m.a*.1,-m.b*.4],[m.a*.3,-m.b*.45]],1.5); if(q)mdl('tower_A_blue',q[0],q[1],2.2,.3);
+      q=spot([[m.a*.05,-m.b*.2],[-m.a*.3,0],[m.a*.3,m.b*.3]],1.1); if(q){mdl('well_blue',q[0],q[1],2,.3); mdl('bucket_water',q[0]+1.05,q[1]+.6,3.3,0);}
+      q=spot([],1.3); if(q){mdl('tent',q[0],q[1],4,.2); mdl('crate_long_B',q[0]-.3,q[1]+.2,3,.2); mdl('barrel',q[0]+.6,q[1]-.4,3.3,0);}
       [[-1.6,-1.25],[1.8,.45],[-.45,2.15],[.35,-2.3],[-1.9,.9]].forEach(([fx,fz],i)=>mdl(['mountain_A','mountain_C','mountain_B'][i%3],fx*m.a,fz*m.b,2.4+(i%3)*.5,i*1.7,-.8));
     }
     ringOut(12,1.18,(x,z,i,front)=>front?((i%2&&mdl('rock_single_'+'BCE'[i%3],x,z,3.2,i))||PROP.bush(x,z)):PROP.palm(x,z,i)); PROP.lighthouse(m.a*1.5,-m.b*1.7); PROP.skyAndBoats(m,true);
@@ -658,9 +658,9 @@ const THEME={
     PROP.sea(); const box=new THREE.BoxGeometry(1,1,1); flat(box,0xb9814f,0,-.4,0,m.a*2.7,.8,m.b*2.8); flat(box,0x8f6038,0,-.45,0,m.a*2.78,.8,m.b*2.88); flat(box,0x7b4fc9,0,.02,0,m.a*1.35,.06,m.b*1.25);
     let q=spot([[-m.a*.42,-m.b*.3],[-m.a*.45,m.b*.25],[m.a*.4,-m.b*.35],[0,-m.b*.45]],3.2); if(q)PROP.ferris(q[0],q[1],1.5);
     q=spot([[m.a*.42,m.b*.3],[m.a*.4,-m.b*.3],[-m.a*.4,m.b*.35],[0,m.b*.4]],2.3); if(q)PROP.carousel(q[0],q[1]);
-    [[-m.a*1.13,-m.b*1.13,'#ff4d4d','red'],[m.a*1.13,-m.b*1.13,'#2f8fff','blue'],[0,-m.b*1.2,'#35c98a','green']].forEach(([x,z,c,f],i)=>{PROP.tent(x,z,c,1.25); mdl('target',x+2.3,z+1.5,4,.3-i*.3); mdl('crate_long_'+'AB'[i%2],x-2.2,z+1.3,2.8,.5); mdl('barrel',x-2.6,z+.3,3,0); mdl('flag_'+f,x+2.1,z-.6,5,i);});
-    [[m.a*.1,m.b*.1,0xff5fa8],[-m.a*.15,-m.b*.1,0x2f8fff],[m.a*.2,-m.b*.5,0x35c98a],[-m.a*.2,m.b*.5,0xffc531]].forEach(([x,z,c],i)=>{if(clearOf(x,z,1.5)){USED.push([x,z,1.5]); mdl(['market_red','market_yellow','market_blue','market_red'][i],x,z,1.45,i*1.57+.4)||PROP.stand(x,z,c);}});
-    if(MODELS)for(let i=0;i<3;i++){const h=spot([],1.45); if(h){mdl(['market_red','market_yellow','market_blue'][i],h[0],h[1],1.45,i*2.1+.4); mdl('barrel',h[0]+1.5,h[1]+.7,3,0);}}
+    [[-m.a*1.13,-m.b*1.13,'#ff4d4d','red'],[m.a*1.13,-m.b*1.13,'#2f8fff','blue'],[0,-m.b*1.2,'#35c98a','green']].forEach(([x,z,c,f],i)=>{PROP.tent(x,z,c,1.25); mdl('target',x+2.3,z+1.5,4.6,.3-i*.3); mdl('crate_long_'+'AB'[i%2],x-2.3,z+1.4,3,.5); mdl('barrel',x-2.7,z+.3,3.3,0); mdl('flag_'+f,x+2.2,z-.6,7,i);});
+    [[m.a*.1,m.b*.1,0xff5fa8],[-m.a*.15,-m.b*.1,0x2f8fff],[m.a*.2,-m.b*.5,0x35c98a],[-m.a*.2,m.b*.5,0xffc531]].forEach(([x,z,c],i)=>{if(clearOf(x,z,1.5)){USED.push([x,z,1.5]); mdl(['market_red','market_yellow','market_blue','market_red'][i],x,z,1.6,i*1.57+.4)||PROP.stand(x,z,c);}});
+    if(MODELS)for(let i=0;i<3;i++){const h=spot([],2); if(h){mdl(['market_red','market_yellow','market_blue'][i],h[0],h[1],2,i*2.1+.4); mdl('barrel',h[0]+2.1,h[1]+.9,3.3,0);}}
     ringOut(16,1.14,(x,z,i,front)=>front?PROP.bush(x,z,0xff8fc8):PROP.post(x,z,i)); PROP.balloons(-m.a*1.2,m.b*.2); PROP.balloons(m.a*1.2,m.b*.1); PROP.skyAndBoats(m,true);
   },
   farm(m){
@@ -669,11 +669,11 @@ const THEME={
     if(MODELS){for(let r=0;r<3;r++)for(let k=0;k<6;k++)mdl('building_grain',-m.a*.45+k*2.45+(r%2)*1.2,-m.b*1.72-r*2.1,1.15,0,-.3);
       [[-1.75,-2.5,'hills_A_trees'],[1.7,-2.8,'mountain_A_grass_trees'],[-2.7,-.9,'mountain_B_grass_trees'],[2.8,-.5,'hills_C_trees'],[.1,-3.5,'mountain_B_grass_trees'],[-2.6,1.4,'hills_C_trees'],[2.7,1.6,'hills_A_trees']].forEach(([fx,fz,n],i)=>mdl(n,fx*m.a,fz*m.b,4.2,i*1.1,-.15));}
     else for(let r=0;r<7;r++)for(let k=0;k<9;k++)mesh(new THREE.SphereGeometry(.28,8,6),0x2e9e4f,-m.a*.55+k*1.3+m.a*.1,.2,-m.b*1.75-r*1.1).castShadow=false;
-    let q=spot([[-m.a*.4,-m.b*.3],[-m.a*.45,m.b*.2],[m.a*.4,-m.b*.3],[0,-m.b*.4]],2.6); if(q){if(mdl('home_B_red',q[0],q[1],2.4,.5)){mdl('well_blue',q[0]+2.2,q[1]+.9,1.5,.4); mdl('resource_lumber',q[0]-1.9,q[1]+1.2,2.4,.8); mdl('barrel',q[0]-1.6,q[1]-1,3,0);} else{PROP.barn(q[0],q[1]); if(clearOf(q[0]+2.7,q[1]-.3,.8))PROP.silo(q[0]+2.7,q[1]-.3);}}
-    q=spot([[m.a*.4,m.b*.25],[m.a*.42,-m.b*.25],[-m.a*.35,m.b*.35],[m.a*.15,m.b*.4]],1.4); if(q)mdl('windmill_red',q[0],q[1],2.2,-.6)||PROP.windmill(q[0],q[1]);
+    let q=spot([[-m.a*.4,-m.b*.3],[-m.a*.45,m.b*.2],[m.a*.4,-m.b*.3],[0,-m.b*.4]],2.8); if(q){if(mdl('home_B_red',q[0],q[1],3.2,.5)){mdl('well_blue',q[0]+2.6,q[1]+1.3,1.9,.4); mdl('resource_lumber',q[0]-2.4,q[1]+1.5,3,.8); mdl('barrel',q[0]-2.2,q[1]-1.3,3.3,0);} else{PROP.barn(q[0],q[1]); if(clearOf(q[0]+2.7,q[1]-.3,.8))PROP.silo(q[0]+2.7,q[1]-.3);}}
+    q=spot([[m.a*.4,m.b*.25],[m.a*.42,-m.b*.25],[-m.a*.35,m.b*.35],[m.a*.15,m.b*.4]],1.9); if(q)mdl('windmill_red',q[0],q[1],3,-.6)||PROP.windmill(q[0],q[1]);
     q=spot([[m.a*.1,-m.b*.1],[-m.a*.1,m.b*.35],[m.a*.3,-m.b*.5],[-m.a*.2,-m.b*.55]],2.2); if(q){const pd=mesh(new THREE.CylinderGeometry(2,2,.06,32),0x4fb8e8,q[0],.03,q[1]); pd.castShadow=false; pd.scale.z=.75; mdl('waterlily_A',q[0]-.7,q[1]+.3,4,0,.06); mdl('waterlily_A',q[0]+.6,q[1]-.5,3.2,2,.06); mdl('waterplant_C',q[0]+1.6,q[1]+.6,3.2,0); mdl('waterplant_B',q[0]-1.7,q[1]-.4,3.2,1); mdl('waterplant_C',q[0]-.3,q[1]-1.3,2.8,2);}
-    q=spot([[-m.a*.15,m.b*.05],[m.a*.25,m.b*.05],[0,m.b*.45]],1.2); if(q){if(mdl('wheelbarrow',q[0],q[1],2.6,.6)){mdl('crate_long_B',q[0]+.9,q[1]+.6,2.6,.3); mdl('sack',q[0]-.8,q[1]+.5,3,1.2); mdl('crate_open',q[0]+.2,q[1]-.8,2.6,.2);} else PROP.tractor(q[0],q[1]);}
-    ringOut(18,1.17,(x,z,i,front)=>front?(i%2?PROP.hay(x,z,i):PROP.bush(x,z,0x3fae5a)):(i%3===2?PROP.hay(x,z,i):(mdl(i%2?'tree_single_A':'tree_single_B',x,z,2.3,i)||PROP.tree(x,z,i))));
+    q=spot([[-m.a*.15,m.b*.05],[m.a*.25,m.b*.05],[0,m.b*.45]],1.2); if(q){if(mdl('wheelbarrow',q[0],q[1],3,.6)){mdl('crate_long_B',q[0]+1,q[1]+.7,3,.3); mdl('sack',q[0]-.9,q[1]+.6,3.3,1.2); mdl('crate_open',q[0]+.2,q[1]-.9,3,.2);} else PROP.tractor(q[0],q[1]);}
+    ringOut(18,1.17,(x,z,i,front)=>front?(i%2?PROP.hay(x,z,i):PROP.bush(x,z,0x3fae5a)):(i%3===2?PROP.hay(x,z,i):(mdl(i%2?'tree_single_A':'tree_single_B',x,z,3,i)||PROP.tree(x,z,i))));
     for(let k=-5;k<=5;k++)mdl('fence_wood_straight',k*2.05,-m.b*1.5,1.78,Math.PI/2)||PROP.fence(k*2.05,-m.b*1.5,0); PROP.skyAndBoats(m,false);
   }
 };
@@ -698,8 +698,8 @@ THEME.volcano=function(m){
     g.material=mt; g.scale.set(.001,1,.001); g.visible=false; FXP.tong.push(g);});
   [.5,1.8,2.9,4.3,5.5].map(a=>[q[0]+Math.sin(a)*5.3,q[1]+Math.cos(a)*5.3]).forEach(([x,z],i)=>{if(NODES.every(n=>Math.hypot(n.x-x,n.z-z)>2.5)){const lp=mesh(new THREE.CylinderGeometry(.9+i*.15,.9+i*.15,.05,20),new THREE.MeshBasicMaterial({color:0xff7a10}),x,.06,z); lp.castShadow=false; lp.scale.z=.7;}});
   if(MODELS){[[-1.65,-1.2],[1.75,.5],[-.5,2.0],[.4,-2.1],[-1.8,.9],[1.6,-1.4]].forEach(([fx,fz],i)=>mdl(['mountain_B','mountain_A','mountain_C'][i%3],fx*m.a,fz*m.b,2.6+(i%3)*.6,i*1.3,-.8));
-    let h=spot([],1.5); if(h){mdl('mine_blue',h[0],h[1],1.5,.8);} h=spot([],1.3); if(h)mdl('building_destroyed',h[0],h[1],1.6,2);}
-  ringOut(16,1.17,(x,z,i,front)=>{if(mdl(front||i%2?'rock_single_'+'BCDE'[i%4]:['tree_dead_medium','tree_dead_small','tree_dead_large'][i%3],x,z,front||i%2?3+(i%3)*.8:.55,i*1.9))return; if(front||i%2){const rk=mesh(new THREE.DodecahedronGeometry(.5+(i%3)*.2),new THREE.MeshLambertMaterial({color:0x3a3238,flatShading:true}),x,.3,z); rk.rotation.set(i,i*2,0);}
+    let h=spot([],1.6); if(h){mdl('mine_blue',h[0],h[1],1.8,.8);} h=spot([],1.4); if(h)mdl('building_destroyed',h[0],h[1],2,2);}
+  ringOut(16,1.17,(x,z,i,front)=>{if(mdl(front||i%2?'rock_single_'+'BCDE'[i%4]:['tree_dead_medium','tree_dead_small','tree_dead_large'][i%3],x,z,front||i%2?3+(i%3)*.8:.7,i*1.9))return; if(front||i%2){const rk=mesh(new THREE.DodecahedronGeometry(.5+(i%3)*.2),new THREE.MeshLambertMaterial({color:0x3a3238,flatShading:true}),x,.3,z); rk.rotation.set(i,i*2,0);}
     else{const tg=grp(x,0,z); mesh(new THREE.CylinderGeometry(.07,.13,1.9,6),0x2e2528,0,.95,0,tg); [[.35,1.5,.5],[-.3,1.2,-.6]].forEach(([bx,by,rz])=>{mesh(new THREE.CylinderGeometry(.04,.06,.8,5),0x2e2528,bx,by,0,tg).rotation.z=-rz*1.6;});}});
   PROP.skyAndBoats(m,true);
 };

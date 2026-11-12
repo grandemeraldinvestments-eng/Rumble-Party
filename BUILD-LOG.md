@@ -133,6 +133,11 @@ A 3D party board game for 2 to 4 players. Players roll a dice, move around a 60-
 - If `models.json` is missing, the game falls back to the scenery it builds in code.
 - The four characters, the ferris wheel, carousel, striped tents, lighthouse, palms and volcano are still built in code.
 
+### 18. Scenery scale, Island village and more event spaces
+- Scenery models are scaled to the characters: buildings stand clearly taller than a player, and barrels, crates and fences sit at waist height.
+- The Island no longer has the ferris wheel, striped tent or balloons; those belong to the Carnival. It has a beach village instead: two houses, a market stall, a watchtower, a well and a canopy with cargo.
+- Two more event spaces on every map. Island has 4 Storm spaces, Carnival 4 Festival, Farm 4 Pearl shuffle, and the Volcano, which had none, has 2 Storm.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
