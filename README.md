@@ -30,4 +30,4 @@ Playing on separate phones with a join code depends on the realtime room service
 
 ## Credits
 
-Scenery models by Kay Lousberg (KayKit, www.kaylousberg.com), CC0.
+Scenery and character models by Kay Lousberg (KayKit, www.kaylousberg.com), CC0.

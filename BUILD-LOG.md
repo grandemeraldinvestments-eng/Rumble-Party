@@ -6,7 +6,7 @@ Last updated: 11 November 2026.
 
 ## What the game is
 
-A 3D party board game for 2 to 4 players. Players roll a dice, move around a 60-space board, win tickets in mini games, and trade 20 tickets for a pearl at the pearl stall. Most pearls after the last round wins. Each player uses their own phone and joins with a code, or one person plays solo against computer players.
+A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-space board, win tickets in mini games, and trade 20 tickets for a pearl at the pearl stall. Most pearls after the last round wins. Each player uses their own phone and joins with a code, or one person plays solo against computer players.
 
 ## Current contents
 
@@ -15,7 +15,7 @@ A 3D party board game for 2 to 4 players. Players roll a dice, move around a 60-
 | Maps | Island, Carnival, Farm, Volcano |
 | Board | 45-space loop plus a 15-space bridge shortcut, 3 shops, 5 fixed pearl stall spots |
 | Mini games | 19, chosen each round by a 10-second vote between three |
-| Players | 2 to 4, any mix of people and computer players |
+| Players | 2 to 6, any mix of people and computer players |
 | Game length | 5, 10 or 15 rounds |
 | Items | Twin Dice, Magnet, Kite |
 | Music | Lobby, board and mini-game tracks, with separate music and sound switches |
@@ -138,6 +138,12 @@ A 3D party board game for 2 to 4 players. Players roll a dice, move around a 60-
 - The Island no longer has the ferris wheel, striped tent or balloons; those belong to the Carnival. It has a beach village instead: two houses, a market stall, a watchtower, a well and a canopy with cargo.
 - Two more event spaces on every map. Island has 4 Storm spaces, Carnival 4 Festival, Farm 4 Pearl shuffle, and the Volcano, which had none, has 2 Storm.
 
+### 19. Animated characters, six players and a start platform
+- The four block characters are replaced by six animated ones: Knight, Barbarian, Mage, Rogue, Ranger and Paladin. They walk, run, jump, idle and cheer, and their portraits appear on the player cards.
+- Character files are `char-0.json` to `char-5.json` (about 650 KB each). If they fail to load, the game uses six block characters instead.
+- Up to six players, any mix of people and computer players. With five or six, the player cards sit in two rows and mini game prizes are 10, 6, 4, 2 and 1 tickets.
+- Players wait on a start platform beside the GO space and step onto the board on their first turn.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
@@ -157,7 +163,7 @@ Tests run in a headless browser with no graphics chip:
 
 ## Credits
 
-Scenery models are by Kay Lousberg (KayKit: Medieval Hexagon Pack and Halloween Bits, www.kaylousberg.com), released under Creative Commons Zero (CC0). They were taken from the KayKit-Game-Assets repositories on GitHub and converted to a compact format.
+Scenery and character models are by Kay Lousberg (KayKit: Medieval Hexagon Pack, Halloween Bits and Adventurers character pack, www.kaylousberg.com), released under Creative Commons Zero (CC0). They were taken from the KayKit-Game-Assets repositories on GitHub and converted to a compact format.
 
 ## Known limits
 
