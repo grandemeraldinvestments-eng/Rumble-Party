@@ -27,3 +27,7 @@ then visit http://localhost:8000. Opening `index.html` directly from disk also w
 ## Online play
 
 Playing on separate phones with a join code depends on the realtime room service of the Claude artifact the game was built in. That service is not available to a copy served from this repository, so here the game runs in solo mode against computer players. The Host and Join buttons stay disabled.
+
+## Credits
+
+Scenery models by Kay Lousberg (KayKit, www.kaylousberg.com), CC0.

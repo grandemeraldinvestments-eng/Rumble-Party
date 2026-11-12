@@ -127,6 +127,12 @@ A 3D party board game for 2 to 4 players. Players roll a dice, move around a 60-
 - In walk-around games, other players' movement is replayed a beat behind and glides between updates, so they no longer jerk toward each new position.
 - On the test machine (no graphics chip) the board went from about 5 to about 40 frames a second.
 
+### 17. Ready-made scenery models
+- Added free 3D models for scenery: a beach hut, market stalls, a well, a farmhouse, a windmill, pine trees, fences, wheat fields, pond plants, boulders, dead trees, a mine, a ruin, sea crags, hills and clouds.
+- The models are stored in `models.json` (52 models, about 1 MB). Everything placed on a map is baked into one mesh, so the extra drawing cost is small.
+- If `models.json` is missing, the game falls back to the scenery it builds in code.
+- The four characters, the ferris wheel, carousel, striped tents, lighthouse, palms and volcano are still built in code.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
@@ -143,6 +149,10 @@ Tests run in a headless browser with no graphics chip:
 - A two-device game is simulated in one browser and the final scores on both sides are compared.
 - Controller input is checked with a simulated gamepad.
 - Screenshots are taken of new visuals.
+
+## Credits
+
+Scenery models are by Kay Lousberg (KayKit: Medieval Hexagon Pack and Halloween Bits, www.kaylousberg.com), released under Creative Commons Zero (CC0). They were taken from the KayKit-Game-Assets repositories on GitHub and converted to a compact format.
 
 ## Known limits
 

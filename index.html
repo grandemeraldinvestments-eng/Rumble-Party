@@ -527,7 +527,7 @@ function init3D(){
   dice.visible=false;
   numC=document.createElement('canvas'); numC.width=numC.height=128; numT=new THREE.CanvasTexture(numC);
   num=new THREE.Sprite(new THREE.SpriteMaterial({map:numT,depthTest:false,transparent:true})); num.scale.set(1.2,1.2,1); num.visible=false; scene.add(num);
-  buildWorld('island'); placePearl(12,true); resize(); window.addEventListener('resize',resize); requestAnimationFrame(frame);
+  buildWorld('island'); placePearl(12,true); loadModels(); resize(); window.addEventListener('resize',resize); requestAnimationFrame(frame);
 }
 /* ---------- building a map: ground, path, spaces and themed scenery ---------- */
 let COAST=null, USED=[];
@@ -568,6 +568,40 @@ function bake(items,col){
 function grp(x,y,z){const g=new THREE.Group(); g.position.set(x,y,z); world.add(g); return g;}
 function ringOut(n,k,fn){const d=(k-1)*14; for(let i=0;i<n;i++){const j=Math.floor(i*45/n),q=NODES[j],o=outN(j),x=q.x+o[0]*d,z=q.z+o[1]*d; if(clearOf(x,z,.3)&&!inLoop(x,z))fn(x,z,i,z>MAPX.b*.45);}}
 function flat(geo,col,x,y,z,sx,sy,sz){const m=mesh(geo,col,x,y,z); m.scale.set(sx,sy,sz); m.receiveShadow=true; m.castShadow=false; return m;}
+/* ---------- ready-made scenery models. models.json holds free (CC0) models by Kay Lousberg (KayKit), packed as plain vertex data.
+   Everything placed with mdl() on one map is baked into a single mesh. If the file is missing, the code-built props below are used instead ---------- */
+let MODELS=null, MBATCH={}; const MGEO={}, MMAT={};
+function loadModels(){
+  fetch('models.json').then(r=>r.ok?r.json():null).then(b=>{
+    if(!b||!b.m||!b.tex)return; const ks=Object.keys(b.tex); let left=ks.length;
+    ks.forEach(k=>{const im=new Image(); im.onload=()=>{const t=new THREE.Texture(im); t.flipY=false; t.needsUpdate=true; MMAT[k]=new THREE.MeshLambertMaterial({map:t}); MMAT[k].keep=true;
+      if(--left===0){MODELS=b; if(world&&(!V||V.phase==='lobby')){buildWorld(curMap); placePearl(12,true);}}}; im.src=b.tex[k];});
+  }).catch(()=>{});
+}
+function mgeo(name){
+  if(MGEO[name])return MGEO[name]; const m=MODELS.m[name], dec=(s,T)=>{const bin=atob(s),u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i); return new T(u.buffer);};
+  const p=dec(m.p,Int16Array),n=dec(m.n,Int8Array),u=dec(m.u,Uint16Array),pos=new Float32Array(p.length),nor=new Float32Array(n.length),uv=new Float32Array(u.length);
+  for(let i=0;i<p.length;i++)pos[i]=p[i]/32767*m.s; for(let i=0;i<n.length;i++)nor[i]=n[i]/127; for(let i=0;i<u.length;i++)uv[i]=u[i]/65535;
+  return MGEO[name]={pos,nor,uv,idx:dec(m.i,m.v<65536?Uint16Array:Uint32Array),tex:m.x};
+}
+/* place a model: s is its scale, rot its turn. Returns false when models are not available, so callers can fall back: mdl(...)||PROP.old(...) */
+function mdl(name,x,z,s,rot,y,parent){
+  if(!MODELS||!MODELS.m[name]||!MMAT[MODELS.m[name].x])return false; const g=mgeo(name);
+  if(parent){const G=new THREE.BufferGeometry(); G.setAttribute('position',new THREE.BufferAttribute(g.pos,3)); G.setAttribute('normal',new THREE.BufferAttribute(g.nor,3)); G.setAttribute('uv',new THREE.BufferAttribute(g.uv,2)); G.setIndex(new THREE.BufferAttribute(g.idx,1));
+    const o=mesh(G,MMAT[g.tex],x,y||0,z,parent); o.scale.setScalar(s); o.rotation.y=rot||0; o.castShadow=false; return true;}
+  (MBATCH[g.tex]=MBATCH[g.tex]||[]).push([g,x,y||0,z,s,rot||0]); return true;
+}
+function flushModels(){
+  for(const k in MBATCH){const L=MBATCH[k]; let nv=0,ni=0; L.forEach(q=>{nv+=q[0].pos.length/3; ni+=q[0].idx.length;});
+    const pos=new Float32Array(nv*3),nor=new Float32Array(nv*3),uv=new Float32Array(nv*2),idx=new Uint32Array(ni); let v=0,ii=0;
+    for(const [g,x,y,z,s,rot] of L){const c=Math.cos(rot),sn=Math.sin(rot),n=g.pos.length/3;
+      for(let i=0;i<n;i++){const px=g.pos[i*3],py=g.pos[i*3+1],pz=g.pos[i*3+2],nx=g.nor[i*3],nz=g.nor[i*3+2],o=(v+i)*3;
+        pos[o]=(px*c+pz*sn)*s+x; pos[o+1]=py*s+y; pos[o+2]=(pz*c-px*sn)*s+z; nor[o]=nx*c+nz*sn; nor[o+1]=g.nor[i*3+1]; nor[o+2]=nz*c-nx*sn; uv[(v+i)*2]=g.uv[i*2]; uv[(v+i)*2+1]=g.uv[i*2+1];}
+      for(let i=0;i<g.idx.length;i++)idx[ii++]=g.idx[i]+v; v+=n;}
+    const G=new THREE.BufferGeometry(); G.setAttribute('position',new THREE.BufferAttribute(pos,3)); G.setAttribute('normal',new THREE.BufferAttribute(nor,3)); G.setAttribute('uv',new THREE.BufferAttribute(uv,2)); G.setIndex(new THREE.BufferAttribute(idx,1));
+    mesh(G,MMAT[k],0,0,0);}
+  MBATCH={};
+}
 const PROP={
   sea(){const sea=mesh(new THREE.CircleGeometry(170,48),0x1fa3d4,0,-.7,0); sea.rotation.x=-Math.PI/2; sea.castShadow=false;},
   ferris(x,z,sc){const fw=grp(x,0,z); fw.scale.setScalar(sc); const wheel=new THREE.Group(); wheel.position.y=2.7; fw.add(wheel); const se={o:wheel,ax:'z',v:.25}; spin.push(se); FXP.wheel={x,z,y:2.7*sc,s:sc,sp:se};
@@ -587,7 +621,7 @@ const PROP={
     [0xffffff,0xff4d4d,0xffffff].forEach((c,i)=>mesh(new THREE.CylinderGeometry(.5-i*.06,.56-i*.06,.9,18),c,0,1.1+i*.9,0,lh));
     mesh(new THREE.SphereGeometry(.3,14,10),new THREE.MeshBasicMaterial({color:0xfff2a8}),0,3.75,0,lh); mesh(new THREE.ConeGeometry(.5,.5,18),0xff4d4d,0,4.25,0,lh);},
   skyAndBoats(m,sea){
-    [[-.6,7,-1.5],[.4,8.2,-1.8],[1.2,6.5,-1.4],[-1.3,7.4,-1.9]].forEach(([fx,y,fz])=>{const c=grp(fx*m.a,y+3,fz*m.b-6); clouds.push(c);
+    [[-.6,7,-1.5],[.4,8.2,-1.8],[1.2,6.5,-1.4],[-1.3,7.4,-1.9]].forEach(([fx,y,fz])=>{const c=grp(fx*m.a,y+3,fz*m.b-6); clouds.push(c); if(mdl(clouds.length%2?'cloud_big':'cloud_small',0,-1,0,1.5,clouds.length,0,c))return;
       [[0,0,0,1.5],[1.4,.1,.2,1.1],[-1.4,-.05,.1,1],[.4,.6,-.1,.95]].forEach(([a,b,d,r])=>{mesh(new THREE.SphereGeometry(r,14,10),0xffffff,a,b,d,c).castShadow=false;});});
     if(sea)[[-1.5,.9,0xff4d4d],[1.2,1.7,0x8b5cf6],[1.6,-1.5,0xffc531]].forEach(([fx,fz,c],i)=>{const b=grp(fx*m.a,-.55,fz*m.b); b.rotation.y=i*1.9; boats.push(b);
       mesh(new THREE.BoxGeometry(1.5,.35,.6),c,0,0,0,b); mesh(new THREE.ConeGeometry(.55,1.3,3),0xffffff,0,.95,0,b).scale.z=.12; mesh(new THREE.CylinderGeometry(.03,.03,1.5,4),0x7c8ea3,0,.75,0,b);});},
@@ -612,26 +646,35 @@ const THEME={
     let q=spot([[-m.a*.48,-m.b*.05],[-m.a*.3,m.b*.35],[m.a*.1,-m.b*.5],[-m.a*.55,m.b*.1]],2.4); if(q)PROP.ferris(q[0],q[1],1.15);
     q=spot([[m.a*.45,m.b*.25],[m.a*.25,m.b*.45],[m.a*.5,-m.b*.1],[0,m.b*.45]],1.8); if(q)PROP.tent(q[0],q[1],'#ff4d4d',1.1);
     q=spot([[m.a*.1,m.b*.1],[-m.a*.1,-m.b*.4],[m.a*.3,-m.b*.45]],1.2); if(q)PROP.balloons(q[0],q[1]);
-    ringOut(12,1.18,(x,z,i,front)=>front?PROP.bush(x,z):PROP.palm(x,z,i)); PROP.lighthouse(m.a*1.5,-m.b*1.7); PROP.skyAndBoats(m,true);
+    if(MODELS){
+      q=spot([[m.a*.25,-m.b*.3],[-m.a*.2,m.b*.3],[m.a*.4,m.b*.05],[-m.a*.4,-m.b*.3]],1.7); if(q){mdl('home_A_blue',q[0],q[1],2.1,.6); mdl('barrel',q[0]+1.35,q[1]+.9,3,0); mdl('crate_A_big',q[0]+1.5,q[1]+.15,3,.4); mdl('sack',q[0]-1.3,q[1]+1,3,1); mdl('flag_blue',q[0]-1.4,q[1]-.4,4.5,.5);}
+      q=spot([[-m.a*.1,m.b*.45],[m.a*.15,m.b*.35],[-m.a*.5,m.b*.3],[m.a*.5,-m.b*.35]],1.7); if(q){mdl('market_blue',q[0],q[1],1.6,-.4); mdl('crate_long_A',q[0]+1.6,q[1]+.6,2.6,.3);}
+      q=spot([[m.a*.05,-m.b*.2],[-m.a*.3,0],[m.a*.3,m.b*.3]],.9); if(q){mdl('well_blue',q[0],q[1],1.7,.3); mdl('bucket_water',q[0]+.9,q[1]+.5,3,0);}
+      [[-1.6,-1.25],[1.8,.45],[-.45,2.15],[.35,-2.3],[-1.9,.9]].forEach(([fx,fz],i)=>mdl(['mountain_A','mountain_C','mountain_B'][i%3],fx*m.a,fz*m.b,2.4+(i%3)*.5,i*1.7,-.8));
+    }
+    ringOut(12,1.18,(x,z,i,front)=>front?((i%2&&mdl('rock_single_'+'BCE'[i%3],x,z,3.2,i))||PROP.bush(x,z)):PROP.palm(x,z,i)); PROP.lighthouse(m.a*1.5,-m.b*1.7); PROP.skyAndBoats(m,true);
   },
   carnival(m){
     PROP.sea(); const box=new THREE.BoxGeometry(1,1,1); flat(box,0xb9814f,0,-.4,0,m.a*2.7,.8,m.b*2.8); flat(box,0x8f6038,0,-.45,0,m.a*2.78,.8,m.b*2.88); flat(box,0x7b4fc9,0,.02,0,m.a*1.35,.06,m.b*1.25);
     let q=spot([[-m.a*.42,-m.b*.3],[-m.a*.45,m.b*.25],[m.a*.4,-m.b*.35],[0,-m.b*.45]],3.2); if(q)PROP.ferris(q[0],q[1],1.5);
     q=spot([[m.a*.42,m.b*.3],[m.a*.4,-m.b*.3],[-m.a*.4,m.b*.35],[0,m.b*.4]],2.3); if(q)PROP.carousel(q[0],q[1]);
-    [[-m.a*1.13,-m.b*1.13,'#ff4d4d'],[m.a*1.13,-m.b*1.13,'#2f8fff'],[0,-m.b*1.2,'#35c98a']].forEach(([x,z,c])=>PROP.tent(x,z,c,1.25));
-    [[m.a*.1,m.b*.1,0xff5fa8],[-m.a*.15,-m.b*.1,0x2f8fff],[m.a*.2,-m.b*.5,0x35c98a],[-m.a*.2,m.b*.5,0xffc531]].forEach(([x,z,c])=>{if(clearOf(x,z,1.5))PROP.stand(x,z,c);});
+    [[-m.a*1.13,-m.b*1.13,'#ff4d4d','red'],[m.a*1.13,-m.b*1.13,'#2f8fff','blue'],[0,-m.b*1.2,'#35c98a','green']].forEach(([x,z,c,f],i)=>{PROP.tent(x,z,c,1.25); mdl('target',x+2.3,z+1.5,4,.3-i*.3); mdl('crate_long_'+'AB'[i%2],x-2.2,z+1.3,2.8,.5); mdl('barrel',x-2.6,z+.3,3,0); mdl('flag_'+f,x+2.1,z-.6,5,i);});
+    [[m.a*.1,m.b*.1,0xff5fa8],[-m.a*.15,-m.b*.1,0x2f8fff],[m.a*.2,-m.b*.5,0x35c98a],[-m.a*.2,m.b*.5,0xffc531]].forEach(([x,z,c],i)=>{if(clearOf(x,z,1.5)){USED.push([x,z,1.5]); mdl(['market_red','market_yellow','market_blue','market_red'][i],x,z,1.45,i*1.57+.4)||PROP.stand(x,z,c);}});
+    if(MODELS)for(let i=0;i<3;i++){const h=spot([],1.45); if(h){mdl(['market_red','market_yellow','market_blue'][i],h[0],h[1],1.45,i*2.1+.4); mdl('barrel',h[0]+1.5,h[1]+.7,3,0);}}
     ringOut(16,1.14,(x,z,i,front)=>front?PROP.bush(x,z,0xff8fc8):PROP.post(x,z,i)); PROP.balloons(-m.a*1.2,m.b*.2); PROP.balloons(m.a*1.2,m.b*.1); PROP.skyAndBoats(m,true);
   },
   farm(m){
     const g=mesh(new THREE.CircleGeometry(170,48),0x7ccf6a,0,-.02,0); g.rotation.x=-Math.PI/2; g.castShadow=false; g.receiveShadow=true;
     const box=new THREE.BoxGeometry(1,1,1); [[-1.9,-1.9,0xe8c95a],[1.9,-2,0x5fb85a],[0,-2.6,0xd9b24a],[-2.3,.2,0x5fb85a],[2.3,.3,0xe8c95a]].forEach(([fx,fz,c])=>flat(box,c,fx*m.a,.005,fz*m.b,m.a*1.1,.02,m.b*1.2));
-    for(let r=0;r<7;r++)for(let k=0;k<9;k++)mesh(new THREE.SphereGeometry(.28,8,6),0x2e9e4f,-m.a*.55+k*1.3+m.a*.1,.2,-m.b*1.75-r*1.1).castShadow=false;
-    let q=spot([[-m.a*.4,-m.b*.3],[-m.a*.45,m.b*.2],[m.a*.4,-m.b*.3],[0,-m.b*.4]],2.6); if(q){PROP.barn(q[0],q[1]); if(clearOf(q[0]+2.7,q[1]-.3,.8))PROP.silo(q[0]+2.7,q[1]-.3);}
-    q=spot([[m.a*.4,m.b*.25],[m.a*.42,-m.b*.25],[-m.a*.35,m.b*.35],[m.a*.15,m.b*.4]],1.4); if(q)PROP.windmill(q[0],q[1]);
-    q=spot([[m.a*.1,-m.b*.1],[-m.a*.1,m.b*.35],[m.a*.3,-m.b*.5],[-m.a*.2,-m.b*.55]],2.2); if(q){const pd=mesh(new THREE.CylinderGeometry(2,2,.06,32),0x4fb8e8,q[0],.03,q[1]); pd.castShadow=false; pd.scale.z=.75;}
-    q=spot([[-m.a*.15,m.b*.05],[m.a*.25,m.b*.05],[0,m.b*.45]],1.2); if(q)PROP.tractor(q[0],q[1]);
-    ringOut(18,1.17,(x,z,i,front)=>front?(i%2?PROP.hay(x,z,i):PROP.bush(x,z,0x3fae5a)):(i%3===2?PROP.hay(x,z,i):PROP.tree(x,z,i)));
-    for(let k=-5;k<=5;k++)PROP.fence(k*2.05,-m.b*1.5,0); PROP.skyAndBoats(m,false);
+    if(MODELS){for(let r=0;r<3;r++)for(let k=0;k<6;k++)mdl('building_grain',-m.a*.45+k*2.45+(r%2)*1.2,-m.b*1.72-r*2.1,1.15,0,-.3);
+      [[-1.75,-2.5,'hills_A_trees'],[1.7,-2.8,'mountain_A_grass_trees'],[-2.7,-.9,'mountain_B_grass_trees'],[2.8,-.5,'hills_C_trees'],[.1,-3.5,'mountain_B_grass_trees'],[-2.6,1.4,'hills_C_trees'],[2.7,1.6,'hills_A_trees']].forEach(([fx,fz,n],i)=>mdl(n,fx*m.a,fz*m.b,4.2,i*1.1,-.15));}
+    else for(let r=0;r<7;r++)for(let k=0;k<9;k++)mesh(new THREE.SphereGeometry(.28,8,6),0x2e9e4f,-m.a*.55+k*1.3+m.a*.1,.2,-m.b*1.75-r*1.1).castShadow=false;
+    let q=spot([[-m.a*.4,-m.b*.3],[-m.a*.45,m.b*.2],[m.a*.4,-m.b*.3],[0,-m.b*.4]],2.6); if(q){if(mdl('home_B_red',q[0],q[1],2.4,.5)){mdl('well_blue',q[0]+2.2,q[1]+.9,1.5,.4); mdl('resource_lumber',q[0]-1.9,q[1]+1.2,2.4,.8); mdl('barrel',q[0]-1.6,q[1]-1,3,0);} else{PROP.barn(q[0],q[1]); if(clearOf(q[0]+2.7,q[1]-.3,.8))PROP.silo(q[0]+2.7,q[1]-.3);}}
+    q=spot([[m.a*.4,m.b*.25],[m.a*.42,-m.b*.25],[-m.a*.35,m.b*.35],[m.a*.15,m.b*.4]],1.4); if(q)mdl('windmill_red',q[0],q[1],2.2,-.6)||PROP.windmill(q[0],q[1]);
+    q=spot([[m.a*.1,-m.b*.1],[-m.a*.1,m.b*.35],[m.a*.3,-m.b*.5],[-m.a*.2,-m.b*.55]],2.2); if(q){const pd=mesh(new THREE.CylinderGeometry(2,2,.06,32),0x4fb8e8,q[0],.03,q[1]); pd.castShadow=false; pd.scale.z=.75; mdl('waterlily_A',q[0]-.7,q[1]+.3,4,0,.06); mdl('waterlily_A',q[0]+.6,q[1]-.5,3.2,2,.06); mdl('waterplant_C',q[0]+1.6,q[1]+.6,3.2,0); mdl('waterplant_B',q[0]-1.7,q[1]-.4,3.2,1); mdl('waterplant_C',q[0]-.3,q[1]-1.3,2.8,2);}
+    q=spot([[-m.a*.15,m.b*.05],[m.a*.25,m.b*.05],[0,m.b*.45]],1.2); if(q){if(mdl('wheelbarrow',q[0],q[1],2.6,.6)){mdl('crate_long_B',q[0]+.9,q[1]+.6,2.6,.3); mdl('sack',q[0]-.8,q[1]+.5,3,1.2); mdl('crate_open',q[0]+.2,q[1]-.8,2.6,.2);} else PROP.tractor(q[0],q[1]);}
+    ringOut(18,1.17,(x,z,i,front)=>front?(i%2?PROP.hay(x,z,i):PROP.bush(x,z,0x3fae5a)):(i%3===2?PROP.hay(x,z,i):(mdl(i%2?'tree_single_A':'tree_single_B',x,z,2.3,i)||PROP.tree(x,z,i))));
+    for(let k=-5;k<=5;k++)mdl('fence_wood_straight',k*2.05,-m.b*1.5,1.78,Math.PI/2)||PROP.fence(k*2.05,-m.b*1.5,0); PROP.skyAndBoats(m,false);
   }
 };
 THEME.volcano=function(m){
@@ -654,7 +697,9 @@ THEME.volcano=function(m){
     if(!far){const dx=mid[0]-q[0],dz=mid[1]-q[1],D=Math.hypot(dx,dz),px=-dz/D,pz=dx/D; add([[q[0]+dx/D*2.7,q[1]+dz/D*2.7],[q[0]+dx*.62+px*.5,q[1]+dz*.62+pz*.5],[q[0]+dx*.84-px*.3,q[1]+dz*.84-pz*.3],mid],u=>.42+u*.3);}
     g.material=mt; g.scale.set(.001,1,.001); g.visible=false; FXP.tong.push(g);});
   [.5,1.8,2.9,4.3,5.5].map(a=>[q[0]+Math.sin(a)*5.3,q[1]+Math.cos(a)*5.3]).forEach(([x,z],i)=>{if(NODES.every(n=>Math.hypot(n.x-x,n.z-z)>2.5)){const lp=mesh(new THREE.CylinderGeometry(.9+i*.15,.9+i*.15,.05,20),new THREE.MeshBasicMaterial({color:0xff7a10}),x,.06,z); lp.castShadow=false; lp.scale.z=.7;}});
-  ringOut(16,1.17,(x,z,i,front)=>{if(front||i%2){const rk=mesh(new THREE.DodecahedronGeometry(.5+(i%3)*.2),new THREE.MeshLambertMaterial({color:0x3a3238,flatShading:true}),x,.3,z); rk.rotation.set(i,i*2,0);}
+  if(MODELS){[[-1.65,-1.2],[1.75,.5],[-.5,2.0],[.4,-2.1],[-1.8,.9],[1.6,-1.4]].forEach(([fx,fz],i)=>mdl(['mountain_B','mountain_A','mountain_C'][i%3],fx*m.a,fz*m.b,2.6+(i%3)*.6,i*1.3,-.8));
+    let h=spot([],1.5); if(h){mdl('mine_blue',h[0],h[1],1.5,.8);} h=spot([],1.3); if(h)mdl('building_destroyed',h[0],h[1],1.6,2);}
+  ringOut(16,1.17,(x,z,i,front)=>{if(mdl(front||i%2?'rock_single_'+'BCDE'[i%4]:['tree_dead_medium','tree_dead_small','tree_dead_large'][i%3],x,z,front||i%2?3+(i%3)*.8:.55,i*1.9))return; if(front||i%2){const rk=mesh(new THREE.DodecahedronGeometry(.5+(i%3)*.2),new THREE.MeshLambertMaterial({color:0x3a3238,flatShading:true}),x,.3,z); rk.rotation.set(i,i*2,0);}
     else{const tg=grp(x,0,z); mesh(new THREE.CylinderGeometry(.07,.13,1.9,6),0x2e2528,0,.95,0,tg); [[.35,1.5,.5],[-.3,1.2,-.6]].forEach(([bx,by,rz])=>{mesh(new THREE.CylinderGeometry(.04,.06,.8,5),0x2e2528,bx,by,0,tg).rotation.z=-rz*1.6;});}});
   PROP.skyAndBoats(m,true);
 };
@@ -669,7 +714,7 @@ function ribbonGeo(P,hw,y){const pos=[],L=P.length,ed=[];
 function buildWorld(id){
   const m=MAPS[id]||MAPS.island; curMap=id; MAPX=m;
   if(world){scene.remove(world); world.traverse(o=>{if(o.geometry)o.geometry.dispose(); if(o.material)[].concat(o.material).forEach(x=>{if(!x.keep)x.dispose();});});}
-  world=new THREE.Group(); scene.add(world); defParent=world; spin=[]; upright=[]; clouds=[]; boats=[]; FXP={tong:[],boost:0,erupt:0}; shownBurn=-2; COAST=null; USED=[];
+  world=new THREE.Group(); scene.add(world); defParent=world; spin=[]; upright=[]; clouds=[]; boats=[]; FXP={tong:[],boost:0,erupt:0}; shownBurn=-2; COAST=null; USED=[]; MBATCH={};
   NODES=buildGraph(m); $('#gl').style.background=`linear-gradient(${m.sky[0]},${m.sky[1]} 60%)`;
   if(!ICONS){const mk=d=>{const mt=new THREE.MeshBasicMaterial({map:tex(d),transparent:true}); mt.keep=true; return mt;};
     ICONS={S:mk((g,s)=>label(g,s,'GO','#17304d',26)),
@@ -681,7 +726,7 @@ function buildWorld(id){
       mov:mk(g=>{g.fillStyle='#fff'; [14,30].forEach(x=>{g.beginPath(); g.moveTo(x,16); g.lineTo(x+18,32); g.lineTo(x,48); g.lineTo(x+7,32); g.closePath(); g.fill();});})};
     const burst=col=>mk(g=>{g.fillStyle=col; g.beginPath(); for(let i=0;i<16;i++){const a=i*Math.PI/8,r=i%2?13:26; g.lineTo(32+Math.cos(a)*r,32+Math.sin(a)*r);} g.closePath(); g.fill(); g.fillStyle='#fff'; g.beginPath(); g.arc(32,32,7,0,7); g.fill();});
     ICONS.T=burst('#0e8fa8'); ICONS.F=burst('#ff5fa8'); ICONS.V=burst('#d98a00'); ICONS.E=burst('#e0401a');}
-  THEME[id in THEME?id:'island'](m);
+  THEME[id in THEME?id:'island'](m); flushModels();
   const box=new THREE.BoxGeometry(1,1,1), tideMap=m.sp.includes('T');
   if(tideMap){FXP.flood=grp(0,-.6,0); FXP.spans=grp(0,0,0); FXP.spans.visible=false;}
   {const pk={}; NODES.forEach(a=>a.next.forEach(j=>{const b=NODES[j],dx=b.x-a.x,dz=b.z-a.z,c=a.bridge||b.bridge?m.bridge:m.path; (pk[c]=pk[c]||[]).push([box,(a.x+b.x)/2,.07,(a.z+b.z)/2,Math.atan2(-dz,dx),Math.hypot(dx,dz),.12,.85]);})); for(const c in pk)bake(pk[c],+c);}
