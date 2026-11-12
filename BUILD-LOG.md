@@ -144,6 +144,10 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 - Up to six players, any mix of people and computer players. With five or six, the player cards sit in two rows and mini game prizes are 10, 6, 4, 2 and 1 tickets.
 - Players wait on a start platform beside the GO space and step onto the board on their first turn.
 
+### 20. Home-screen web app
+- Added a web app manifest, icons and an offline worker (`manifest.webmanifest`, `icon-*.png`, `apple-touch-icon.png`, `sw.js`), so the game can be added to a phone's home screen, open full screen and run offline after the first visit.
+- Needs GitHub Pages switched on for the repository. Outside Claude the game is solo only.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

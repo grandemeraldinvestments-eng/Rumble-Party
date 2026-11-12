@@ -31,3 +31,12 @@ Playing on separate phones with a join code depends on the realtime room service
 ## Credits
 
 Scenery and character models by Kay Lousberg (KayKit, www.kaylousberg.com), CC0.
+
+## Play it as a home-screen app
+
+Once GitHub Pages is switched on for this repository, the game is served at `https://grandemeraldinvestments-eng.github.io/Rumble-Party/`.
+
+- **iPhone:** open the link in Safari, tap Share, then "Add to Home Screen".
+- **Android:** open the link in Chrome, tap the menu, then "Add to Home screen" or "Install app".
+
+It opens full screen from its own icon and works offline after the first visit. Outside Claude the game is solo against computer players; joining friends by code needs the Claude page.
