@@ -265,9 +265,11 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
   .chip{padding:3px 4px; border-width:2px; box-shadow:2px 2px 0 var(--ink)}
   .chip .nm{font-size:.72rem; gap:3px} .chip .face{width:20px; height:20px; border-width:1px}
   .chip .st{font-size:.82rem; gap:2px; margin-top:2px} .chip .bag{font-size:.6rem; min-height:0; margin-top:1px}
-  .panel{align-self:flex-end; max-width:min(46%,340px); padding:7px 9px 9px; gap:5px; box-shadow:3px 3px 0 var(--ink)}
-  .panel .who{font-size:.98rem} .panel .msg{min-height:1.6em; font-size:.9rem}
-  .panel .acts{min-height:44px; gap:6px} .panel .acts .btn{padding:8px 10px; font-size:.95rem}
+  .panel{align-self:center; max-width:min(100%,900px); padding:6px 10px 8px; gap:2px 12px; box-shadow:3px 3px 0 var(--ink); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,auto); grid-template-areas:'head acts' 'msg acts'; align-items:center; text-align:left}
+  .panel .phead{grid-area:head} .panel .msg{grid-area:msg; place-items:center start; text-align:left} .panel .acts{grid-area:acts; flex-wrap:nowrap; align-self:stretch; align-items:stretch; min-width:min(44vw,400px)}
+  .panel.auto,.panel.min{grid-template-columns:minmax(0,1fr)}  .panel.auto .msg{grid-column:1 / -1}
+  .panel .who{font-size:.98rem} .panel .msg{min-height:1.6em; font-size:.88rem; line-height:1.2}
+  .panel .acts{min-height:44px; gap:6px} .panel .acts .btn{padding:6px 10px; font-size:.92rem; flex:1 1 0}
   .card{max-width:min(100%,720px); padding:12px 14px; gap:9px}
   .card h1{font-size:1.5rem}
   #menu .stack,#setMain{display:grid; grid-template-columns:1fr 1fr; gap:8px}
@@ -580,9 +582,15 @@ function init3D(){
   PR=Math.min(window.devicePixelRatio||1,SMOOTH?1.5:2); R.shadowMap.enabled=true; R.shadowMap.type=THREE.PCFShadowMap; R.shadowMap.autoUpdate=false;
   scene=new THREE.Scene(); cam=new THREE.PerspectiveCamera(50,1,1,320); lights(scene);
   // pearl with a light beam
-  pearl=mesh(new THREE.SphereGeometry(.4,24,16),new THREE.MeshLambertMaterial({color:0xf3e6ff,emissive:0x7a55c7}),0,1.9,0);
-  pearl.halo=mesh(new THREE.TorusGeometry(.62,.05,8,32),new THREE.MeshBasicMaterial({color:0xffe27a}),0,0,0,pearl); pearl.halo.rotation.x=1.1; pearl.halo.castShadow=false;
-  mesh(new THREE.CylinderGeometry(.55,.55,6,24,1,true),new THREE.MeshBasicMaterial({color:0xd9c2ff,transparent:true,opacity:.25,depthWrite:false,side:THREE.DoubleSide}),0,.9,0,pearl).castShadow=false;
+  pearl=new THREE.Group(); scene.add(pearl);
+  {const out=new THREE.MeshLambertMaterial({color:0xd8456a}), inn=new THREE.MeshLambertMaterial({color:0xff8fa8,side:THREE.BackSide}), half=()=>new THREE.SphereGeometry(.95,22,10,0,Math.PI*2,0,Math.PI/2);
+    const shell=(par,flip)=>{const g=new THREE.Group(); par.add(g); g.position.z=.85; for(const m of [out,inn]){const h=mesh(half(),m,0,0,0,g); h.scale.set(1,.42,1); h.rotation.x=flip?Math.PI:0;}
+      for(let i=-3;i<=3;i++){const r=mesh(new THREE.BoxGeometry(.07,.05,.8),new THREE.MeshLambertMaterial({color:0xc93f63}),Math.sin(i*.32)*.62,(flip?-1:1)*.3,.05+Math.abs(i)*.02,g); r.rotation.y=i*.32; r.rotation.x=(flip?1:-1)*.38; r.castShadow=false;} return g;};
+    const base=new THREE.Group(); base.position.set(0,.5,-.85); pearl.add(base); shell(base,true);
+    pearl.lid=new THREE.Group(); pearl.lid.position.set(0,.5,-.85); pearl.add(pearl.lid); shell(pearl.lid,false);
+    pearl.orb=mesh(new THREE.SphereGeometry(.44,24,16),new THREE.MeshLambertMaterial({color:0xffffff,emissive:0x8f70d8}),0,.66,.12,pearl);
+    pearl.halo=mesh(new THREE.TorusGeometry(.64,.045,8,32),new THREE.MeshBasicMaterial({color:0xffe27a}),0,.66,.12,pearl); pearl.halo.rotation.x=1.1; pearl.halo.castShadow=false;
+    mesh(new THREE.CylinderGeometry(.2,.2,5,16,1,true),new THREE.MeshBasicMaterial({color:0xd9c2ff,transparent:true,opacity:.16,depthWrite:false,side:THREE.DoubleSide}),0,4.4,.12,pearl).castShadow=false; pearl.scale.setScalar(1.45);}
   arrows=new THREE.Group(); arrows.visible=false; scene.add(arrows);
   // lava particles for the eruption, and a group for trap flags
   {const LN=140,lg=new THREE.BufferGeometry(),lc=new Float32Array(LN*3); for(let i=0;i<LN;i++)lc.set(i%3?[1,.45,.05]:[1,.85,.2],i*3);
@@ -858,7 +866,10 @@ function setNum(n){if(n===numShown)return; numShown=n; const g=numC.getContext('
   g.lineWidth=14; g.lineJoin='round'; g.strokeStyle='#17304d'; g.strokeText(n,64,68); g.fillStyle='#fff'; g.fillText(n,64,68); numT.needsUpdate=true;}
 function resize(){const w=window.innerWidth,h=window.innerHeight,px=1; R.setSize(w,h,false);
   cam.aspect=w/h; cam.fov=w<h?58:42; cam.updateProjectionMatrix(); if(MS){MS.cam.aspect=w/h; MS.cam.updateProjectionMatrix();}}
-function placePearl(i,inst){pearl.tx=NODES[i].x; pearl.tz=NODES[i].z; if(inst){pearl.position.x=pearl.tx; pearl.position.z=pearl.tz;}}
+function pearlSide(i){const n=NODES[i]; let best=[0,2.1],bd=-1;   // the clam sits beside its space, on whichever side is clearest of the path
+  for(let k=0;k<16;k++){const a=k/16*Math.PI*2, x=n.x+Math.sin(a)*2.5, z=n.z+Math.cos(a)*2.5; let d=1e9; NODES.forEach((q,j)=>{if(j!==i)d=Math.min(d,Math.hypot(q.x-x,q.z-z));}); if(PLAT)d=Math.min(d,Math.hypot(PLAT.x-x,PLAT.z-z)-1.6); d+=Math.cos(a)*.25; if(d>bd){bd=d; best=[x-n.x,z-n.z];}}
+  return best;}
+function placePearl(i,inst){const o=pearlSide(i); pearl.at=i; pearl.tx=NODES[i].x+o[0]; pearl.tz=NODES[i].z+o[1]; if(inst){pearl.position.x=pearl.tx; pearl.position.z=pearl.tz;}}
 function burst(x,z){const P=conf.geometry.attributes.position.array,Vv=conf.v;
   for(let i=0;i<P.length;i+=3){P[i]=x; P[i+1]=1.6; P[i+2]=z; Vv[i]=(Math.random()-.5)*5; Vv[i+1]=3+Math.random()*5; Vv[i+2]=(Math.random()-.5)*5;}
   conf.life=1.8; conf.visible=true;}
@@ -976,7 +987,7 @@ function sync(dt){
     if(p.it.length!==g.sh.itn){if(p.it.length>g.sh.itn){SFX.item(); floatText(k,'ITEM!','#b6f5d6');} g.sh.itn=p.it.length;}
   });
   NODES.forEach(n=>{const d=n.disc; if(d.sq>0){d.sq-=dt; d.scale.y=1-.45*Math.sin(Math.max(0,d.sq)/.2*Math.PI);}});
-  if(pearl.tx!==NODES[V.pearlAt].x||pearl.tz!==NODES[V.pearlAt].z)placePearl(V.pearlAt);
+  if(pearl.at!==V.pearlAt)placePearl(V.pearlAt);
   if(ui.hit!==sh.hit){sh.hit=ui.hit; if(ui.hitK===myK())camMode='follow'; const g=pawns[ui.hitK]; if(g){g.jump=.36; SFX.hit(); floatText(ui.hitK,ui.roll); camD=10.5;}}
   if(ui.sp!==sh.sp){sh.sp=ui.sp; if(camMode==='me'||ui.who===myK())camMode='follow'; if(V.phase==='board'){splash(ui.spT); if(camMode==='follow')camD=17;}}
   if(ui.ch!==sh.ch){sh.ch=ui.ch; if(V.phase==='board')showChance(ui);}
@@ -1011,13 +1022,13 @@ function renderAsk(){
   if(a.k!==myK()){const d=document.createElement('div'); d.className='wait'; d.textContent=`Waiting for ${nameOf(a.k)}…`; box.appendChild(d); return;}
   a.l.forEach((l,i)=>{const b=document.createElement('button'), [t,sub]=l.split('|'); b.className='btn'+(i?' alt':''); b.id='act'+i; b.textContent=t; const itm=Object.values(ITEMS).find(x=>x.name===t); if(itm)b.insertAdjacentHTML('afterbegin',itm.svg);
     if(sub){const sm=document.createElement('small'); sm.textContent=sub; b.appendChild(sm);}
-    b.onclick=()=>{if(a.pick&&pickSel!==i){pickSel=i; showPick(a,box); return;} box.innerHTML=''; if(a.pick){pickTxt=''; landAt=-1; hudKey='';} answer(a.id,i);}; box.appendChild(b);});
-  if(a.pick){pickSel=0; showPick(a,box);}
+    b.onclick=()=>{if(a.pick&&a.info[i]!=null&&pickSel!==i){pickSel=i; showPick(a,box); return;} box.innerHTML=''; if(a.pick){pickTxt=''; landAt=-1; hudKey='';} answer(a.id,i);}; box.appendChild(b);});
+  if(a.pick){pickSel=a.start==null?0:a.start; showPick(a,box);}
 }
 /* a choice you preview first: the picked option turns yellow, the message and a ring on the board show where it leads, a second tap confirms */
 function spShort(i){const n=NODES[i]; if(!n)return'a space'; if(n.hot)return'a scorched space'; return{H:'the item shop',S:'the gate','+':'a blue space','-':'a red space','?':'a chance space',I:'an item space'}[n.t]||(SP[n.t]?'a '+SP[n.t][0]+' space':'a space');}
-function showPick(a,box){[...box.children].forEach((b,i)=>b.classList.toggle('alt',i!==pickSel)); landAt=a.land[pickSel];
-  pickTxt=`${a.l[pickSel]}: the pearl is ${a.d[pickSel]} spaces away. You land on ${spShort(landAt)}${landAt===V.pearlAt?' with the pearl stall':''}. Tap again to go.`; $('#msg').textContent=pickTxt; hudKey='';}
+function showPick(a,box){[...box.children].forEach((b,i)=>b.classList.toggle('alt',i!==pickSel)); landAt=a.land?a.land[pickSel]:-1;
+  pickTxt=(pickSel>=0&&a.info[pickSel])||''; $('#msg').textContent=pickTxt||V.ui.msg||''; hudKey='';}
 function drawResults(){
   const r=V.res, key=JSON.stringify(r); if(!r||key===resKey)return; resKey=key;
   $('#winLine').textContent=r.tie?'It’s a tie at the top':`${nameOf(r.rank[0])} wins the fair`;
@@ -1119,7 +1130,7 @@ function frame(now){
   sync(dt); mT-=dt; if(mT<=0){mT=.4; musicTick();}
   spin.forEach(q=>{q.o.rotation[q.ax]+=dt*q.v;}); upright.forEach(c=>{c.rotation.z=-c.parent.rotation.z;}); fxFrame(dt);
   pearl.position.x+=(pearl.tx-pearl.position.x)*Math.min(1,dt*2.2); pearl.position.z+=(pearl.tz-pearl.position.z)*Math.min(1,dt*2.2);
-  pearl.position.y=1.9+Math.sin(T*2)*.15; pearl.halo.rotation.z+=dt*2;
+  pearl.position.y=.06; pearl.halo.rotation.z+=dt*2; pearl.lid.rotation.x=-1.15-Math.sin(T*2)*.1; pearl.orb.position.y=.66+Math.sin(T*2)*.04;
   clouds.forEach(c=>{c.position.x+=dt*.35; if(c.position.x>46)c.position.x=-46;});
   boats.forEach((b,i)=>{b.position.y=-.55+Math.sin(T*1.3+i*2)*.06; b.rotation.z=Math.sin(T*1.1+i)*.05;});
   chars.forEach(c=>animChar(c,dt));
@@ -1210,7 +1221,7 @@ async function branch(p,nx,n=1){
   if(S.tide&&S.round<=S.tide){say('The tide covers the bridge, so it is the main path only.'); await sleep(900); return nx[0];}
   if(p.cpu){await sleep(450); return d[1]<d[0]?nx[1]:nx[0];}
   const land=nx.map(t=>{let q=t; for(let r=n-1;r>0;r--)q=NODES[q].next[0]; return q;});
-  say('Fork in the path. Tap a path to preview it, then tap it again to go.'); S.ui.fork=1; askX={pick:1,d,land};
+  say('Fork in the path. Tap a path to preview it, then tap it again to go.'); S.ui.fork=1; askX={pick:1,land,info:['Main path','Bridge'].map((l,i)=>`${l}: the pearl is ${d[i]} spaces away. You land on ${spShort(land[i])}${land[i]===S.pearlAt?' with the pearl stall':''}. Tap again to go.`)};
   const c=await ask(p.k,'Main path','Bridge'); S.ui.fork=0; return nx[c];
 }
 async function moveP(p,n){
@@ -1243,7 +1254,8 @@ async function useItem(p,idx){
   say(`${nm(p)} flies a Kite to the pearl stall.`); S.ui.dice=-1; await flyTo(p,S.pearlAt); await stall(p); return 1;
 }
 async function shop(p){
-  const ids=['twin','magnet','kite'].filter(id=>p.t>=ITEMS[id].cost); say('Item shop. Your bag holds 2 items.'); S.ui.follow=p.k;
+  const ids=['twin','magnet','kite'].filter(id=>p.t>=ITEMS[id].cost); say('Item shop. Tap an item to read about it, then tap it again to buy.'); S.ui.follow=p.k;
+  askX={pick:1,start:-1,info:[...ids.map(id=>`${ITEMS[id].name}, ${ITEMS[id].cost} tickets. ${ITEMS[id].desc} Tap again to buy.`),null]};
   const c=await ask(p.k,...ids.map(id=>`${ITEMS[id].name}|${ITEMS[id].cost} tickets`),'Skip');
   if(c<ids.length){p.t-=ITEMS[ids[c]].cost; p.it.push(ids[c]);}
 }
@@ -1343,6 +1355,7 @@ async function takeTurn(p){
       if(p.cpu)break;
       const opts=['Hit the dice']; if(!used)p.it.forEach(id=>opts.push(`${ITEMS[id].name}|${ITEMS[id].tip}`));
       const d=dist(p.pos,S.pearlAt); say(`The pearl is ${d} space${d===1?'':'s'} away.`);
+      if(opts.length>1)askX={pick:1,start:0,info:[null,...p.it.map(id=>`${ITEMS[id].name}. ${ITEMS[id].desc} Tap again to use it.`)]};
       const c=await ask(p.k,...opts);
       if(c===0)break;
       n=await useItem(p,c-1); used=true; ui.dice=p.k;

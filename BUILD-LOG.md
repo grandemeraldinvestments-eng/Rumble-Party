@@ -166,6 +166,11 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 - Fork in the path: tapping an option turns it yellow and shows that route's distance to the pearl and the space you will land on, with a ring on that space and the camera leaning toward it. Tapping the yellow option again confirms.
 - The Center button is inside the action window, between the player name and Map.
 
+### 24. Landscape action bar, item previews and the clam
+- Sideways, the action window is a bar along the bottom: player name and message on the left, buttons on the right.
+- Items work like the fork: tap an item in the shop or in your bag to read what it does (it turns yellow), tap it again to buy or use it. Skip and Hit the dice act on the first tap.
+- The pearl stall is an open clam with the pearl inside, sitting beside its space on the side clearest of the path.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
