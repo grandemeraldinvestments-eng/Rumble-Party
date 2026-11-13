@@ -160,6 +160,12 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 - New Practice screen on the main menu: pick any of the 19 mini games and play it against 1, 3 or 5 computer players. Games already tried are marked.
 - `minigames.html` is the same game opened straight on the practice list.
 
+### 23. Slimmer player cards and fork preview
+- Player cards are two lines: YOU, CPU or the rank sits under the name, and tickets, pearls and items share the second line.
+- The menu button is smaller and the round label sits under it on two lines, so more of the board shows.
+- Fork in the path: tapping an option turns it yellow and shows that route's distance to the pearl and the space you will land on, with a ring on that space and the camera leaning toward it. Tapping the yellow option again confirms.
+- The Center button is inside the action window, between the player name and Map.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

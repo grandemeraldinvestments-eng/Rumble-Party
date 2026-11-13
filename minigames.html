@@ -106,10 +106,13 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .chip{background:var(--card); padding:4px 5px; border:3px solid var(--ink); min-width:0; box-shadow:3px 3px 0 var(--ink)}
 .chip.on{outline:4px solid var(--sun); outline-offset:0; background:#fff3c4}
 .chip .nm{display:flex; align-items:center; gap:4px; font-weight:800; font-size:.78rem}
-.chip .nm .name{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.chip .nm .name{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1.1}
+.chip .nm .name small{display:block; font-size:.58rem; font-weight:800; color:var(--dim); letter-spacing:.04em}
+.chip .st .it{display:block; margin-left:2px}
+.chip .st .it svg{width:16px; height:16px; display:block}
 .chip .face{width:22px; height:22px}
 .chip.on .face{border-color:var(--p1)}
-.chip .st{display:flex; align-items:center; gap:3px; margin-top:4px; font-weight:800; font-size:.95rem; flex-wrap:wrap}
+.chip .st{display:flex; align-items:center; gap:3px; margin-top:2px; font-weight:800; font-size:.95rem; flex-wrap:wrap}
 .chip .bag{display:flex; gap:3px; margin-top:3px; min-height:16px; flex-wrap:wrap; font-size:.68rem; font-weight:800}
 .chip .bag span{background:var(--ink); color:#fff; padding:0 4px}
 .chip .bag .rk{background:none; color:var(--dim); padding-left:0}
@@ -119,10 +122,12 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .hudrow{display:flex; align-items:center; justify-content:center; gap:6px; flex:none}
 .pill{border:2px solid var(--ink); background:var(--card); padding:2px 10px; min-height:36px; font-size:.85rem; font-weight:800; box-shadow:2px 2px 0 var(--ink); white-space:nowrap}
 .info{align-self:center; max-width:100%; background:var(--ink); color:#fff; border:0; padding:8px 12px; font-weight:600; text-align:left; line-height:1.3; flex:none}
-#centerBtn{align-self:flex-end; flex:none}
+#centerBtn{flex:none}
+.phead .pill{padding:2px 8px}
+.topside{display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex:none}
 .phead{display:flex; align-items:center; gap:8px}
 .phead .who{flex:1; min-width:0; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-#menuBtn{flex:none; width:44px; height:44px; padding:0; display:grid; place-items:center}
+#menuBtn{flex:none; width:36px; height:36px; min-height:36px; padding:0; display:grid; place-items:center}
 .toprow{display:flex; gap:6px; align-items:flex-start; flex:none}
 .toprow .score{flex:1; min-width:0}
 .score.n4{gap:4px}
@@ -134,13 +139,13 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .panel.auto{padding-bottom:10px; gap:4px}
 .panel.auto .acts,.panel.auto #minBtn{display:none}
 .panel.auto .msg{min-height:0; text-align:left; display:block}
-.burger{display:block; width:18px; height:3px; background:var(--ink); box-shadow:0 -6px 0 var(--ink),0 6px 0 var(--ink)}
+.burger{display:block; width:16px; height:3px; background:var(--ink); box-shadow:0 -5px 0 var(--ink),0 5px 0 var(--ink)}
 #settings{position:fixed; inset:0; z-index:40; background:rgba(23,48,77,.62); display:flex; align-items:center; justify-content:center;
   padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
 #settings .card{max-width:340px}
 .panel.min .msg,.panel.min .acts{display:none}
 .panel.min{padding-bottom:10px}
-.roundtag{background:var(--ink); color:#fff; padding:8px 10px; font-size:.8rem; white-space:nowrap; letter-spacing:.06em; text-transform:uppercase; font-weight:700}
+.roundtag{background:var(--ink); color:#fff; padding:4px 6px; font-size:.62rem; line-height:1.25; text-align:center; white-space:nowrap; letter-spacing:.06em; text-transform:uppercase; font-weight:700}
 .grow{flex:1; min-height:0; pointer-events:none}
 .panel{position:relative; background:var(--card); border:3px solid var(--ink); padding:10px 12px 14px; display:flex; flex-direction:column; gap:8px; text-align:center;
   box-shadow:5px 5px 0 var(--ink); flex:none; width:100%; max-width:480px; align-self:center}
@@ -260,12 +265,9 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
   .chip{padding:3px 4px; border-width:2px; box-shadow:2px 2px 0 var(--ink)}
   .chip .nm{font-size:.72rem; gap:3px} .chip .face{width:20px; height:20px; border-width:1px}
   .chip .st{font-size:.82rem; gap:2px; margin-top:2px} .chip .bag{font-size:.6rem; min-height:0; margin-top:1px}
-  .hudrow{align-self:flex-start}
-  .roundtag{padding:5px 8px; font-size:.7rem}
   .panel{align-self:flex-end; max-width:min(46%,340px); padding:7px 9px 9px; gap:5px; box-shadow:3px 3px 0 var(--ink)}
   .panel .who{font-size:.98rem} .panel .msg{min-height:1.6em; font-size:.9rem}
   .panel .acts{min-height:44px; gap:6px} .panel .acts .btn{padding:8px 10px; font-size:.95rem}
-  #centerBtn{align-self:flex-end}
   .card{max-width:min(100%,720px); padding:12px 14px; gap:9px}
   .card h1{font-size:1.5rem}
   #menu .stack,#setMain{display:grid; grid-template-columns:1fr 1fr; gap:8px}
@@ -366,13 +368,11 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 </section>
 
 <section class="screen" id="game" hidden>
-  <div class="toprow"><div class="score" id="score"></div><button class="pill" id="menuBtn" aria-label="Settings"><i class="burger"></i></button></div>
-  <div class="hudrow"><span class="roundtag" id="roundLbl"></span></div>
+  <div class="toprow"><div class="score" id="score"></div><div class="topside"><button class="pill" id="menuBtn" aria-label="Settings"><i class="burger"></i></button><span class="roundtag" id="roundLbl"></span></div></div>
   <button class="info" id="spInfo" hidden></button>
   <div class="grow"></div>
-  <button class="pill" id="centerBtn" hidden>Center</button>
   <div class="panel" id="panel">
-    <div class="phead"><div class="who" id="who"></div><button class="pill" id="mapBtn">Map</button><button class="pill" id="minBtn">Hide</button></div>
+    <div class="phead"><div class="who" id="who"></div><button class="pill" id="centerBtn" hidden>Center</button><button class="pill" id="mapBtn">Map</button><button class="pill" id="minBtn">Hide</button></div>
     <div class="msg" id="msg"></div>
     <div class="acts" id="acts"></div>
   </div>
@@ -563,6 +563,7 @@ const nameOf=k=>CAST[V.p[k].i].name;
 
 /* ---------- 3D scene ---------- */
 const FONT='"Rubik","Arial Black",Arial,sans-serif';
+let landR=null, pickSel=0, pickTxt='', landAt=-1;
 let R,scene,cam,pawns=[],dice,num,numC,numT,pearl,clouds=[],boats=[],spin=[],upright=[],world=null,curMap='',defParent=null,MAPX=MAPS.island,ICONS=null,introT=0,FXP={tong:[],boost:0,erupt:0},lava=null,trapG=null,shownBurn=-2,trapKey='',arrows,conf,mapView=false,T=0,camD=13,MS=null,camMode='follow',mark=null,panelMin=false,mapD=0;
 const camT=new THREE.Vector3(), chars=new Set();
 const mat=c=>new THREE.MeshLambertMaterial({color:c});
@@ -590,6 +591,7 @@ function init3D(){
   trapG=new THREE.Group(); scene.add(trapG);
   // marker ring for the space a player taps
   mark=mesh(new THREE.TorusGeometry(.98,.07,8,36),new THREE.MeshBasicMaterial({color:0x17304d}),0,.34,0); mark.rotation.x=Math.PI/2; mark.castShadow=false; mark.visible=false;
+  landR=mesh(new THREE.TorusGeometry(1.02,.12,8,36),new THREE.MeshBasicMaterial({color:0xffc531}),0,.4,0); landR.rotation.x=Math.PI/2; landR.castShadow=false; landR.visible=false;
   // confetti
   const CN=80,cg=new THREE.BufferGeometry(),cc=new Float32Array(CN*3),pal=[[1,.77,.19],[1,.3,.3],[.18,.56,1],[.21,.79,.54],[.79,.65,1]];
   for(let i=0;i<CN;i++)cc.set(pal[i%5],i*3);
@@ -982,6 +984,7 @@ function sync(dt){
   if(ui.cheer!==sh.cheer){sh.cheer=ui.cheer; const g=pawns[ui.cheerK]; if(g){g.cheer=.9; burst(g.position.x,g.position.z);}}
   dice.visible=ui.dice>=0&&!!pawns[ui.dice]; if(dice.visible){const g=pawns[ui.dice]; dice.position.set(g.position.x,3.3,g.position.z); dice.rotation.x+=dt*7; dice.rotation.y+=dt*9;}
   const cur=pawns[V.turn]; num.visible=ui.num>=0&&!!cur; if(num.visible){setNum(ui.num); num.position.set(cur.position.x,2.75,cur.position.z);}
+  if(landR){const L=landAt>=0&&V.phase==='board'?NODES[landAt]:null; landR.visible=!!L; if(L){landR.position.set(L.x,.4+Math.sin(T*5)*.06,L.z); landR.scale.setScalar(1+Math.sin(T*5)*.08);}}
   arrows.visible=!!ui.fork; if(arrows.visible)arrows.children.forEach((a,i)=>{a.position.y=.9+Math.sin(T*6+i)*.12;});
   $('#centerBtn').hidden=camMode!=='free'||mapView;
   const mine=ui.who===myK()||!!(ui.ask&&ui.ask.k===myK()); $('#panel').classList.toggle('auto',!mine); $('#panel').classList.toggle('min',mine&&panelMin);
@@ -994,22 +997,27 @@ function drawHud(){
   const rank=p=>{let i=ord.indexOf(p); while(i>0&&same(ord[i-1],p))i--; return['1st','2nd','3rd','4th','5th','6th'][i];};
   $('#score').style.setProperty('--n',V.p.length>4?3:V.p.length); $('#score').style.setProperty('--nl',V.p.length); $('#score').className='score'+(V.p.length>3?' n4':'');
   $('#score').innerHTML=V.p.map((p,k)=>`<div class="chip ${k===V.turn?'on':''}" style="--c:${CAST[p.i].c}">
-    <div class="nm">${face(p.i)}<span class="name">${CAST[p.i].name}</span></div>
-    <div class="st"><i class="tk"></i>${p.t}<i class="pl"></i>${p.pe}</div>
-    <div class="bag"><span class="rk">${k===me?'YOU':p.cpu?'CPU':rank(p)}</span>${p.it.filter(i=>ITEMS[i]).map(i=>`<span class="it" title="${ITEMS[i].name}">${ITEMS[i].svg}</span>`).join('')}</div></div>`).join('');
-  $('#roundLbl').textContent=V.round>=V.rounds?'Final round x2':`Round ${V.round} of ${V.rounds}`;
+    <div class="nm">${face(p.i)}<span class="name">${CAST[p.i].name}<small>${k===me?'YOU':p.cpu?'CPU':rank(p)}</small></span></div>
+    <div class="st"><i class="tk"></i>${p.t}<i class="pl"></i>${p.pe}${p.it.filter(i=>ITEMS[i]).map(i=>`<span class="it" title="${ITEMS[i].name}">${ITEMS[i].svg}</span>`).join('')}</div></div>`).join('');
+  $('#roundLbl').innerHTML=V.round>=V.rounds?'Final<br>round x2':`Round<br>${V.round} of ${V.rounds}`;
   const w=V.p[V.ui.who]; $('#who').textContent=w?CAST[w.i].name+(V.ui.who===me?' (you)':w.cpu?' (CPU)':''):''; $('#who').style.color=w?CAST[w.i].c:'';
-  $('#msg').textContent=V.ui.msg||'';
+  $('#msg').textContent=pickTxt||V.ui.msg||'';
 }
 function renderAsk(){
   const a=V.ui.ask, box=V.phase==='mini'?$('#mgActs'):V.phase==='results'?$('#resActs'):$('#acts'), key=a?a.id+':'+V.phase:'';
   if(key===askShown)return; askShown=key; for(const id of ['#acts','#mgActs','#resActs'])$(id).innerHTML='';
+  if(pickTxt||landAt>=0){pickTxt=''; landAt=-1; hudKey='';}
   if(!a)return;
   if(a.k!==myK()){const d=document.createElement('div'); d.className='wait'; d.textContent=`Waiting for ${nameOf(a.k)}…`; box.appendChild(d); return;}
   a.l.forEach((l,i)=>{const b=document.createElement('button'), [t,sub]=l.split('|'); b.className='btn'+(i?' alt':''); b.id='act'+i; b.textContent=t; const itm=Object.values(ITEMS).find(x=>x.name===t); if(itm)b.insertAdjacentHTML('afterbegin',itm.svg);
     if(sub){const sm=document.createElement('small'); sm.textContent=sub; b.appendChild(sm);}
-    b.onclick=()=>{box.innerHTML=''; answer(a.id,i);}; box.appendChild(b);});
+    b.onclick=()=>{if(a.pick&&pickSel!==i){pickSel=i; showPick(a,box); return;} box.innerHTML=''; if(a.pick){pickTxt=''; landAt=-1; hudKey='';} answer(a.id,i);}; box.appendChild(b);});
+  if(a.pick){pickSel=0; showPick(a,box);}
 }
+/* a choice you preview first: the picked option turns yellow, the message and a ring on the board show where it leads, a second tap confirms */
+function spShort(i){const n=NODES[i]; if(!n)return'a space'; if(n.hot)return'a scorched space'; return{H:'the item shop',S:'the gate','+':'a blue space','-':'a red space','?':'a chance space',I:'an item space'}[n.t]||(SP[n.t]?'a '+SP[n.t][0]+' space':'a space');}
+function showPick(a,box){[...box.children].forEach((b,i)=>b.classList.toggle('alt',i!==pickSel)); landAt=a.land[pickSel];
+  pickTxt=`${a.l[pickSel]}: the pearl is ${a.d[pickSel]} spaces away. You land on ${spShort(landAt)}${landAt===V.pearlAt?' with the pearl stall':''}. Tap again to go.`; $('#msg').textContent=pickTxt; hudKey='';}
 function drawResults(){
   const r=V.res, key=JSON.stringify(r); if(!r||key===resKey)return; resKey=key;
   $('#winLine').textContent=r.tie?'It’s a tie at the top':`${nameOf(r.rank[0])} wins the fair`;
@@ -1126,13 +1134,14 @@ function frame(now){
     const pt=cam.aspect<1, tv=Math.tan(cam.fov*Math.PI/360), u=pt?mapBB.a:mapBB.b, w=pt?mapBB.b:mapBB.a; const H=window.innerHeight, W=window.innerWidth, sr=$('#score').getBoundingClientRect(), pr=$('#panel').getBoundingClientRect(), pv=pr.width>0&&pr.height>0;
       const fit=(l,t,r,bm)=>{const fh=Math.max(.3,(bm-t)/H), fw=Math.max(.3,(r-l)/W); return{D:Math.max((u+1.9)/(tv*fh),(w+1.9)/(tv*cam.aspect*fw)),cy:((t+bm)/2-H/2)/H,cx:((l+r)/2-W/2)/W};};
       // sideways: the cards run along the top and the action window sits in a corner, so try the space beside it and the space above it and keep the bigger map
-      let top=pt?$('#roundLbl').getBoundingClientRect().bottom:sr.bottom+4, best=fit(0,top,W,pv&&pr.width>W*.6?Math.min(H,pr.top):H);
+      let top=sr.bottom+4, best=fit(0,top,W,pv&&pr.width>W*.6?Math.min(H,pr.top):H);
       if(pv&&pr.width<=W*.6){const A=fit(0,top,pr.left-6,H), B=fit(0,top,W,pr.top-4); best=A.D<B.D?A:B;}
       mapD+=(best.D-mapD)*(mapD?Math.min(1,dt*6):1); mapC.x+=(best.cx-mapC.x)*Math.min(1,dt*6); mapC.y+=(best.cy-mapC.y)*Math.min(1,dt*6);
       const sh=-mapC.y*2*mapD*tv, sx=pt?0:-mapC.x*2*mapD*tv*cam.aspect;
     const px=mapBB.x+(pt?sh:sx), pz=mapBB.z+(pt?0:sh); cam.up.set(pt?-1:0,0,pt?0:-1); cam.position.set(px,mapD,pz); cam.lookAt(px,0,pz);}
   else{const f=V.ui.follow, kk=1-Math.exp(-dt*4), cz=V.ui.cam, tg=camMode==='free'?null:cz?{x:cz[0],z:cz[1]}:camMode==='me'?(pawns[myK()]||pawns[0]).position:f<0?pearl.position:(pawns[f]||pawns[0]).position;
-    if(tg){camT.x+=(tg.x-camT.x)*kk; camT.z+=(tg.z-camT.z)*kk;} camD+=((cz&&camMode!=='free'?19:12.5)-camD)*(1-Math.exp(-dt*2.5));
+    let wide=0, tq=tg; if(tg&&landAt>=0&&NODES[landAt]){const L=NODES[landAt]; wide=Math.hypot(L.x-tg.x,L.z-tg.z); tq={x:(tg.x+L.x)/2,z:(tg.z+L.z)/2};}
+    if(tq){camT.x+=(tq.x-camT.x)*kk; camT.z+=(tq.z-camT.z)*kk;} camD+=((cz&&camMode!=='free'?19:Math.max(12.5,Math.min(24,wide*1.1+7)))-camD)*(1-Math.exp(-dt*2.5));
     cam.position.set(camT.x,camD*.84,camT.z+camD*.8); cam.lookAt(camT.x,.3,camT.z+.4);}
   if(MS){if(MS.update)MS.update(dt*MSPEED); R.render(MS.scene,MS.cam);}
   else if($('#mini').hidden)R.render(scene,cam);
@@ -1183,9 +1192,10 @@ function leave(){
 }
 
 /* ---------- host game logic: changes S and waits; the renderer does the rest ---------- */
+let askX=null;
 function ask(k,...labels){
   if(S.p[k].cpu)return Promise.resolve(0);
-  return new Promise(res=>{const id=++askId, g=gen; S.ui.ask={id,k,l:labels};
+  return new Promise(res=>{const id=++askId, g=gen; S.ui.ask={id,k,l:labels,...(askX||{})}; askX=null;
     const done=i=>{if(g!==gen||!pend||pend.id!==id)return; pend=null; S.ui.ask=null; res(Math.max(0,Math.min(labels.length-1,i)));};
     pend={id,k,res:done}; if(S.p[k].seat!=='host')setTimeout(()=>done(0),60000);});
 }
@@ -1195,16 +1205,17 @@ const gain=(p,n)=>{p.t=Math.max(0,p.t+n);};
 const nm=p=>CAST[p.i].name;
 async function stepTo(p,to){p.pos=to; p.st++; await sleep(260);}
 async function flyTo(p,to){p.pos=to; p.fly++; await sleep(900);}
-async function branch(p,nx){
+async function branch(p,nx,n=1){
   const d=nx.map(t=>dist(t,S.pearlAt)+1);
   if(S.tide&&S.round<=S.tide){say('The tide covers the bridge, so it is the main path only.'); await sleep(900); return nx[0];}
   if(p.cpu){await sleep(450); return d[1]<d[0]?nx[1]:nx[0];}
-  say(`Fork in the path. The pearl is ${d[0]} spaces by the main path, ${d[1]} by the bridge.`); S.ui.fork=1;
+  const land=nx.map(t=>{let q=t; for(let r=n-1;r>0;r--)q=NODES[q].next[0]; return q;});
+  say('Fork in the path. Tap a path to preview it, then tap it again to go.'); S.ui.fork=1; askX={pick:1,d,land};
   const c=await ask(p.k,'Main path','Bridge'); S.ui.fork=0; return nx[c];
 }
 async function moveP(p,n){
   while(n>0){
-    S.ui.num=n; const nx=NODES[p.pos].next; await stepTo(p,nx.length>1?await branch(p,nx):nx[0]); n--;
+    S.ui.num=n; const nx=NODES[p.pos].next; await stepTo(p,nx.length>1?await branch(p,nx,n):nx[0]); n--;
     if(p.pos===0){gain(p,10); say('Lap bonus: +10 tickets.');}
     if(NODES[p.pos].t==='H'){S.ui.num=-1; await shopStop(p);}
     if(p.pos===S.pearlAt){S.ui.num=-1; await stall(p);}

@@ -1,6 +1,6 @@
 // Rumble Party service worker: keeps the game playable offline once it has been opened online.
 // The page itself is fetched fresh when there is a connection, so pushed updates arrive on the next launch.
-const CACHE='rumble-party-v3';
+const CACHE='rumble-party-v4';
 const CORE=['./','index.html','manifest.webmanifest','icon-192.png','models.json','char-0.json','char-1.json','char-2.json','char-3.json','char-4.json','char-5.json','music-board.wav','music-mini.wav','music-lobby.wav',
   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js','https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js'];
 self.addEventListener('install',e=>{self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c=>Promise.all(CORE.map(u=>c.add(u).catch(()=>{})))));});
