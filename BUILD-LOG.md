@@ -2,7 +2,7 @@
 
 Everything built so far, in the order it happened. The game is one file, `index.html`, plus three music tracks. It runs in a browser with Three.js and has no build step.
 
-Last updated: 11 November 2026.
+Last updated: 12 November 2026.
 
 ## What the game is
 
@@ -147,6 +147,12 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 ### 20. Home-screen web app
 - Added a web app manifest, icons and an offline worker (`manifest.webmanifest`, `icon-*.png`, `apple-touch-icon.png`, `sw.js`), so the game can be added to a phone's home screen, open full screen and run offline after the first visit.
 - Needs GitHub Pages switched on for the repository. Outside Claude the game is solo only.
+
+### 21. Landscape layout, full screen and right-stick scrolling
+- Sideways phones get their own layout: player cards in one row, the action window at the bottom right, two-column menus, and a compact mini game intro so the Ready button is always on screen.
+- Full screen: on phones the game asks the browser for full screen when a game starts, and Settings has a full screen switch. iPhone browsers do not allow this; there the game must be opened from the Home Screen icon.
+- Controller right stick scrolls menus and long screens, and pans the board during play. Pressing the right stick re-centres the camera.
+- The menu now says 2 to 6 players.
 
 ## Mini games
 

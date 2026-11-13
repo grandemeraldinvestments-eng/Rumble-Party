@@ -244,6 +244,43 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 #results .card{text-align:center}
 #results h1{font-size:clamp(1rem,5.4vw,1.4rem)}
 @media (prefers-reduced-motion:reduce){.float,.splash{animation-duration:.01s}}
+
+/* ---------- phones held sideways: cards in one row, the action window tucked into the bottom right, menus in two columns ---------- */
+@media (orientation:landscape) and (max-height:560px){
+  body{padding-block:6px}
+  .screen{gap:6px}
+  .score{grid-template-columns:repeat(var(--nl,4),minmax(0,1fr)); gap:4px}
+  .toprow .score{max-width:min(100%,calc(var(--nl,4)*124px))}
+  .toprow{justify-content:space-between}
+  .chip{padding:3px 4px; border-width:2px; box-shadow:2px 2px 0 var(--ink)}
+  .chip .nm{font-size:.72rem; gap:3px} .chip .face{width:20px; height:20px; border-width:1px}
+  .chip .st{font-size:.82rem; gap:2px; margin-top:2px} .chip .bag{font-size:.6rem; min-height:0; margin-top:1px}
+  .hudrow{align-self:flex-start}
+  .roundtag{padding:5px 8px; font-size:.7rem}
+  .panel{align-self:flex-end; max-width:min(46%,340px); padding:7px 9px 9px; gap:5px; box-shadow:3px 3px 0 var(--ink)}
+  .panel .who{font-size:.98rem} .panel .msg{min-height:1.6em; font-size:.9rem}
+  .panel .acts{min-height:44px; gap:6px} .panel .acts .btn{padding:8px 10px; font-size:.95rem}
+  #centerBtn{align-self:flex-end}
+  .card{max-width:min(100%,720px); padding:12px 14px; gap:9px}
+  .card h1{font-size:1.5rem}
+  #menu .stack,#setMain{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  #setMain h2{grid-column:1 / -1}
+  #lobby .card{display:grid; grid-template-columns:1fr 1fr; gap:6px 16px; align-content:start}
+  #lobby .card>*{grid-column:1}
+  #lobby #hostCtl{grid-column:2; grid-row:1 / span 5; gap:6px}
+  #lobby .row2,#lobby #lobbyNote{grid-column:1 / -1}
+  #mini{gap:6px; padding-top:calc(6px + env(safe-area-inset-top,0px)); padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+  #mini h2{font-size:1rem} #mini header p{display:none}
+  #mini.gl header{padding:4px 10px; align-self:flex-start}
+  #stage{overflow-y:auto; gap:8px; max-width:720px; justify-content:safe center}
+  #stage p.sub:not(#rdyNote){display:none}
+  #stage p{max-width:70ch}
+  .votes{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+  #chance{flex-direction:row; flex-wrap:wrap; gap:12px 20px; padding:10px}
+  #chance p{max-width:44vw}
+  .chdisc{width:110px; height:110px} .chdisc span{font-size:4.4rem}
+  #jumpBtn{bottom:calc(28px + env(safe-area-inset-bottom,0px)); width:84px; height:84px}
+}
 </style>
 
 <canvas id="gl"></canvas>
@@ -253,7 +290,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 <section class="screen center" id="menu">
   <div class="card">
     <h1>Rumble Party</h1>
-    <p class="lede">A party board game for 2 to 4 players. Run around the board, win tickets in mini games and trade them for pearls. Four maps, nineteen mini games.</p>
+    <p class="lede">A party board game for 2 to 6 players. Run around the board, win tickets in mini games and trade them for pearls. Four maps, nineteen mini games.</p>
     <div class="stack">
       <button class="btn" id="hostBtn" disabled>Host a game</button>
       <button class="btn" id="joinBtn" disabled>Join a game</button>
@@ -336,6 +373,8 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
       <button class="btn alt" id="sndBtn">Sound effects: on</button>
       <button class="btn alt" id="musBtn">Music: on</button>
       <button class="btn alt" id="gfxBtn">Graphics: smooth</button>
+      <button class="btn alt" id="fsBtn">Full screen: off</button>
+      <p class="lede" id="fsNote" hidden>To play full screen on this phone, add the game to your Home Screen and open it from there.</p>
       <button class="btn alt" id="quitBtn">Leave game</button>
       <button class="btn" id="setClose">Back to the game</button></div>
     <div class="stack" id="setLeave" hidden><h2>Leave the game?</h2><p class="lede" id="leaveNote"></p>
@@ -931,7 +970,7 @@ function drawHud(){
   const key=JSON.stringify([V.p.map(p=>[p.t,p.pe,p.it,p.cpu]),V.turn,V.round,V.ui.who,V.ui.msg]); if(key===hudKey)return; hudKey=key;
   const me=myK(), ord=[...V.p].sort((a,b)=>b.pe-a.pe||b.t-a.t), same=(a,b)=>a.pe===b.pe&&a.t===b.t;
   const rank=p=>{let i=ord.indexOf(p); while(i>0&&same(ord[i-1],p))i--; return['1st','2nd','3rd','4th','5th','6th'][i];};
-  $('#score').style.setProperty('--n',V.p.length>4?3:V.p.length); $('#score').className='score'+(V.p.length>3?' n4':'');
+  $('#score').style.setProperty('--n',V.p.length>4?3:V.p.length); $('#score').style.setProperty('--nl',V.p.length); $('#score').className='score'+(V.p.length>3?' n4':'');
   $('#score').innerHTML=V.p.map((p,k)=>`<div class="chip ${k===V.turn?'on':''}" style="--c:${CAST[p.i].c}">
     <div class="nm">${face(p.i)}<span class="name">${CAST[p.i].name}</span></div>
     <div class="st"><i class="tk"></i>${p.t}<i class="pl"></i>${p.pe}</div>
@@ -1013,7 +1052,7 @@ function gpPoll(dt){
   let p=null; try{const l=navigator.getGamepads?navigator.getGamepads():[]; for(const q of l)if(q&&q.connected&&q.buttons.length){p=q; break;}}catch(e){return;}
   if(!p)return;
   const dz=v=>Math.abs(v)<.22?0:v, b=i=>!!(p.buttons[i]&&p.buttons[i].pressed), hit=i=>b(i)&&!gp.prev[i], cur=$('#gpCur');
-  const ax=dz(p.axes[0]||0), ay=dz(p.axes[1]||0), dx=(b(15)?1:0)-(b(14)?1:0), dy=(b(13)?1:0)-(b(12)?1:0), any=ax||ay||dx||dy||p.buttons.some(q=>q.pressed);
+  const ax=dz(p.axes[0]||0), ay=dz(p.axes[1]||0), dx=(b(15)?1:0)-(b(14)?1:0), dy=(b(13)?1:0)-(b(12)?1:0), any=ax||ay||dx||dy||dz(p.axes[2]||0)||dz(p.axes[3]||0)||p.buttons.some(q=>q.pressed);
   if(!gp.on&&any){gp.on=true; gp.x=window.innerWidth/2; gp.y=window.innerHeight*.6;}
   if(gp.on){
     gp.idle=any?0:gp.idle+dt;
@@ -1029,6 +1068,12 @@ function gpPoll(dt){
       if(sig!==gp.sig){gp.sig=sig; if(main&&!gp.down){const r=main.getBoundingClientRect(), t=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2); if(t&&(t===main||main.contains(t))){gp.x=r.left+r.width/2; gp.y=r.top+r.height/2;}}}
       if(hit(0)){const el=document.elementFromPoint(gp.x,gp.y); if(el){gp.down=el; fire(el,'pointerdown');}}
       if(!b(0)&&gp.prev[0]&&gp.down){const d=gp.down, el=document.elementFromPoint(gp.x,gp.y); gp.down=null; fire(d,'pointerup'); if(el&&(el===d||d.contains(el)||el.contains(d))){const c=el.closest('button,a,input,label')||el; if(c.tagName==='INPUT')c.focus(); else c.click();}}
+      const rx=dz(p.axes[2]||0), ry=dz(p.axes[3]||0);
+      if(rx||ry){let el=document.elementFromPoint(gp.x,gp.y), sc=null; for(;el&&el!==document.body;el=el.parentElement){const oy=getComputedStyle(el).overflowY; if((oy==='auto'||oy==='scroll')&&el.scrollHeight>el.clientHeight+2){sc=el; break;}}
+        if(!sc)sc=[...document.querySelectorAll('.card,#stage')].find(q=>q.offsetParent&&q.scrollHeight>q.clientHeight+2);
+        if(sc){sc.scrollTop+=ry*dt*900; sc.scrollLeft+=rx*dt*900;}
+        else if(V&&V.phase==='board'&&shownScreen==='game'&&!mapView&&introT<=0){camMode='free'; camT.x=Math.max(-MAPX.a-3,Math.min(MAPX.a+3,camT.x+rx*dt*16)); camT.z=Math.max(-MAPX.b-3,Math.min(MAPX.b+3,camT.z+ry*dt*16));}}
+      if(hit(11)&&V&&V.phase==='board')camMode='follow';
       if(hit(1)){const m=$('#mapBtn'); if(m&&m.offsetParent)m.click();}
       if(hit(9)){const m=$('#menuBtn'); if(m&&m.offsetParent)m.click();}
       cur.style.transform=`translate(${gp.x}px,${gp.y}px)`;
@@ -1055,7 +1100,8 @@ function frame(now){
   const board=V&&V.phase==='board'&&pawns.length;
   if(board&&introT>0)introCam(dt);
   else if(!board){const a=T*.1,r=MAPX.a*(cam.aspect<1?2.4:1.7); cam.position.set(Math.sin(a)*r,r*.6,Math.cos(a)*r); cam.lookAt(0,0,0);}
-  else if(mapView){const pt=cam.aspect<1, tv=Math.tan(cam.fov*Math.PI/360), u=pt?MAPX.a:MAPX.b, w=pt?MAPX.b:MAPX.a; const H=window.innerHeight, top=$('#roundLbl').getBoundingClientRect().bottom, bot=Math.min(H,$('#panel').getBoundingClientRect().top), f=Math.min(1,Math.max(.55,(bot-top)/H)), c=((top+bot)/2-H/2)/H,
+  else if(mapView){const pt=cam.aspect<1, tv=Math.tan(cam.fov*Math.PI/360), u=pt?MAPX.a:MAPX.b, w=pt?MAPX.b:MAPX.a; const H=window.innerHeight, top=$('#roundLbl').getBoundingClientRect().bottom, pr=$('#panel').getBoundingClientRect(), bot=pr.width>window.innerWidth*.6?Math.min(H,pr.top):H,   // a narrow action window in the corner does not shrink the map
+       f=Math.min(1,Math.max(.55,(bot-top)/H)), c=((top+bot)/2-H/2)/H,
       D=Math.max((u+1.6)/(tv*f),(w+1.8)/(tv*cam.aspect)); mapD+=(D-mapD)*(mapD?Math.min(1,dt*6):1); const sh=-c*2*mapD*tv;
     cam.up.set(pt?-1:0,0,pt?0:-1); cam.position.set(pt?sh:0,mapD,pt?0:sh); cam.lookAt(pt?sh:0,0,pt?0:sh);}
   else{const f=V.ui.follow, kk=1-Math.exp(-dt*4), cz=V.ui.cam, tg=camMode==='free'?null:cz?{x:cz[0],z:cz[1]}:camMode==='me'?(pawns[myK()]||pawns[0]).position:f<0?pearl.position:(pawns[f]||pawns[0]).position;
@@ -1780,7 +1826,7 @@ const GUIDE=[
    <li><span class="sw" style="background:#fff">${ITEMS.kite.svg}</span><span><b>Kite, 15 tickets</b>Fly straight to the pearl stall.</span></li></ul>
    <p class="lede">Buy items at a purple shop space. Your bag holds 2.</p>`],
  ['Mini games and the finish',`<ul class="legend">
-   <li><span><b>Game controller.</b>In walk-around games the left stick or d-pad runs and A jumps or dashes. Everywhere else the stick moves a pointer and A presses what is under it, the d-pad hops between buttons, B opens the map and Start opens the menu.</span></li>
+   <li><span><b>Game controller.</b>In walk-around games the left stick or d-pad runs and A jumps or dashes. Everywhere else the left stick moves a pointer and A presses what is under it, the d-pad hops between buttons, the right stick scrolls lists and pans the board (press it to centre), B opens the map and Start opens the menu.</span></li>
    <li><span><b>Shared-deck games.</b>Walk into other players to shove them, do not fall off the edge, and the last one standing ends the game.</span></li>
    <li><span><b>A mini game ends every round.</b>Players get 10 seconds to vote between three games, everyone taps Ready, then all play at once on their own screen. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2.</span></li>
    <li><span><b>Underdog gift.</b>Before the final round, the player in last place gets 10 tickets.</span></li>
@@ -1853,6 +1899,17 @@ $('#spInfo').onclick=hideInfo;
 })();
 const sndLbl=()=>{$('#sndBtn').textContent=muted?'Sound effects: off':'Sound effects: on';}; sndLbl();
 const musLbl=()=>{$('#musBtn').textContent=musicOff?'Music: off':'Music: on';}; musLbl();
+/* full screen: hides the browser's bars. Phones go full screen when a game is opened unless it was turned off here.
+   iPhones only allow it for a page opened from the Home Screen, so there a note explains that instead */
+const fsEl=document.documentElement, fsCan=!!(fsEl.requestFullscreen||fsEl.webkitRequestFullscreen), fsApp=()=>window.matchMedia('(display-mode: fullscreen),(display-mode: standalone)').matches||navigator.standalone===true;
+const fsOn=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+function goFull(on){try{if(on){const f=fsEl.requestFullscreen||fsEl.webkitRequestFullscreen, r=f.call(fsEl,{navigationUI:'hide'}); if(r&&r.catch)r.catch(()=>{});} else{const f=document.exitFullscreen||document.webkitExitFullscreen, r=f.call(document); if(r&&r.catch)r.catch(()=>{});}}catch(e){}}
+let fsWant=true; try{fsWant=localStorage.getItem('rumble-full')!=='0';}catch(e){}
+function autoFull(){if(fsCan&&fsWant&&!fsOn()&&!fsApp()&&window.matchMedia('(pointer:coarse)').matches)goFull(true);}
+const fsLbl=()=>{$('#fsBtn').hidden=!fsCan||fsApp(); $('#fsNote').hidden=fsCan||fsApp(); $('#fsBtn').textContent=fsOn()?'Full screen: on':'Full screen: off';}; fsLbl();
+$('#fsBtn').onclick=()=>{const on=!fsOn(); fsWant=on; try{localStorage.setItem('rumble-full',on?'1':'0');}catch(e){} goFull(on);};
+document.addEventListener('fullscreenchange',()=>{fsLbl(); resize();}); document.addEventListener('webkitfullscreenchange',()=>{fsLbl(); resize();});
+['#soloBtn','#hostBtn','#joinBtn','#startBtn'].forEach(q=>$(q).addEventListener('click',autoFull));
 const gfxLbl=()=>{$('#gfxBtn').textContent=SMOOTH?'Graphics: smooth':'Graphics: sharp';}; gfxLbl();
 $('#gfxBtn').onclick=()=>{SMOOTH=!SMOOTH; try{localStorage.setItem('rumble-gfx',SMOOTH?'smooth':'sharp');}catch(e){} gfxLbl();
   if(scene.sun)scene.sun.castShadow=!SMOOTH; if(MS&&MS.scene.sun)MS.scene.sun.castShadow=!SMOOTH; chars.forEach(c=>{if(c.blob)c.blob.visible=SMOOTH;}); PR=Math.min(window.devicePixelRatio||1,SMOOTH?1.5:2); R.setPixelRatio(PR); resize(); R.shadowMap.needsUpdate=true;};
