@@ -154,6 +154,12 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 - Controller right stick scrolls menus and long screens, and pans the board during play. Pressing the right stick re-centres the camera.
 - The menu now says 2 to 6 players.
 
+### 22. Touch steering fix, map centring and practice mode
+- Fixed: in sideways view, dragging to steer in the walk-around mini games did nothing, because the browser treated the drag as a page scroll. Checked with a simulated touch drag before and after.
+- Map view is fitted to the real bounds of the board and centred in the free part of the screen, beside the action window when the phone is sideways.
+- New Practice screen on the main menu: pick any of the 19 mini games and play it against 1, 3 or 5 computer players. Games already tried are marked.
+- `minigames.html` is the same game opened straight on the practice list.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

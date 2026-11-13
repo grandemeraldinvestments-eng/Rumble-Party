@@ -207,7 +207,8 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 #mgActs{flex:none; width:100%; max-width:520px; margin:0 auto}
 #mini.gl{background:none; touch-action:none; --sub:var(--ink)}
 #mini.gl header{background:var(--stage2); border:3px solid var(--ink); padding:8px 14px; align-self:center}
-#mini.gl #stage{justify-content:flex-start; max-width:none; gap:8px}
+#mini.gl #stage{justify-content:flex-start; max-width:none; gap:8px; overflow:visible!important; touch-action:none}
+#mini.gl *{touch-action:none}
 #mini.gl #mgActs{display:none}
 #mini.gl .bar{background:rgba(23,48,77,.35)}
 .mhud{display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none}
@@ -237,6 +238,10 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .rank .row .aw{font-weight:700; color:var(--bulb); min-width:3ch; text-align:right}
 .rank .row .st{display:flex; align-items:center; gap:4px; font-weight:700}
 .rank .pos{font-weight:700; width:1.2em}
+.pgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); gap:8px}
+.pgrid button{border:3px solid var(--ink); background:var(--card); color:var(--ink); padding:.55em .4em; min-height:48px; font-weight:800; box-shadow:3px 3px 0 var(--ink)}
+.pgrid button.done{background:var(--mint,#bff3dc)}
+#practice .card{max-height:100%; overflow-y:auto}
 #joy{position:fixed; z-index:22; width:112px; height:112px; margin:-56px 0 0 -56px; border:3px solid var(--ink); border-radius:50%; background:rgba(255,255,255,.35); pointer-events:none}
 #joy i{position:absolute; left:50%; top:50%; width:48px; height:48px; margin:-24px 0 0 -24px; border-radius:50%; background:var(--ink)}
 #jumpBtn{position:fixed; z-index:23; right:max(20px,env(safe-area-inset-right,0px)); bottom:calc(64px + env(safe-area-inset-bottom,0px)); width:96px; height:96px; border-radius:50%;
@@ -265,6 +270,9 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
   .card h1{font-size:1.5rem}
   #menu .stack,#setMain{display:grid; grid-template-columns:1fr 1fr; gap:8px}
   #setMain h2{grid-column:1 / -1}
+  #practice .card{max-width:min(100%,860px)}
+  .pgrid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:6px} .pgrid button{min-height:36px; font-size:.8rem; padding:.35em .3em}
+  #practice .lede{display:none} #practice .card{gap:6px} #practice h1{font-size:1.1rem} #practice .seg button{min-height:34px; padding:.15em 0}
   #lobby .card{display:grid; grid-template-columns:1fr 1fr; gap:6px 16px; align-content:start}
   #lobby .card>*{grid-column:1}
   #lobby #hostCtl{grid-column:2; grid-row:1 / span 5; gap:6px}
@@ -295,6 +303,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
       <button class="btn" id="hostBtn" disabled>Host a game</button>
       <button class="btn" id="joinBtn" disabled>Join a game</button>
       <button class="btn alt" id="soloBtn">Play solo vs computers</button>
+      <button class="btn alt" id="pracBtn">Practice mini games</button>
       <button class="btn alt" id="howBtn">How to play</button>
     </div>
     <p class="lede" id="netNote">Checking online play&hellip;</p>
@@ -311,6 +320,19 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
   </div>
 </section>
 
+<section class="screen center" id="practice" hidden>
+  <div class="card">
+    <h1 id="pracTitle">Practice</h1>
+    <p class="lede">Pick any mini game to play it straight away against computer players. Nothing is saved.</p>
+    <div class="label">Computer players</div>
+    <div class="seg" id="pracCpu"><button data-n="1">1</button><button data-n="3" aria-pressed="true">3</button><button data-n="5">5</button></div>
+    <div class="label">Shared deck</div>
+    <div class="pgrid" id="pracA"></div>
+    <div class="label">Own screen</div>
+    <div class="pgrid" id="pracS"></div>
+    <button class="btn alt" id="pracBack">Back</button>
+  </div>
+</section>
 <section class="screen center" id="lobby" hidden>
   <div class="card">
     <div class="stack" id="codeBox"><div class="label">Game code</div><div class="code" id="codeTxt"></div>
@@ -892,7 +914,7 @@ function toast(t){const d=document.createElement('div'); d.className='toast'; d.
 /* ---------- the renderer: draws whatever V says, animating the differences ---------- */
 const OFFS=[[-.42,-.3],[.42,-.3],[-.42,.36],[.42,.36],[0,-.62],[0,.66]];
 let shownGid=0, shownScreen='menu', hudKey='', askShown='', sh={hit:0,sp:0,cheer:0}, lobbyKey='', resKey='';
-function show(id){shownScreen=id; for(const s of ['menu','join','lobby','guide','game','results'])$('#'+s).hidden=s!==id; if(id!=='game'){mapView=false; $('#mapBtn').textContent='Map'; hideInfo(); $('#settings').hidden=true; $('#chance').hidden=true; introT=0; $('#titleCard').hidden=true; $('#fade').hidden=true;}}
+function show(id){shownScreen=id; for(const s of ['menu','join','lobby','guide','game','results','practice'])$('#'+s).hidden=s!==id; if(id!=='game'){mapView=false; $('#mapBtn').textContent='Map'; hideInfo(); $('#settings').hidden=true; $('#chance').hidden=true; introT=0; $('#titleCard').hidden=true; $('#fade').hidden=true;}}
 function showChance(u){const el=$('#chance'), raw=u.chG||'?', it=raw.indexOf('item:')===0?ITEMS[raw.slice(5)]:null, gl=it?'★':raw; el.hidden=false; el.className='spin'; $('#chText').textContent=u.chT; $('#chHead').textContent=u.chH||'Chance';
   $('#chDisc').style.background=u.chC||''; $('#chG').textContent=gl; $('#chG').style.fontSize=gl.length>1?'3.6rem':''; $('#chG').style.color=u.chC&&u.chC!=='#ffc531'?'#fff':''; setTimeout(()=>{el.className=''; if(it){$('#chG').innerHTML=it.svg; $('#chDisc').style.background='#fff';}},1700/SPEED); setTimeout(()=>{el.hidden=true;},((u.chD||3300)-200)/SPEED);}
 function hideInfo(){$('#spInfo').hidden=true; if(mark)mark.visible=false;}
@@ -910,7 +932,7 @@ function setupBoard(){
   if(curMap!==V.map)buildWorld(V.map);
   pawns.forEach(g=>{g.sc.remove(g); chars.delete(g);}); shownGid=V.gid;
   pawns=V.p.map(p=>{const g=makeChar(p.i); g.at=p.pos; g.fly=p.fly; g.seg=null; g.jump=0; g.cheer=0; g.face=0; g.position.set(NODES[p.pos].x,.28,NODES[p.pos].z); g.sh={t:p.t,pe:p.pe,itn:p.it.length}; return g;});
-  placePearl(V.pearlAt,true); sh={hit:V.ui.hit,sp:V.ui.sp,cheer:V.ui.cheer,ch:V.ui.ch,fx:V.ui.fx?V.ui.fx.n:0}; shownBurn=-2; trapKey='?'; camT.set(NODES[0].x,0,NODES[0].z); camD=18; hudKey=''; camMode='follow'; hideInfo(); startIntro();
+  placePearl(V.pearlAt,true); sh={hit:V.ui.hit,sp:V.ui.sp,cheer:V.ui.cheer,ch:V.ui.ch,fx:V.ui.fx?V.ui.fx.n:0}; shownBurn=-2; trapKey='?'; camT.set(NODES[0].x,0,NODES[0].z); camD=18; hudKey=''; camMode='follow'; hideInfo(); if(!V.prac)startIntro();
 }
 function sync(dt){
   if(!V)return;
@@ -1100,10 +1122,15 @@ function frame(now){
   const board=V&&V.phase==='board'&&pawns.length;
   if(board&&introT>0)introCam(dt);
   else if(!board){const a=T*.1,r=MAPX.a*(cam.aspect<1?2.4:1.7); cam.position.set(Math.sin(a)*r,r*.6,Math.cos(a)*r); cam.lookAt(0,0,0);}
-  else if(mapView){const pt=cam.aspect<1, tv=Math.tan(cam.fov*Math.PI/360), u=pt?MAPX.a:MAPX.b, w=pt?MAPX.b:MAPX.a; const H=window.innerHeight, top=$('#roundLbl').getBoundingClientRect().bottom, pr=$('#panel').getBoundingClientRect(), bot=pr.width>window.innerWidth*.6?Math.min(H,pr.top):H,   // a narrow action window in the corner does not shrink the map
-       f=Math.min(1,Math.max(.55,(bot-top)/H)), c=((top+bot)/2-H/2)/H,
-      D=Math.max((u+1.6)/(tv*f),(w+1.8)/(tv*cam.aspect)); mapD+=(D-mapD)*(mapD?Math.min(1,dt*6):1); const sh=-c*2*mapD*tv;
-    cam.up.set(pt?-1:0,0,pt?0:-1); cam.position.set(pt?sh:0,mapD,pt?0:sh); cam.lookAt(pt?sh:0,0,pt?0:sh);}
+  else if(mapView){if(mapBB.m!==curMap||mapBB.n!==NODES.length){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9; NODES.forEach(n=>{x0=Math.min(x0,n.x); x1=Math.max(x1,n.x); z0=Math.min(z0,n.z); z1=Math.max(z1,n.z);}); Object.assign(mapBB,{m:curMap,n:NODES.length,x:(x0+x1)/2,z:(z0+z1)/2,a:(x1-x0)/2,b:(z1-z0)/2});}
+    const pt=cam.aspect<1, tv=Math.tan(cam.fov*Math.PI/360), u=pt?mapBB.a:mapBB.b, w=pt?mapBB.b:mapBB.a; const H=window.innerHeight, W=window.innerWidth, sr=$('#score').getBoundingClientRect(), pr=$('#panel').getBoundingClientRect(), pv=pr.width>0&&pr.height>0;
+      const fit=(l,t,r,bm)=>{const fh=Math.max(.3,(bm-t)/H), fw=Math.max(.3,(r-l)/W); return{D:Math.max((u+1.9)/(tv*fh),(w+1.9)/(tv*cam.aspect*fw)),cy:((t+bm)/2-H/2)/H,cx:((l+r)/2-W/2)/W};};
+      // sideways: the cards run along the top and the action window sits in a corner, so try the space beside it and the space above it and keep the bigger map
+      let top=pt?$('#roundLbl').getBoundingClientRect().bottom:sr.bottom+4, best=fit(0,top,W,pv&&pr.width>W*.6?Math.min(H,pr.top):H);
+      if(pv&&pr.width<=W*.6){const A=fit(0,top,pr.left-6,H), B=fit(0,top,W,pr.top-4); best=A.D<B.D?A:B;}
+      mapD+=(best.D-mapD)*(mapD?Math.min(1,dt*6):1); mapC.x+=(best.cx-mapC.x)*Math.min(1,dt*6); mapC.y+=(best.cy-mapC.y)*Math.min(1,dt*6);
+      const sh=-mapC.y*2*mapD*tv, sx=pt?0:-mapC.x*2*mapD*tv*cam.aspect;
+    const px=mapBB.x+(pt?sh:sx), pz=mapBB.z+(pt?0:sh); cam.up.set(pt?-1:0,0,pt?0:-1); cam.position.set(px,mapD,pz); cam.lookAt(px,0,pz);}
   else{const f=V.ui.follow, kk=1-Math.exp(-dt*4), cz=V.ui.cam, tg=camMode==='free'?null:cz?{x:cz[0],z:cz[1]}:camMode==='me'?(pawns[myK()]||pawns[0]).position:f<0?pearl.position:(pawns[f]||pawns[0]).position;
     if(tg){camT.x+=(tg.x-camT.x)*kk; camT.z+=(tg.z-camT.z)*kk;} camD+=((cz&&camMode!=='free'?19:12.5)-camD)*(1-Math.exp(-dt*2.5));
     cam.position.set(camT.x,camD*.84,camT.z+camD*.8); cam.lookAt(camT.x,.3,camT.z+.4);}
@@ -1150,9 +1177,9 @@ const CODE_CH='ABCDEFGHJKLMNPQRSTUVWXYZ';
 async function openRoom(code){net.nr=await net.room.join('pier-'+code.toLowerCase()); net.av={}; net.buf={}; net.hadHost=false; net.lostAt=0; net.nr.onPeers(onPeers);}
 function newLobby(code){net.host=true; S={phase:'lobby',code,gid:0,seats:['host',null,null,null,null,null],ncpu:code?1:2,rounds:10,map:'island',p:[],ui:{},mini:null,res:null}; V=S; lobbyKey='';}
 function leave(){
-  gen++; if(MS)MS.end(); pad(false); miniBusy=false; miniMid=0; miniPh=''; $('#mini').hidden=true; stage.innerHTML='';
+  const wasPrac=PRAC_ONLY||(S&&S.prac); gen++; if(MS)MS.end(); pad(false); miniBusy=false; miniMid=0; miniPh=''; $('#mini').hidden=true; stage.innerHTML='';
   if(net.nr){net.nr.leave().catch(()=>{}); net.nr=null;} net.host=false; pend=null; S=null; V=null; lastPub=''; askShown=''; hudKey='';
-  pawns.forEach(g=>{g.sc.remove(g); chars.delete(g);}); pawns=[]; shownGid=0; dice.visible=false; num.visible=false; arrows.visible=false; show('menu');
+  pawns.forEach(g=>{g.sc.remove(g); chars.delete(g);}); pawns=[]; shownGid=0; dice.visible=false; num.visible=false; arrows.visible=false; if(wasPrac)openPractice(); else show('menu');
 }
 
 /* ---------- host game logic: changes S and waits; the renderer does the rest ---------- */
@@ -1370,7 +1397,7 @@ async function runDuel(a,b,stake){
   S.mini.rows=res; S.mini.phase='done'; await sleep(3800); S.mini=null; S.phase='board';
   say(tie?'The duel is a draw.':`${nm(S.p[res[0].k])} wins the duel and ${stake} tickets.`);
 }
-function startGame(){
+function startGame(prac=-1){
   let c=S.ncpu; const ps=[]; S.seats.forEach((s,i)=>{if(s)ps.push({i,seat:s,cpu:false}); else if(c-->0)ps.push({i,seat:null,cpu:true});});
   if(ps.length<2)return;
   if(curMap!==S.map)buildWorld(S.map);
@@ -1378,8 +1405,24 @@ function startGame(){
   S.p=ps.map((p,k)=>({...p,k,pos:0,t:10,pe:0,it:[],mg:0,st:0,fly:0,on:0}));
   Object.assign(S,{gid:rand(1,1e9),round:1,turn:0,pearlAt:far[rand(0,far.length-1)],deck:[],mid:0,res:null,mini:null,phase:'board',traps:{},burn:null,tide:0,pot:MAPS[S.map].sp.includes('J')?5:null,harv:MAPS[S.map].sp.includes('V')?4:null,
     ui:{who:0,msg:'',dice:-1,hit:0,hitK:0,roll:'',num:-1,ask:null,sp:0,spT:'',follow:0,cheer:0,cheerK:0,fork:0,ch:0,chT:'',chH:'',chC:'',chG:'',fx:{n:0,t:''},cam:null}});
-  gameLoop();
+  if(prac<0)gameLoop(); else{S.prac=1; S.ui.who=-1; practiceRun(prac);}
 }
+/* practice: one chosen mini game against computer players, then back to the list */
+const PRAC_ONLY=false; let pracN=3; const pracDone=new Set();
+async function practiceRun(gi){const g=GAMES[gi];
+  miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
+  await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
+  await waitFor(()=>S.p.every(p=>p.k in miniRes||(p.cpu&&!g.arena)),(g.max+14)*1000);
+  S.p.forEach(p=>{if(!(p.k in miniRes))miniRes[p.k]=p.cpu?g.cpu():g.low?999:0;});
+  const res=S.p.map(p=>({k:p.k,sc:miniRes[p.k]})).sort((a,b)=>g.low?a.sc-b.sc:b.sc-a.sc);
+  res.forEach((r,i)=>{r.pl=i>0&&res[i-1].sc===r.sc?res[i-1].pl:i; r.aw=(S.p.length>4?AWARD6:AWARD)[r.pl];});
+  S.mini.rows=res; S.mini.phase='done'; pracDone.add(gi);
+  await ask(0,'Back to the list'); leave();
+}
+function openPractice(){const mk=(arena)=>GAMES.map((g,i)=>[g,i]).filter(q=>!!q[0].arena===arena).map(([g,i])=>`<button data-g="${i}" class="${pracDone.has(i)?'done':''}">${g.name}</button>`).join('');
+  $('#pracA').innerHTML=mk(true); $('#pracS').innerHTML=mk(false); $('#pracBack').hidden=PRAC_ONLY; $('#pracTitle').textContent=PRAC_ONLY?'Rumble Mini Games':'Practice';
+  $('#pracCpu').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.n===pracN)); show('practice');}
+function startPractice(gi){audioOn(); newLobby(''); S.ncpu=pracN; startGame(gi);}
 
 /* ---------- mini games ---------- */
 const stage=$('#stage');
@@ -1408,7 +1451,7 @@ function miniSync(){
     return;
   }
   $('#mgTitle').textContent=g.name;
-  if(m.phase==='intro'){$('#mgSub').textContent=m.note?'Duel':'The vote is in'; stage.innerHTML=`${m.note?`<p><b>${m.note}</b></p>`:''}<p>${g.how}</p>${m.note?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2. With five or six players the prizes are 10, 6, 4, 2 and 1.</p>'}${g.arena?'<p class="sub">The deck is a different shape every time. Fall off the edge and you are out. Walk into other players to shove them.</p>':''}<div class="rdy" id="rdyRow"></div>${myK()>=0&&(!m.only||m.only.includes(myK()))?'<button class="btn" id="rdyBtn">Ready</button>':''}<p class="sub" id="rdyNote"></p>`;
+  if(m.phase==='intro'){$('#mgSub').textContent=m.prac?'Practice':m.note?'Duel':'The vote is in'; stage.innerHTML=`${m.note?`<p><b>${m.note}</b></p>`:''}<p>${g.how}</p>${m.note||m.prac?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2. With five or six players the prizes are 10, 6, 4, 2 and 1.</p>'}${g.arena?'<p class="sub">The deck is a different shape every time. Fall off the edge and you are out. Walk into other players to shove them.</p>':''}<div class="rdy" id="rdyRow"></div>${myK()>=0&&(!m.only||m.only.includes(myK()))?'<button class="btn" id="rdyBtn">Ready</button>':''}<p class="sub" id="rdyNote"></p>`;
     const rb=$('#rdyBtn'); if(rb)rb.onclick=()=>{rb.disabled=true; rb.textContent='Ready!'; setReady(m.mid);}; rdyKey=''; drawReady(m);}
   else if(m.phase==='play'){
     const k=myK(); if(k<0||(m.only&&!m.only.includes(k))){stage.innerHTML=`<p>${m.only?'The duel is under way':'Mini game in progress'}\u2026</p>`; return;}
@@ -1418,7 +1461,7 @@ function miniSync(){
   }
   else if(m.phase==='done'){$('#mgSub').textContent='Results';
     stage.innerHTML=`<div class="rank">${m.rows.map(r=>{const p=V.p[r.k]; return`<div class="row" style="--c:${CAST[p.i].c}"><span class="pos">${r.pl+1}</span>${face(p.i)}
-      <b>${CAST[p.i].name}</b><span class="sc">${fmt(g,r.sc)}${r.sc===999?'':' '+g.unit}</span><span class="aw">${r.aw>=0?"+":""}${r.aw}</span></div>`;}).join('')}</div>`;}
+      <b>${CAST[p.i].name}</b><span class="sc">${fmt(g,r.sc)}${r.sc===999?'':' '+g.unit}</span>${m.prac?"":`<span class="aw">${r.aw>=0?"+":""}${r.aw}</span>`}</div>`;}).join('')}</div>`;}
 }
 async function countdown(el){for(const t of ['3','2','1']){el.textContent=t; await sleep(550);}}
 
@@ -1441,6 +1484,7 @@ function miniStage(hint,pos,look){
 }
 
 /* joystick: drag anywhere to steer, plus a jump button; arrow keys and space on a keyboard */
+const mapC={x:0,y:0}, mapBB={m:'',n:0,x:0,z:0,a:1,b:1};
 const joy={x:0,y:0,jump:false,id:null,ox:0,oy:0,keys:{},on:false};
 function pad(on,jump,label){$('#jumpBtn').hidden=!(on&&jump); $('#jumpBtn').textContent=label||'Jump'; $('#joy').hidden=true; joy.x=joy.y=0; joy.id=null; joy.jump=false; joy.on=on;}
 (function(){
@@ -1849,6 +1893,10 @@ function runGuide(force){return new Promise(done=>{
 /* ---------- menu, lobby and HUD buttons ---------- */
 $('#soloBtn').onclick=async()=>{audioOn(); await runGuide(); newLobby('');};
 $('#howBtn').onclick=async()=>{await runGuide(true); show('menu');};
+$('#pracBtn').onclick=openPractice; $('#pracBack').onclick=()=>show('menu');
+$('#pracCpu').onclick=e=>{const b=e.target.closest('button'); if(b){pracN=+b.dataset.n; openPractice();}};
+for(const id of ['#pracA','#pracS'])$(id).onclick=e=>{const b=e.target.closest('button'); if(b){autoFull&&autoFull(); startPractice(+b.dataset.g);}};
+if(PRAC_ONLY)openPractice();
 $('#hostBtn').onclick=async()=>{
   audioOn(); await runGuide(); const code=[0,0,0,0].map(()=>CODE_CH[rand(0,CODE_CH.length-1)]).join('');
   try{await openRoom(code); newLobby(code);}catch(e){show('menu'); toast('Could not open an online game. Try again.');}
