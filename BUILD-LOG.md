@@ -197,6 +197,7 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 - Ticket Grab: from 15 to 45 seconds the deck shrinks to half its size and the camera closes in with it. In the last 15 seconds half the tickets are red.
 - The item icon on the reveal card is centred in its circle in landscape.
 - The clam and pearl are half their previous size and sit closer to their space.
+- Hedge Maze: no overview. The camera stays close above your own character, the hedges are taller, and the exit is no longer pointed out.
 
 ## Mini games
 
