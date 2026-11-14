@@ -1934,8 +1934,8 @@ const DOORS={hint:'Pick a door',surv:true,max:39,ring:2,speed:.9,allFall:true,de
     if(st.lt<ai.wait){ai.dx=ai.dz=0; return;} const tx=DOORS.doorX(n,ai.pick), dx=tx-av.x, dz=-4.9-av.z; if(Math.abs(dx)>.22&&av.z<-2.6){ai.dx=Math.sign(dx)*.8; ai.dz=.15;} else{const l=Math.hypot(dx,dz)||1; ai.dx=dx/l*.85; ai.dz=dz/l*.85;}}};
 
 /* Ghost Runner: pitch black, a torch each. The ghost hunts one player; if that player touches someone, the ghost switches to them */
-const GHOST={hint:'Run from the ghost',surv:true,max:60,dark:true,tight:true,cam:[14,2.2,-.22],edgeAI:1.4,deck:{k:'s',h:6},
-  start(k){const c=[[-1,-1],[1,-1],[-1,1],[1,1],[0,-1],[0,1]][k%6]; return[c[0]*4.8,c[1]*4.8];},
+const GHOST={hint:'Run from the ghost',surv:true,max:60,dark:true,tight:true,cam:[14,2.2,-.22],edgeAI:1.4,deck:{k:'s',h:7.2},
+  start(k){const c=[[-1,-1],[1,-1],[-1,1],[1,1],[0,-1],[0,1]][k%6]; return[c[0]*5.8,c[1]*5.8];},
   draw(sc,sh){deckDraw(sc,sh,new THREE.MeshPhongMaterial({color:0xb08a5e,shininess:0}),new THREE.MeshPhongMaterial({color:0x6b5335,shininess:0}));},   // lit per pixel, so only the torch beams show the floor; the edge is not marked
   init(sc,rng,sh,n){const g=new THREE.Group(); sc.add(g); const gm=new THREE.MeshPhongMaterial({color:0xf2f6ff,shininess:0}), body=mesh(new THREE.SphereGeometry(.5,18,14),gm,0,.75,0,g); body.scale.set(1,1.3,1); body.castShadow=false;   // no glow: you only see the ghost when a torch is on it
     for(let i=0;i<5;i++){const a=i/5*6.283; mesh(new THREE.ConeGeometry(.2,.45,8),gm,Math.sin(a)*.3,.18,Math.cos(a)*.3,g).rotation.x=Math.PI;}
@@ -1952,13 +1952,14 @@ const GHOST={hint:'Run from the ghost',surv:true,max:60,dark:true,tight:true,cam
   step(st,t,dt){const h=st.hs, g=st.g; g.position.x+=(h[0]-g.position.x)*Math.min(1,dt*14); g.position.z+=(h[1]-g.position.z)*Math.min(1,dt*14); g.position.y=Math.sin(t*4)*.1; st.gx=g.position.x; st.gz=g.position.z;
     const tg=st.avs[h[2]]; if(tg&&tg.alive){g.rotation.y=Math.atan2(tg.x-st.gx,tg.z-st.gz); st.ring.visible=true; st.ring.position.set(tg.x,.03,tg.z); st.ring.scale.setScalar(1+Math.sin(t*8)*.12);} else st.ring.visible=false;
     const me=st.avs.find(a=>a.mine); if(me&&me.alive&&t>1.5)$('#hint').textContent=h[2]===me.k?'The ghost is after YOU. Touch someone to pass it on':'Run from the ghost';
-    // one torch per player, shining the way they face
-    st.avs.forEach((a,i)=>{let L=st.torch[i]; if(!L){L=new THREE.SpotLight(0xfff1c9,2.2,11,.6,.6,1); st.sc.add(L); st.sc.add(L.target); st.torch[i]=L;}
-      L.visible=a.alive; if(!a.alive)return; const fx=Math.sin(a.face), fz=Math.cos(a.face); L.position.set(a.x-fx*.9,2.6,a.z-fz*.9); L.target.position.set(a.x+fx*2.6,0,a.z+fz*2.6);});},
+    // a burning torch each: a pool of light all the way round the player
+    st.avs.forEach((a,i)=>{let L=st.torch[i]; if(!L){L=new THREE.PointLight(0xffb45e,1.9,5.2,1.1); st.sc.add(L); L.flame=mesh(new THREE.SphereGeometry(.13,8,6),new THREE.MeshBasicMaterial({color:0xffc04d}),0,0,0,st.sc); L.flame.castShadow=false; st.torch[i]=L;}
+      L.visible=L.flame.visible=a.alive; if(!a.alive)return; const fx=Math.sin(a.face+.9), fz=Math.cos(a.face+.9), fl=1+Math.sin(t*23+i*2)*.06+Math.sin(t*37+i)*.04;   // held out to one side, flickering
+      L.position.set(a.x+fx*.35,1.7+a.y,a.z+fz*.35); L.intensity=1.9*fl; L.flame.position.set(a.x+fx*.42,1.55+a.y,a.z+fz*.42); L.flame.scale.setScalar(fl);});},
   check(av,st,t,local){if(!local||t<2||st.hs[2]!==av.k)return 0; return Math.hypot(av.x-st.gx,av.z-st.gz)<.7?'hit':0;},   // the ghost can only catch the player it is hunting
   ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.15; const dx=av.x-st.gx, dz=av.z-st.gz, d=Math.hypot(dx,dz)||.01, hunted=st.hs[2]===av.k, n=nearest(av,st);
     if(hunted&&n&&n.d<2.6&&Math.random()>.25){ai.dx=(n.o.x-av.x)/n.d; ai.dz=(n.o.z-av.z)/n.d;}   // someone is close: pass it on
-    else if(d<(hunted?99:3.4)){let best=-1,bx=0,bz=0; const H=5.3;   // run to wherever ends up furthest from the ghost without leaving the deck
+    else if(d<(hunted?99:3.4)){let best=-1,bx=0,bz=0; const H=6.5;   // run to wherever ends up furthest from the ghost without leaving the deck
       for(let i=0;i<16;i++){const a=i/16*6.283, ux=Math.sin(a), uz=Math.cos(a), px=av.x+ux*2.4, pz=av.z+uz*2.4; if(Math.abs(px)>H||Math.abs(pz)>H)continue; const v=Math.hypot(px-st.gx,pz-st.gz)+(ux*ai.dx+uz*ai.dz)*.5+Math.random()*.3; if(v>best){best=v; bx=ux; bz=uz;}}
       ai.dx=bx; ai.dz=bz;}
     else if(n&&n.d<1.6&&st.hs[2]===n.o.k){ai.dx=-(n.o.x-av.x)/n.d*.8; ai.dz=-(n.o.z-av.z)/n.d*.8;}   // keep away from whoever is hunted
@@ -1978,7 +1979,7 @@ const GAMES=[
  {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},
  {name:'Trap Doors',unit:'sec',surv:true,arena:true,max:45,how:'Three rounds. Each round, walk into a door before the time runs out. Only one player fits in a door, and once you are in you cannot come back out. One door is a drop: whoever is behind it falls through the floor. There are 5 doors, then 3, then 2, or one per player if more are still in.',cpu:()=>rand(100,390)/10,play:arena(DOORS)},
- {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:66,how:'It is pitch black and everyone has a torch. You cannot see the ghost or the edge of the deck unless a torch is on them. A ghost hunts one player at a time. If the hunted player touches someone, the ghost goes after them instead. Get caught and you are out. The ghost gets faster as the game goes on.',cpu:()=>rand(100,500)/10,play:arena(GHOST)},
+ {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:66,how:'It is pitch black. Everyone carries a burning torch that lights a circle around them. You cannot see the ghost or the edge of the deck until they come into the light. A ghost hunts one player at a time. If the hunted player touches someone, the ghost goes after them instead. Get caught and you are out. The ghost gets faster as the game goes on.',cpu:()=>rand(100,500)/10,play:arena(GHOST)},
  {name:'Slippery Slope',unit:'sec',surv:true,arena:true,max:46,how:'The deck is ice, so you slide and take time to turn. A giant snowball rolls around and sends anyone it hits flying. Stay on the ice the longest.',cpu:()=>rand(60,300)/10,play:arena(SLIP)},
  {name:'Bell Ringer',unit:'taps',max:10,how:'Hammer the bell as many times as you can in 5 seconds.',cpu:()=>rand(24,40),
   async play(){

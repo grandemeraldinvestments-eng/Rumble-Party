@@ -252,6 +252,10 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Because each door holds one player, a round has 5, 3 and 2 doors, or one per player still in if that is more.
 - For the reveal the camera swings round behind the doors, low enough to see underneath. The floor under the wrong door swings down and that player drops through.
 
+### 37. Ghost Runner: torches and a bigger deck
+- Each player carries a burning torch that lights a circle all the way round them, in place of a forward beam. The flame flickers.
+- The deck is 20% bigger.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
