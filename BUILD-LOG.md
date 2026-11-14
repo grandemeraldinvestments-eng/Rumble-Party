@@ -247,6 +247,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - The ghost no longer glows. It is only visible where a torch beam lands on it. The same goes for the red ring under the hunted player.
 - The deck edge is no longer outlined, so you only see it when a torch reaches it.
 
+### 36. Trap Doors: one per door and a view from behind
+- Only one player fits in each door, and once inside there is no coming back out. A player who is too slow is put in the nearest empty door.
+- Because each door holds one player, a round has 5, 3 and 2 doors, or one per player still in if that is more.
+- For the reveal the camera swings round behind the doors, low enough to see underneath. The floor under the wrong door swings down and that player drops through.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
