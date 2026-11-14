@@ -437,7 +437,7 @@ const CAST=[{name:'Otto',c:'var(--p1)',hex:0xf07a10},{name:'Pip',c:'var(--p2)',h
 ['Knight','Barbarian','Mage','Rogue','Ranger','Paladin'].forEach((n,i)=>{CAST[i].mname=n;});   // names used once the animated character models have loaded
 const COST=20, AWARD=[10,5,2,0], AWARD6=[10,6,4,2,1,0];
 /* ---------- background music: three looping tracks, switched by what is on screen ---------- */
-const TRACKS={board:'music-board.wav',mini:'music-mini.wav',lobby:'music-lobby.wav'}, mBuf={};
+const TRACKS={board:'music-board.mp3',mini:'music-mini.wav',lobby:'music-lobby.wav'}, mBuf={};
 let mSrc=null, mMaster=null, mWant='', mT=0, musicOff=false; try{musicOff=localStorage.getItem('pier-music')==='0';}catch(e){}
 function loadTrack(k){return mBuf[k]||(mBuf[k]=fetch(TRACKS[k]).then(r=>{if(!r.ok)throw 0; return r.arrayBuffer();}).then(a=>new Promise((ok,no)=>{const pr=AC.decodeAudioData(a,ok,no); if(pr&&pr.catch)pr.catch(()=>{});})).catch(()=>null));}
 async function setMusic(k){
