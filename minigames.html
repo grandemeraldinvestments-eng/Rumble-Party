@@ -437,7 +437,7 @@ const CAST=[{name:'Otto',c:'var(--p1)',hex:0xf07a10},{name:'Pip',c:'var(--p2)',h
 ['Knight','Barbarian','Mage','Rogue','Ranger','Paladin'].forEach((n,i)=>{CAST[i].mname=n;});   // names used once the animated character models have loaded
 const COST=20, AWARD=[10,5,2,0], AWARD6=[10,6,4,2,1,0];
 /* ---------- background music: three looping tracks, switched by what is on screen ---------- */
-const TRACKS={board:'music-board.mp3',mini:'music-mini.wav',lobby:'music-lobby.wav'}, mBuf={};
+const TRACKS={board:'music-board.mp3',mini1:'music-mini1.mp3',mini2:'music-mini2.mp3',mini3:'music-mini3.mp3',lobby:'music-lobby.wav'}, mBuf={};
 let mSrc=null, mMaster=null, mWant='', mT=0, musicOff=false; try{musicOff=localStorage.getItem('pier-music')==='0';}catch(e){}
 function loadTrack(k){return mBuf[k]||(mBuf[k]=fetch(TRACKS[k]).then(r=>{if(!r.ok)throw 0; return r.arrayBuffer();}).then(a=>new Promise((ok,no)=>{const pr=AC.decodeAudioData(a,ok,no); if(pr&&pr.catch)pr.catch(()=>{});})).catch(()=>null));}
 async function setMusic(k){
@@ -449,7 +449,7 @@ async function setMusic(k){
 }
 function musicTick(){
   if(!AC||SPEED>1)return; if(!mMaster){mMaster=AC.createGain(); mMaster.connect(AC.destination);} mMaster.gain.value=musicOff?0:1;
-  const want=!V||V.phase==='lobby'||V.phase==='results'?'lobby':V.phase==='mini'?'mini':'board'; if(want!==mWant)setMusic(want);
+  const want=!V||V.phase==='lobby'||V.phase==='results'?'lobby':V.phase==='mini'?'mini'+(V.mini&&GAMES[V.mini.g]?GAMES[V.mini.g].trk:1):'board'; if(want!==mWant)setMusic(want);
 }
 // browsers only allow sound after a tap, so start the audio on the very first touch anywhere
 ['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{audioOn(); musicTick();},{capture:true,passive:true}));
@@ -1850,6 +1850,7 @@ const SLIP={hint:'Keep clear of the snowball',surv:true,max:40,ice:1.5,edgeAI:2.
     if(r>st.R*.45){fx-=av.x/r*.6; fz-=av.z/r*.6;}
     const l=Math.hypot(fx,fz); if(l>.12){ai.dx=fx/Math.max(1,l); ai.dz=fz/Math.max(1,l);} else{ai.dx=0; ai.dz=0;}}};
 
+const TRK={'Crab Scramble':1,'Boom Hop':1,'Hot Planks':1,'Coconut Drop':1,'Crumble Deck':1,'Slippery Slope':1,'Ticket Grab':2,'Spotlight':2,'Sumo Shove':2,'Hedge Maze':2,'Paint Fight':2,'Stomp':2};
 const GAMES=[
  {name:'Crab Scramble',unit:'sec',surv:true,arena:true,max:51,how:'Everyone shares one small island. Drag to run and dodge the crabs, which keep getting faster. You have 3 lives. Whoever lasts longest wins.',cpu:()=>rand(100,400)/10,play:arena(CRAB)},
  {name:'Boom Hop',unit:'sec',surv:true,arena:true,max:46,how:'Everyone shares one round deck. Tap Jump to clear the swinging boom. It keeps speeding up, and it flashes yellow just before it swings back the other way.',cpu:()=>rand(50,300)/10,play:arena(BOOM)},
@@ -2007,6 +2008,7 @@ const GAMES=[
     await sleep(600); m.end(); return out;
   }},
 ];
+GAMES.forEach(g=>{g.trk=TRK[g.name]||3;});
 
 /* ---------- intro guide ---------- */
 const sw=(c,t,ink)=>`<span class="sw" style="background:${c};${ink?'color:var(--ink)':''}">${t}</span>`;

@@ -12,7 +12,7 @@ A 3D party board game for 2 to 4 players that runs in a web browser. Players run
 ## Files
 
 - `index.html` - the whole game: markup, styles and code in one file
-- `music-board.mp3`, `music-mini.wav`, `music-lobby.wav` - looping background tracks
+- `music-board.mp3`, `music-mini1.mp3` to `music-mini3.mp3`, `music-lobby.wav` - looping background tracks
 
 The only outside dependency is three.js r128, loaded from cdnjs, plus two Google Fonts.
 

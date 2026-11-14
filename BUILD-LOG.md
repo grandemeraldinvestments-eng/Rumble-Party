@@ -200,6 +200,15 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 - Board music replaced with a new track (`music-board.mp3`, 2 min 20 s, looped).
 - Hedge Maze: no overview. The camera stays close above your own character, the hedges are taller, and the exit is no longer pointed out.
 
+### 28. Mini game songs
+Three new songs, each cropped to 90 seconds (the longest mini game), replace the single mini game track:
+
+| File | Used for |
+|---|---|
+| `music-mini1.mp3` | Dodge and survive: Crab Scramble, Boom Hop, Hot Planks, Coconut Drop, Crumble Deck, Slippery Slope |
+| `music-mini2.mp3` | Player against player and collecting: Ticket Grab, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Stomp |
+| `music-mini3.mp3` | Own-screen games (duels and practice): Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon Pop, Crate Stack |
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
@@ -221,7 +230,7 @@ Tests run in a headless browser with no graphics chip:
 
 Scenery and character models are by Kay Lousberg (KayKit: Medieval Hexagon Pack, Halloween Bits and Adventurers character pack, www.kaylousberg.com), released under Creative Commons Zero (CC0). They were taken from the KayKit-Game-Assets repositories on GitHub and converted to a compact format.
 
-The board music was generated with Suno by the project owner.
+The board and mini game music was generated with Suno by the project owner.
 
 ## Known limits
 
