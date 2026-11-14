@@ -209,6 +209,13 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 | `music-mini2.mp3` | Player against player and collecting: Ticket Grab, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Stomp |
 | `music-mini3.mp3` | Own-screen games (duels and practice): Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon Pop, Crate Stack |
 
+### 29. Pearl celebration, two-roll Twin Dice and a smaller action window
+- Buying or winning a pearl: the character holds the pearl overhead and dances for about two seconds, with a banner and a fanfare.
+- Twin Dice: the player hits the dice twice, once for each roll.
+- Pop-up cards can be closed early with a tap by the player whose turn it is, once the card has been revealed.
+- Action window: the player name sits top left with the text directly under it, and Map and Hide to the right. In portrait the window is about 22% shorter; in landscape the text has the full width up to the Map button.
+- Ready screen: player names are two per row (three rows for six players) and the rules no longer overlap the title.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
