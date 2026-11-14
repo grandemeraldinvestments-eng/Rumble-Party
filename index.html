@@ -197,7 +197,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .rdy span{flex:0 0 calc(50% - 3px); box-sizing:border-box}
 .rdy span{display:flex; align-items:center; gap:6px; border:3px solid var(--ink); background:var(--card); color:var(--ink); padding:4px 7px; font-weight:800; min-width:0}
 .rdy span b{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left}
-#stage>*{flex:none}
+#stage>*:not(.grow){flex:none}
 .rdy span:not(.on){background:#d6dbe6}
 .rdy span.on{background:#c9f5df}
 .rdy i{font-style:normal; font-weight:600; font-size:.85rem}
@@ -261,6 +261,10 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .pgrid button{border:3px solid var(--ink); background:var(--card); color:var(--ink); padding:.55em .4em; min-height:48px; font-weight:800; box-shadow:3px 3px 0 var(--ink)}
 .pgrid button.done{background:var(--mint,#bff3dc)}
 #practice .card{max-height:100%; overflow-y:auto}
+.vstick{position:fixed; z-index:22; bottom:calc(38px + env(safe-area-inset-bottom,0px)); width:112px; height:112px; border:3px solid var(--ink); border-radius:50%; background:rgba(255,255,255,.38); pointer-events:none}
+.vstick i{position:absolute; left:50%; top:50%; width:48px; height:48px; margin:-24px 0 0 -24px; border-radius:50%; background:var(--ink)}
+.vstick b{position:absolute; left:0; right:0; top:-22px; text-align:center; font-size:.7rem; color:#fff; text-shadow:0 0 3px var(--ink),0 0 3px var(--ink)}
+#stL{left:max(18px,env(safe-area-inset-left,0px))} #stR{right:max(18px,env(safe-area-inset-right,0px))}
 #joy{position:fixed; z-index:22; width:112px; height:112px; margin:-56px 0 0 -56px; border:3px solid var(--ink); border-radius:50%; background:rgba(255,255,255,.35); pointer-events:none}
 #joy i{position:absolute; left:50%; top:50%; width:48px; height:48px; margin:-24px 0 0 -24px; border-radius:50%; background:var(--ink)}
 #jumpBtn{position:fixed; z-index:23; right:max(20px,env(safe-area-inset-right,0px)); bottom:calc(64px + env(safe-area-inset-bottom,0px)); width:96px; height:96px; border-radius:50%;
@@ -406,6 +410,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
   <div class="acts" id="mgActs"></div>
   <div id="joy" hidden><i></i></div>
   <button id="jumpBtn" hidden>Jump</button>
+  <div class="vstick" id="stL" hidden><i></i><b>LOOK</b></div><div class="vstick" id="stR" hidden><i></i><b>MOVE</b></div>
   <div id="gfin" hidden>Game Finished</div>
 </section>
 
@@ -583,6 +588,7 @@ const nameOf=k=>CAST[V.p[k].i].name;
 
 /* ---------- 3D scene ---------- */
 const FONT='"Rubik","Arial Black",Arial,sans-serif';
+const DQ={a:new THREE.Quaternion(),b:new THREE.Quaternion(),e:new THREE.Euler()};
 let landR=null, pickSel=0, pickTxt='', landAt=-1;
 let R,scene,cam,pawns=[],dice,num,numC,numT,pearl,clouds=[],boats=[],spin=[],upright=[],world=null,curMap='',defParent=null,MAPX=MAPS.island,ICONS=null,introT=0,FXP={tong:[],boost:0,erupt:0},lava=null,trapG=null,shownBurn=-2,trapKey='',arrows,conf,mapView=false,T=0,camD=13,MS=null,camMode='follow',mark=null,panelMin=false,mapD=0;
 const camT=new THREE.Vector3(), chars=new Set();
@@ -1017,7 +1023,11 @@ function sync(dt){
         if(!g.prize){g.prize=new THREE.Group(); const o=mesh(new THREE.SphereGeometry(.38,20,14),new THREE.MeshLambertMaterial({color:0xe9dcff,emissive:0x7a55c7}),0,0,0,g.prize); o.castShadow=false; const h=mesh(new THREE.TorusGeometry(.56,.05,8,28),new THREE.MeshBasicMaterial({color:0xffc531}),0,0,0,g.prize); h.castShadow=false; g.add(g.prize);}
         g.prize.visible=true; g.prizeT=0;}}}
   for(const g of pawns)if(g.prize&&g.prize.visible){g.prizeT+=dt*SPEED; const e=g.prizeT; g.prize.position.set(0,2.05+(g.jy||0)+Math.sin(e*9)*.1,0); g.prize.rotation.y+=dt*6; g.prize.scale.setScalar(Math.min(1,e*5)); if(g.cheer<=0&&e>1.9)g.prize.visible=false;}
-  dice.visible=ui.dice>=0&&!!pawns[ui.dice]; if(dice.visible){const g=pawns[ui.dice]; dice.position.set(g.position.x,3.3,g.position.z); dice.rotation.x+=dt*7; dice.rotation.y+=dt*9;}
+  dice.visible=ui.dice>=0&&!!pawns[ui.dice]; if(dice.visible){const g=pawns[ui.dice]; dice.position.set(g.position.x,3.3,g.position.z);
+    if(ui.dface){   // stopped: turn the rolled face up and tip it toward the camera
+      const F={2:[0,0],5:[Math.PI,0],1:[0,Math.PI/2],6:[0,-Math.PI/2],3:[-Math.PI/2,0],4:[Math.PI/2,0]}[ui.dface]||[0,0];
+      DQ.a.setFromEuler(DQ.e.set(F[0],0,F[1])); DQ.b.setFromEuler(DQ.e.set(.95,0,0)).multiply(DQ.a); dice.quaternion.slerp(DQ.b,Math.min(1,dt*16));}
+    else{dice.rotation.x+=dt*7; dice.rotation.y+=dt*9;}}
   const cur=pawns[V.turn]; num.visible=ui.num>=0&&!!cur; if(num.visible){setNum(ui.num); num.position.set(cur.position.x,2.75,cur.position.z);}
   if(landR){const L=landAt>=0&&V.phase==='board'?NODES[landAt]:null; landR.visible=!!L; if(L){landR.position.set(L.x,.4+Math.sin(T*5)*.06,L.z); landR.scale.setScalar(1+Math.sin(T*5)*.08);}}
   arrows.visible=!!ui.fork; if(arrows.visible)arrows.children.forEach((a,i)=>{a.position.y=.9+Math.sin(T*6+i)*.12;});
@@ -1365,11 +1375,11 @@ const SPF={
     S.ui.follow=p.k; say('Lava covers part of the board for 2 rounds.');}
 };
 async function rollMove(p,n){
-  const ui=S.ui; ui.dice=p.k; await sleep(p.cpu?400:150);
-  const a=rand(1,6); let total=a; ui.hit++; ui.hitK=p.k; ui.roll=String(a); await sleep(190);
-  if(n===2){say(`${nm(p)} rolled ${a}. Roll the second dice.`); await sleep(p.cpu?900:450); if(!p.cpu)await ask(p.k,'Hit the dice again');
-    const b2=rand(1,6); total=a+b2; ui.hit++; ui.hitK=p.k; ui.roll=`${a} + ${b2}`; await sleep(190);}
-  ui.dice=-1; say(`${nm(p)} rolled ${total}.`); await sleep(500);
+  const ui=S.ui; ui.dface=0; ui.dice=p.k; await sleep(p.cpu?400:150);
+  const a=rand(1,6); let total=a; ui.hit++; ui.hitK=p.k; ui.roll=String(a); ui.dface=a; await sleep(190);   // the die stops on the number rolled
+  if(n===2){say(`${nm(p)} rolled ${a}. Roll the second dice.`); await sleep(p.cpu?1100:750); ui.dface=0; if(!p.cpu)await ask(p.k,'Hit the dice again'); else await sleep(500);   // then it spins again for the second roll
+    const b2=rand(1,6); total=a+b2; ui.hit++; ui.hitK=p.k; ui.roll=`${a} + ${b2}`; ui.dface=b2; await sleep(190);}
+  await sleep(750); ui.dice=-1; ui.dface=0; say(`${nm(p)} rolled ${total}.`); await sleep(350);
   await moveP(p,total);
 }
 async function land(p,depth){
@@ -1546,15 +1556,15 @@ function miniStage(hint,pos,look){
 /* joystick: drag anywhere to steer, plus a jump button; arrow keys and space on a keyboard */
 const mapC={x:0,y:0}, mapBB={m:'',n:0,x:0,z:0,a:1,b:1};
 const joy={x:0,y:0,jump:false,id:null,ox:0,oy:0,keys:{},on:false};
-function pad(on,jump,label,split){$('#jumpBtn').hidden=!(on&&jump); $('#jumpBtn').textContent=label||'Jump'; $('#joy').hidden=true; joy.x=joy.y=0; joy.id=null; joy.jump=false; joy.on=on; joy.split=!!(on&&split); joy.lid=null; joy.dyaw=0; joy.turn=0; joy.gturn=0;}
+function pad(on,jump,label,split){$('#jumpBtn').hidden=!(on&&jump); $('#jumpBtn').textContent=label||'Jump'; $('#joy').hidden=true; joy.x=joy.y=0; joy.id=null; joy.jump=false; joy.on=on; joy.split=!!(on&&split); joy.lid=null; joy.dyaw=0; joy.turn=0; joy.gturn=0; joy.sturn=0; $('#stL').hidden=$('#stR').hidden=!joy.split; $('#stL').firstElementChild.style.transform=$('#stR').firstElementChild.style.transform='';}
 (function(){
   const el=$('#mini'), j=$('#joy'), knob=j.firstElementChild;
   el.addEventListener('pointerdown',e=>{if(!joy.on)return; if(e.target.id==='jumpBtn'){joy.jump=true; e.preventDefault(); return;}
-    if(joy.split&&e.clientX<window.innerWidth/2){if(joy.lid===null){joy.lid=e.pointerId; joy.lx=e.clientX;} e.preventDefault(); return;}   // left half: drag to look around
-    if(joy.id!==null)return; joy.id=e.pointerId; joy.ox=e.clientX; joy.oy=e.clientY; j.hidden=false; j.style.left=e.clientX+'px'; j.style.top=e.clientY+'px'; knob.style.transform=''; e.preventDefault();});
-  el.addEventListener('pointermove',e=>{if(e.pointerId===joy.lid&&joy.lid!==null){joy.dyaw+=(e.clientX-joy.lx)*.0085; joy.lx=e.clientX; return;} if(e.pointerId!==joy.id)return; let dx=(e.clientX-joy.ox)/46, dy=(e.clientY-joy.oy)/46; const l=Math.hypot(dx,dy); if(l>1){dx/=l; dy/=l;}
-    joy.x=dx; joy.y=dy; knob.style.transform=`translate(${dx*32}px,${dy*32}px)`;});
-  const up=e=>{if(e.pointerId===joy.lid){joy.lid=null; return;} if(e.pointerId!==joy.id)return; joy.id=null; joy.x=joy.y=0; j.hidden=true;};
+    if(joy.split&&e.clientX<window.innerWidth/2){if(joy.lid===null){joy.lid=e.pointerId; joy.lx=e.clientX;} e.preventDefault(); return;}   // left half: the look stick
+    if(joy.id!==null)return; joy.id=e.pointerId; joy.ox=e.clientX; joy.oy=e.clientY; j.hidden=joy.split; j.style.left=e.clientX+'px'; j.style.top=e.clientY+'px'; knob.style.transform=''; e.preventDefault();});
+  el.addEventListener('pointermove',e=>{if(e.pointerId===joy.lid&&joy.lid!==null){const d=Math.max(-1,Math.min(1,(e.clientX-joy.lx)/46)); joy.sturn=d; $('#stL').firstElementChild.style.transform=`translate(${d*32}px,0)`; return;} if(e.pointerId!==joy.id)return; let dx=(e.clientX-joy.ox)/46, dy=(e.clientY-joy.oy)/46; const l=Math.hypot(dx,dy); if(l>1){dx/=l; dy/=l;}
+    joy.x=dx; joy.y=dy; knob.style.transform=`translate(${dx*32}px,${dy*32}px)`; if(joy.split)$('#stR').firstElementChild.style.transform=knob.style.transform;});
+  const up=e=>{if(e.pointerId===joy.lid){joy.lid=null; joy.sturn=0; $('#stL').firstElementChild.style.transform=''; return;} if(e.pointerId!==joy.id)return; joy.id=null; joy.x=joy.y=0; j.hidden=true; $('#stR').firstElementChild.style.transform='';};
   el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up);
   const key=(e,d)=>{joy.keys[e.key]=d; if(!joy.on)return; if(d&&e.key===' ')joy.jump=true; const k=joy.keys;
     if(joy.split){joy.turn=(k.ArrowRight||k.e?1:0)-(k.ArrowLeft||k.q?1:0); if(joy.id===null){joy.x=(k.d?1:0)-(k.a?1:0); joy.y=(k.ArrowDown||k.s?1:0)-(k.ArrowUp||k.w?1:0);} return;}   // keyboard: W A S D or up/down move, left/right arrows turn
@@ -1789,7 +1799,7 @@ const SUMO={hint:'Stay out of the red',surv:true,max:45,dash:true,shove:1.2,ring
     else{ai.dx=(c[0]-av.x)/d*.4; ai.dz=(c[1]-av.z)/d*.4;}}};
 
 /* Hedge Maze: everyone gets the same random maze but runs it alone. First out of the far side wins; one minute */
-const MAZE={hint:'Right side: move. Left side: look',max:60,split:true,alone:true,left:true,noEdge:true,speed:1.2,cam:[15.5,4.2,.25],fit:7.2,deck:{k:'s',h:13},
+const MAZE={hint:'Left stick: look. Right stick: move',max:60,split:true,alone:true,left:true,noEdge:true,speed:1.2,cam:[15.5,4.2,.25],fit:7.2,deck:{k:'s',h:13},
   N:11,S:1.725,
   draw(){},
   init(sc,rng){const N=MAZE.N,S=MAZE.S,half=N*S/2, open=new Uint8Array(N*N), seen=new Uint8Array(N*N), D=[[1,0,1,4],[0,1,2,8],[-1,0,4,1],[0,-1,8,2]];
@@ -1814,13 +1824,14 @@ const MAZE={hint:'Right side: move. Left side: look',max:60,split:true,alone:tru
   start(k,n,st){return st.start;},
   // third person: the camera sits just behind your character, inside the maze, and the hedges are too tall to see over.
   // The right half of the screen (or right stick) moves you; the left half (or left stick) turns the view
-  steer(av,ix,iz,dt){if(av.head==null)av.head=MAZE.h0||0; av.head+=joy.dyaw+(joy.turn+joy.gturn)*2.5*dt; joy.dyaw=0; const f=-iz, dx=Math.sin(av.head), dz=-Math.cos(av.head); return[dx*f+(-dz)*ix,dz*f+dx*ix];},
+  steer(av,ix,iz,dt){if(av.head==null)av.head=MAZE.h0||0; av.head+=(joy.turn+joy.gturn+joy.sturn)*2.4*dt; const f=-iz, dx=Math.sin(av.head), dz=-Math.cos(av.head); return[dx*f+(-dz)*ix,dz*f+dx*ix];},
   blocked(st,x,z,r){for(const w of st.walls)if(Math.abs(x-w[0])<w[2]+r&&Math.abs(z-w[1])<w[3]+r)return true; return false;},
   view(cam,me,dt,st){if(!cam.tp){cam.tp=true; cam.fov=window.innerWidth<window.innerHeight?80:60; cam.near=.05; cam.updateProjectionMatrix(); cam.dd=.4; me.ch.scale.setScalar(.85);}   // a smaller character, so it does not fill the view in a narrow corridor
     const h=me.head==null?(MAZE.h0||0):me.head, dx=Math.sin(h), dz=-Math.cos(h);
-    let d=.3; for(;d<1.9;d+=.1)if(MAZE.blocked(st,me.x-dx*(d+.12),me.z-dz*(d+.12),.2))break;   // back off behind the player until a hedge is in the way
-    cam.dd+=(d-cam.dd)*Math.min(1,dt*(d<cam.dd?30:6)); const q=cam.dd;
-    cam.position.set(me.x-dx*q,2.6,me.z-dz*q); cam.lookAt(me.x+dx*1.7,.6,me.z+dz*1.7);   // above and behind, but still below the top of the hedges
+    let d=.3; for(;d<2.1;d+=.1)if(MAZE.blocked(st,me.x-dx*(d+.12),me.z-dz*(d+.12),.2))break;   // back off behind the player until a hedge is in the way
+    cam.dd+=(d-cam.dd)*Math.min(1,dt*(d<cam.dd?30:6)); const q=cam.dd, rx=-dz, rz=dx;
+    let o=.5; for(;o>0;o-=.1)if(!MAZE.blocked(st,me.x-dx*q+rx*o,me.z-dz*q+rz*o,.2))break; cam.oo=(cam.oo||0)+(Math.max(0,o)-(cam.oo||0))*Math.min(1,dt*8);   // look over the right shoulder when there is room
+    cam.position.set(me.x-dx*q+rx*cam.oo,1.45,me.z-dz*q+rz*cam.oo); cam.lookAt(me.x+dx*3+rx*cam.oo*.4,1.05,me.z+dz*3+rz*cam.oo*.4);   // near eye level, looking along the corridor
     if(!me.moving)me.face=Math.atan2(dx,dz);},
   step(){},
   move(av,st){const R=.3, x1=av.x, z1=av.z, x0=av.px==null?x1:av.px, z0=av.pz==null?z1:av.pz, n=Math.max(1,Math.ceil(Math.hypot(x1-x0,z1-z0)/.18)); av.x=x0; av.z=z0;   // small steps, so a slow frame cannot carry you through a hedge
@@ -1895,7 +1906,7 @@ const GAMES=[
  {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:36,how:'Everyone shares one deck. Coconuts are falling. Watch for the shadows and keep out from under them.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
  {name:'Spotlight',unit:'pts',dec:true,arena:true,max:96,how:'Ninety seconds. Stand in the yellow spotlight to score. Every 30 seconds a new yellow light arrives and the old one turns red, which takes points away just as fast. Where red and yellow overlap is neutral.',cpu:()=>rand(100,400)/10,play:arena(SPOT)},
  {name:'Sumo Shove',unit:'sec',surv:true,arena:true,max:51,how:'Player against player. The red closes in around two safe circles, then the circles start to roam. Touch the red and you are out. Shove the others into it, and tap Dash for a charge that hits much harder.',cpu:()=>rand(60,300)/10,play:arena(SUMO)},
- {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You are inside it and cannot see over the hedges. Drag on the right side of the screen to move, and on the left side to look around. With a controller the right stick moves and the left stick looks. The exit is somewhere on the far side, marked in green. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
+ {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You are inside it and cannot see over the hedges. Use the two on-screen sticks: the left one turns your view and the right one moves you. A controller works the same way. The exit is somewhere on the far side, marked in green. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
  {name:'Paint Fight',unit:'tiles',arena:true,max:36,how:'Player against player on a big square with a hole in the middle. Every tile you walk over turns your colour, including tiles the others already painted. Most tiles when time runs out wins.',cpu:()=>rand(20,60),play:arena(PAINT)},
  {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},

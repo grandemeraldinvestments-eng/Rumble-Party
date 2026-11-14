@@ -232,6 +232,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Chance swap: the camera now shows both players. If they are close it frames both at once; if they are far apart it visits the rival, shows the swap landing, then visits where the rival ended up.
 - Ready screen: every player card is the same size. Landscape shows three per row, portrait two per row, with any leftover cards centred.
 
+### 33. Stopping dice, maze sticks and timer bar
+- The die stops on the number rolled, face up and tipped toward the camera. With Twin Dice it stops on the first number, spins again, and stops on the second after the second hit.
+- Hedge Maze has two on-screen sticks: the left one turns the view, the right one moves. The camera is near eye level, over the character's shoulder.
+- The mini game timer bar is back at the bottom of the screen in landscape.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
