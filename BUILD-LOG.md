@@ -269,6 +269,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Fixed: the Practice mini games button and the mini game tester page stopped working in build 40. A comment added with the build number had swallowed the rest of its line. Every publish now runs an automatic check that the tester page opens on its list.
 - New menu text: an invitation line and a caution line.
 
+## Build 42
+
+- Menu text now says "up to 5 friends" (the game holds 6 players in total).
+- No change to the Rumble Party title. Test screenshots now load the game's real fonts, so they match what phones show.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

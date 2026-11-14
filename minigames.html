@@ -328,7 +328,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 <section class="screen center" id="menu">
   <div class="card">
     <h1>Rumble Party</h1>
-    <p class="lede">Come one, come all! Join the party and compete with up to 6 friends to catch the magical pearls that await.</p>
+    <p class="lede">Come one, come all! Join the party and compete with up to 5 friends to catch the magical pearls that await.</p>
     <p class="lede warn">Caution: this game is known to turn friends into enemies.</p>
     <div class="stack">
       <button class="btn" id="hostBtn" disabled>Host a game</button>
@@ -1487,7 +1487,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=41; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=42; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
