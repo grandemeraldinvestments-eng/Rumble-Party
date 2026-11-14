@@ -226,6 +226,7 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - The camera sits above and behind the character, inside the maze and below the top of the hedges, and moves in closer when a hedge is behind you.
 - Touch: drag on the right half of the screen to move, drag on the left half to turn the view.
 - Controller: right stick moves, left stick turns the view. Keyboard: W A S D or up/down to move, left/right arrows to turn.
+- The maze is 50% bigger: corridors are half as wide again, the camera sits further back, and players run about 30% faster so the one-minute limit still works.
 
 ## Mini games
 
