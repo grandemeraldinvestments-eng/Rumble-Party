@@ -289,6 +289,14 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Trap Doors: a fourth round with 2 doors (5, 3, 2, 2). The game now lasts up to 52 seconds.
 - Hedge Maze: the camera sits further behind your character when there is room, and turning the view is 30% faster.
 
+## Build 46
+
+- Ghost Runner: anyone who touches a ghost is out, not only the hunted player.
+- Ghost Runner: half way through (30 seconds) the ghost splits in two and each half hunts a different player. A player with both on them sees "2 Boos are after You"; touching someone passes on only one.
+- Ghost Runner: platform 15% bigger.
+- Trap Doors: one door fewer each round (5, 4, 3, 2), never fewer doors than players still in.
+- All shared-platform mini games: the camera is refitted when the phone is turned or goes full screen after the game was set up. Before, a game set up in portrait stayed zoomed far out in landscape.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
