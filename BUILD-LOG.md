@@ -242,6 +242,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Ghost Runner: a pitch-black square where every player has a torch. A ghost starts in the middle and hunts one player, marked with a red ring. If the hunted player touches someone, the ghost switches to them. The ghost only catches the player it is hunting, pauses after a catch, then picks someone new. It starts at 75% of player speed and reaches 90%.
 - Both are shared-deck games in the end-of-round rotation, which now has 14 games. The game has 22 mini games in total.
 
+### 35. Ghost Runner: closer and darker
+- The camera is steeper and zoomed in so the deck fills the screen width in portrait and the height in landscape.
+- The ghost no longer glows. It is only visible where a torch beam lands on it. The same goes for the red ring under the hunted player.
+- The deck edge is no longer outlined, so you only see it when a torch reaches it.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

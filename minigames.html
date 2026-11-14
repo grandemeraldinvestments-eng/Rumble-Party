@@ -1601,10 +1601,10 @@ function arena(G){return async function(ctx){
   {// pull the camera back until the whole platform fits the screen, whichever way the phone is held
     const W=window.innerWidth,H=window.innerHeight, tv=Math.tan((W<H?60:45)*Math.PI/360), th=tv*W/H, e=G.fit||(sh.k==='c'?sh.R:sh.h), sq=sh.k!=='c';
     const fits=k=>{const cy=cp[0]*k,cz=cp[1]*k,lz=cp[2]*k, fl=Math.hypot(cy,cz-lz), fy=-cy/fl, fz=(lz-cz)/fl;   // camera forward; right is +x; up = right x forward
-      for(const [x,z] of sq?[[e,e],[e,-e],[e,0]]:[[e,0],[0,e],[0,-e],[e*.7,e*.7]]){const dy=-cy,dz=z-cz, dep=dy*fy+dz*fz, ux=0,uy=-fz,uz=fy, v=(dy*uy+dz*uz)/dep, h=(x+.5)/dep; if(dep<1||Math.abs(h)>th*.97||v>tv*(W>H?.8:.5)||v<-tv*(W>H?.86:.72))return false;} return true;};
-    while(kz<4&&!fits(kz))kz+=.05;}
+      for(const [x,z] of sq?[[e,e],[e,-e],[e,0]]:[[e,0],[0,e],[0,-e],[e*.7,e*.7]]){const dy=-cy,dz=z-cz, dep=dy*fy+dz*fz, ux=0,uy=-fz,uz=fy, v=(dy*uy+dz*uz)/dep, h=(x+(G.tight?.05:.5))/dep; if(dep<1||Math.abs(h)>th*(G.tight?1:.97)||v>tv*(G.tight?.96:W>H?.8:.5)||v<-tv*(G.tight?.96:W>H?.86:.72))return false;} return true;};
+    if(G.tight)kz=.3; while(kz<4&&!fits(kz))kz+=.02;}
   const m=miniStage(G.hint,[0,cp[0]*kz,cp[1]*kz],[0,0,cp[2]*kz]), sc=m.scene, rng=rng32(ctx.seed); if(G.draw)G.draw(sc,sh); else if(!G.noDeck)deckDraw(sc,sh);
-  if(G.dark){sc.background=new THREE.Color(0x03040a); sc.traverse(o=>{if(o.isLight)o.intensity*=.05; else if(o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1)o.visible=false;});}
+  if(G.dark){sc.background=new THREE.Color(0x03040a); sc.traverse(o=>{if(o.isLight)o.intensity*=.02; else if(o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1)o.visible=false;});}
   const n=V.p.length, st=G.init(sc,rng,sh,n); st.zoom=f=>{m.cam.position.set(0,cp[0]*kz*f,cp[1]*kz*f); m.cam.lookAt(0,0,cp[2]*kz*f);};
   const avs=V.p.map((p,k)=>{const a=k/n*6.283+.6, s0=G.start?G.start(k,n,st):[Math.sin(a)*(G.ring||1.5),Math.cos(a)*(G.ring||1.5)],
     av={k,x:s0[0],z:s0[1],y:0,vy:0,vx:0,vz:0,alive:true,gone:0,fell:false,done:false,score:0,face:0,moving:false,kx:0,kz:0,bump:0,dash:0,cd:0,spd:0,ly:0,dy:0,lives:G.lives||1,inv:0,col:CAST[p.i].hex,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
@@ -1924,14 +1924,13 @@ const DOORS={hint:'Pick a door',surv:true,max:36,noLast:false,ring:2,speed:.9,de
     if(st.lt<ai.wait){ai.dx=ai.dz=0; return;} const tx=DOORS.doorX(n,ai.pick), dx=tx-av.x, dz=-4.9-av.z; if(Math.abs(dx)>.25&&av.z<-2.6){ai.dx=Math.sign(dx)*.8; ai.dz=0;} else{const l=Math.hypot(dx,dz)||1; ai.dx=dx/l*.85; ai.dz=dz/l*.85;}}};
 
 /* Ghost Runner: pitch black, a torch each. The ghost hunts one player; if that player touches someone, the ghost switches to them */
-const GHOST={hint:'Run from the ghost',surv:true,max:60,dark:true,edgeAI:1.4,deck:{k:'s',h:6},
+const GHOST={hint:'Run from the ghost',surv:true,max:60,dark:true,tight:true,cam:[14,2.2,-.22],edgeAI:1.4,deck:{k:'s',h:6},
   start(k){const c=[[-1,-1],[1,-1],[-1,1],[1,1],[0,-1],[0,1]][k%6]; return[c[0]*4.8,c[1]*4.8];},
-  draw(sc,sh){deckDraw(sc,sh,new THREE.MeshPhongMaterial({color:0xb08a5e,shininess:0}),0x555555);   // lit per pixel, so the torch beams show on the floor
-    for(const [x,z,sx,sz] of [[0,-sh.h,sh.h*2,.12],[0,sh.h,sh.h*2,.12],[-sh.h,0,.12,sh.h*2],[sh.h,0,.12,sh.h*2]])mesh(new THREE.BoxGeometry(sx,.06,sz),new THREE.MeshBasicMaterial({color:0x3d6bff}),x,.03,z,sc).castShadow=false;},
-  init(sc,rng,sh,n){const g=new THREE.Group(); sc.add(g); const body=mesh(new THREE.SphereGeometry(.5,18,14),new THREE.MeshBasicMaterial({color:0xcfe0ff,transparent:true,opacity:.8}),0,.75,0,g); body.scale.set(1,1.3,1); body.castShadow=false;
-    for(let i=0;i<5;i++){const a=i/5*6.283; mesh(new THREE.ConeGeometry(.2,.45,8),new THREE.MeshBasicMaterial({color:0xcfe0ff,transparent:true,opacity:.8}),Math.sin(a)*.3,.18,Math.cos(a)*.3,g).rotation.x=Math.PI;}
+  draw(sc,sh){deckDraw(sc,sh,new THREE.MeshPhongMaterial({color:0xb08a5e,shininess:0}),new THREE.MeshPhongMaterial({color:0x6b5335,shininess:0}));},   // lit per pixel, so only the torch beams show the floor; the edge is not marked
+  init(sc,rng,sh,n){const g=new THREE.Group(); sc.add(g); const gm=new THREE.MeshPhongMaterial({color:0xf2f6ff,shininess:0}), body=mesh(new THREE.SphereGeometry(.5,18,14),gm,0,.75,0,g); body.scale.set(1,1.3,1); body.castShadow=false;   // no glow: you only see the ghost when a torch is on it
+    for(let i=0;i<5;i++){const a=i/5*6.283; mesh(new THREE.ConeGeometry(.2,.45,8),gm,Math.sin(a)*.3,.18,Math.cos(a)*.3,g).rotation.x=Math.PI;}
     for(const s of [-1,1])mesh(new THREE.SphereGeometry(.09,8,6),new THREE.MeshBasicMaterial({color:0x10131f}),s*.18,.9,.42,g);
-    const ring=flatM(mesh(new THREE.RingGeometry(.5,.66,28),new THREE.MeshBasicMaterial({color:0xff3d3d,side:THREE.DoubleSide}),0,.03,0,sc)); ring.visible=false;
+    const ring=flatM(mesh(new THREE.RingGeometry(.5,.66,28),new THREE.MeshPhongMaterial({color:0xff3d3d,shininess:0,side:THREE.DoubleSide}),0,.03,0,sc)); ring.visible=false;
     return{g,ring,sc,hs:[0,0,-1],x:0,z:0,tk:-1,cd:0,wait:0,torch:[]};},
   // the host decides where the ghost is and who it is after; everyone else is sent that
   host(st,t,dt){const avs=st.avs, alive=avs.filter(a=>a.alive); if(!alive.length)return st.hs; let tg=avs[st.tk];
@@ -1969,7 +1968,7 @@ const GAMES=[
  {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},
  {name:'Trap Doors',unit:'sec',surv:true,arena:true,max:42,how:'Three rounds. Each round, walk into a door before the time runs out. One door is a drop and anyone behind it is out; the rest go through to the next round. There are 5 doors, then 3, then 2.',cpu:()=>rand(100,360)/10,play:arena(DOORS)},
- {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:66,how:'It is pitch black and everyone has a torch. A ghost hunts one player at a time, marked by a red ring. If the hunted player touches someone, the ghost goes after them instead. Get caught and you are out. The ghost gets faster as the game goes on.',cpu:()=>rand(100,500)/10,play:arena(GHOST)},
+ {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:66,how:'It is pitch black and everyone has a torch. You cannot see the ghost or the edge of the deck unless a torch is on them. A ghost hunts one player at a time. If the hunted player touches someone, the ghost goes after them instead. Get caught and you are out. The ghost gets faster as the game goes on.',cpu:()=>rand(100,500)/10,play:arena(GHOST)},
  {name:'Slippery Slope',unit:'sec',surv:true,arena:true,max:46,how:'The deck is ice, so you slide and take time to turn. A giant snowball rolls around and sends anyone it hits flying. Stay on the ice the longest.',cpu:()=>rand(60,300)/10,play:arena(SLIP)},
  {name:'Bell Ringer',unit:'taps',max:10,how:'Hammer the bell as many times as you can in 5 seconds.',cpu:()=>rand(24,40),
   async play(){
