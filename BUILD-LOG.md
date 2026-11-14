@@ -14,7 +14,7 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 |---|---|
 | Maps | Island, Carnival, Farm, Volcano |
 | Board | 45-space loop plus a 15-space bridge shortcut, 3 shops, 5 fixed pearl stall spots |
-| Mini games | 20. A random shared-deck game ends each round; own-screen games are used for duels |
+| Mini games | 22. A random shared-deck game ends each round; own-screen games are used for duels |
 | Players | 2 to 6, any mix of people and computer players |
 | Game length | 5, 10 or 15 rounds |
 | Items | Twin Dice, Magnet, Kite |
@@ -237,10 +237,15 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Hedge Maze has two on-screen sticks: the left one turns the view, the right one moves. The camera is near eye level, over the character's shoulder.
 - The mini game timer bar is back at the bottom of the screen in landscape.
 
+### 34. Two new mini games: Trap Doors and Ghost Runner
+- Trap Doors: three rounds. Everyone walks into a door before the timer runs out; one door per round is a drop and anyone behind it is out. 5 doors, then 3, then 2. Anyone who has not chosen in time is pushed through the nearest door.
+- Ghost Runner: a pitch-black square where every player has a torch. A ghost starts in the middle and hunts one player, marked with a red ring. If the hunted player touches someone, the ghost switches to them. The ghost only catches the player it is hunting, pauses after a catch, then picks someone new. It starts at 75% of player speed and reaches 90%.
+- Both are shared-deck games in the end-of-round rotation, which now has 14 games. The game has 22 mini games in total.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
-Crab Scramble, Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Crumble Deck, Stomp, Slippery Slope.
+Crab Scramble, Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Crumble Deck, Stomp, Trap Doors, Ghost Runner, Slippery Slope.
 
 **Own screen (everyone plays at the same time, separately)**
 Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon Pop, Crate Stack.

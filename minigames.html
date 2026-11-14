@@ -323,7 +323,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 <section class="screen center" id="menu">
   <div class="card">
     <h1>Rumble Party</h1>
-    <p class="lede">A party board game for 2 to 6 players. Run around the board, win tickets in mini games and trade them for pearls. Four maps, twenty mini games.</p>
+    <p class="lede">A party board game for 2 to 6 players. Run around the board, win tickets in mini games and trade them for pearls. Four maps, 22 mini games.</p>
     <div class="stack">
       <button class="btn" id="hostBtn" disabled>Host a game</button>
       <button class="btn" id="joinBtn" disabled>Join a game</button>
@@ -1231,7 +1231,7 @@ function onPeers(ch){
     const h=ch.peers.find(p=>!p.sameTab&&p.presence&&p.presence.host);
     if(h){net.hadHost=true; net.lostAt=0; V=h.presence.s||null;
       if(V&&V.p)for(const p of ch.peers){if(p.sameTab)continue; const pr=p.presence||{}, k=V.p.findIndex(q=>q.seat===(p===h?'host':p.peer));
-        if(k>=0&&Array.isArray(pr.a))avIn(k,pr.a); if(p===h&&pr.cpu)for(const kk in pr.cpu)avIn(kk,pr.cpu[kk]);}
+        if(k>=0&&Array.isArray(pr.a))avIn(k,pr.a); if(p===h&&pr.cpu)for(const kk in pr.cpu)avIn(kk,pr.cpu[kk]); if(p===h&&Array.isArray(pr.hs))net.hs=pr.hs;}
     }else if(net.hadHost&&!net.lostAt)net.lostAt=Date.now();
   }
 }
@@ -1604,18 +1604,19 @@ function arena(G){return async function(ctx){
       for(const [x,z] of sq?[[e,e],[e,-e],[e,0]]:[[e,0],[0,e],[0,-e],[e*.7,e*.7]]){const dy=-cy,dz=z-cz, dep=dy*fy+dz*fz, ux=0,uy=-fz,uz=fy, v=(dy*uy+dz*uz)/dep, h=(x+.5)/dep; if(dep<1||Math.abs(h)>th*.97||v>tv*(W>H?.8:.5)||v<-tv*(W>H?.86:.72))return false;} return true;};
     while(kz<4&&!fits(kz))kz+=.05;}
   const m=miniStage(G.hint,[0,cp[0]*kz,cp[1]*kz],[0,0,cp[2]*kz]), sc=m.scene, rng=rng32(ctx.seed); if(G.draw)G.draw(sc,sh); else if(!G.noDeck)deckDraw(sc,sh);
+  if(G.dark){sc.background=new THREE.Color(0x03040a); sc.traverse(o=>{if(o.isLight)o.intensity*=.05; else if(o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1)o.visible=false;});}
   const n=V.p.length, st=G.init(sc,rng,sh,n); st.zoom=f=>{m.cam.position.set(0,cp[0]*kz*f,cp[1]*kz*f); m.cam.lookAt(0,0,cp[2]*kz*f);};
   const avs=V.p.map((p,k)=>{const a=k/n*6.283+.6, s0=G.start?G.start(k,n,st):[Math.sin(a)*(G.ring||1.5),Math.cos(a)*(G.ring||1.5)],
     av={k,x:s0[0],z:s0[1],y:0,vy:0,vx:0,vz:0,alive:true,gone:0,fell:false,done:false,score:0,face:0,moving:false,kx:0,kz:0,bump:0,dash:0,cd:0,spd:0,ly:0,dy:0,lives:G.lives||1,inv:0,col:CAST[p.i].hex,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
     av.ch.position.set(av.x,0,av.z); if(G.alone&&!av.mine)av.ch.visible=false; return av;});
-  const me=avs[ctx.k]; st.avs=avs; window.__arenaMe=me; net.av={}; net.buf={}; pad(true,G.jump||G.dash,G.dash?'Dash':'Jump',G.split);
+  const me=avs[ctx.k]; st.avs=avs; window.__arenaMe=me; net.hs=null; net.av={}; net.buf={}; pad(true,G.jump||G.dash,G.dash?'Dash':'Jump',G.split);
   const hint=s=>{$('#hint').textContent=s;}, lives=()=>{if(G.lives)hint('Lives: '+me.lives);}; lives();
   let sb=null, sbT=0; if(G.board){sb=document.createElement('div'); sb.className='sboard'; $('#hint').parentNode.appendChild(sb);}
   const out=(av,t,fell)=>{av.alive=false; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); hint(fell?'You fell off!':'You are out!');}};
   await countdown($('#n'));
   let t=0,pubT=0,endT=-1;
   await m.run(dt=>{
-    t+=dt; G.step(st,t,dt,sc);
+    t+=dt; if(G.host){if(net.host||!net.nr)st.hs=G.host(st,t,dt); else if(net.hs)st.hs=net.hs;} G.step(st,t,dt,sc);
     for(const av of avs){
       if(G.alone&&!av.mine)continue;
       const ox=av.x, oz=av.z;
@@ -1660,9 +1661,9 @@ function arena(G){return async function(ctx){
     if(G.view)G.view(m.cam,me,dt,st);
     pubT-=dt;
     if(pubT<=0&&net.nr){pubT=.07; const pk=a=>[r2(a.x),r2(a.z),r2(a.y),a.alive?1:0,r2(a.score)], patch={a:pk(me)};
-      if(net.host&&!G.alone){patch.cpu={}; avs.forEach(a=>{if(a.cpu)patch.cpu[a.k]=pk(a);});} net.nr.presence(patch).catch(()=>{});}
+      if(net.host&&!G.alone){patch.cpu={}; avs.forEach(a=>{if(a.cpu)patch.cpu[a.k]=pk(a);});} if(net.host&&G.host)patch.hs=st.hs; net.nr.presence(patch).catch(()=>{});}
     if(sb){sbT-=dt; if(sbT<=0){sbT=.25; sb.innerHTML=avs.slice().sort((a,b)=>b.score-a.score).map(a=>`<span style="--c:${CAST[V.p[a.k].i].c}"${a.mine?' class="me"':''}>${CAST[V.p[a.k].i].name} <b>${a.score.toFixed(1)}</b></span>`).join('');}}
-    $('#n').textContent=G.left?Math.max(0,G.max-t).toFixed(1):G.surv?(me.alive?t:me.score).toFixed(1):G.dec?me.score.toFixed(1):me.score; $('#bar').style.transform=`scaleX(${Math.max(0,1-t/G.max)})`;
+    $('#n').textContent=G.num?G.num(st,t):G.left?Math.max(0,G.max-t).toFixed(1):G.surv?(me.alive?t:me.score).toFixed(1):G.dec?me.score.toFixed(1):me.score; $('#bar').style.transform=`scaleX(${Math.max(0,1-t/G.max)})`;
     if(endT<0&&t>1.5&&!G.alone&&avs.filter(a=>a.alive).length<=1)endT=t+1.4;   // last one standing ends the game
     if(G.alone&&endT<0&&!me.alive)endT=t+1;
     if(t>=G.max||(endT>0&&t>=endT))return 1;
@@ -1841,7 +1842,7 @@ const MAZE={hint:'Left stick: look. Right stick: move',max:60,split:true,alone:t
       if(d>=R)continue; if(d>.0001){av.x+=ex/d*(R-d); av.z+=ez/d*(R-d);} else if(w[2]<w[3])av.x=w[0]+(dx>=0?1:-1)*(w[2]+R); else av.z=w[1]+(dz>=0?1:-1)*(w[3]+R);}},
   check(av,st,t,local){if(local&&av.z<-st.half-.45){av.score=Math.max(.1,Math.round((60-t)*10)/10); return'win';} return 0;},
   ai(av){av.ai.dx=0; av.ai.dz=0;},
-  cpuScore(st){const T=st.len*MAZE.S/(4.6*MAZE.speed*(.2+Math.random()*.28)); return T<60?Math.round((60-T)*10)/10:0;}};
+  cpuScore(st){const T=st.len*MAZE.S/(4.6*MAZE.speed*(.3+Math.random()*.3)); return T<60?Math.round((60-T)*10)/10:0;}};
 
 /* Paint Fight: a big square with a square hole in the middle */
 const PAINT={hint:'Paint the most tiles',max:30,quiet:true,ring:3.9,deck:{k:'s',h:6.6,hole:2.2},
@@ -1897,7 +1898,64 @@ const SLIP={hint:'Keep clear of the snowball',surv:true,max:40,ice:1.5,edgeAI:2.
     if(r>st.R*.45){fx-=av.x/r*.6; fz-=av.z/r*.6;}
     const l=Math.hypot(fx,fz); if(l>.12){ai.dx=fx/Math.max(1,l); ai.dz=fz/Math.max(1,l);} else{ai.dx=0; ai.dz=0;}}};
 
-const TRK={'Crab Scramble':1,'Boom Hop':1,'Hot Planks':1,'Coconut Drop':1,'Crumble Deck':1,'Slippery Slope':1,'Ticket Grab':2,'Spotlight':2,'Sumo Shove':2,'Hedge Maze':2,'Paint Fight':2,'Stomp':2};
+/* Trap Doors: three rounds. Everyone walks into a door; one door each round is a drop. 5 doors, then 3, then 2 */
+const DOORS={hint:'Pick a door',surv:true,max:36,noLast:false,ring:2,speed:.9,deck:{k:'s',h:5},
+  N:[5,3,2], PICK:8.5, LEN:12,
+  doorX(n,i){return (i-(n-1)/2)*(n===5?1.9:n===3?2.9:3.6);},
+  start(k,n){return[(k-(n-1)/2)*1.3,2.6];},
+  init(sc,rng){const bad=DOORS.N.map(n=>Math.floor(rng()*n)); return{bad,sc,r:-1,g:null,panels:[],shown:false};},
+  build(st,r){if(st.g)st.sc.remove(st.g); const g=new THREE.Group(); st.sc.add(g); st.g=g; st.panels=[]; const n=DOORS.N[r], Z=-4.35;
+    let x0=-5.2; for(let i=0;i<=n;i++){const x1=i<n?DOORS.doorX(n,i)-.8:5.2; if(x1>x0+.05)mesh(new THREE.BoxGeometry(x1-x0,2.4,.5),0x7a5a3a,(x0+x1)/2,1.2,Z,g).castShadow=false; if(i<n)x0=DOORS.doorX(n,i)+.8;}
+    for(let i=0;i<n;i++){const x=DOORS.doorX(n,i); mesh(new THREE.BoxGeometry(1.9,.3,.6),0xffc531,x,2.25,Z,g).castShadow=false; for(const s of [-1,1])mesh(new THREE.BoxGeometry(.16,2.2,.6),0xffc531,x+s*.87,1.1,Z,g).castShadow=false;
+      const p=mesh(new THREE.PlaneGeometry(1.6,2.1),new THREE.MeshBasicMaterial({color:0x17304d}),x,1.05,Z-.2,g); p.castShadow=false; st.panels.push(p);
+      const f=flatM(mesh(new THREE.PlaneGeometry(1.6,1.1),new THREE.MeshBasicMaterial({color:0x2a4a73}),x,.012,Z-.25,g)); st.panels.push(f);}},
+  step(st,t){const r=Math.min(2,Math.floor(t/DOORS.LEN)), lt=t-r*DOORS.LEN;
+    if(r!==st.r){st.r=r; st.shown=false; DOORS.build(st,r); st.avs.forEach((a,k)=>{a.door=null; if(a.alive&&(a.mine||a.cpu)){const s=DOORS.start(k,st.avs.length); a.x=s[0]; a.z=s[1]; a.ai.pick=null;}}); $('#hint').textContent=`Round ${r+1} of 3: walk into a door`;}
+    st.lt=lt; st.open=lt<DOORS.PICK;
+    if(!st.open&&!st.shown){st.shown=true; $('#hint').textContent='One of them is a drop…';}
+    if(lt>DOORS.PICK+1&&st.shown!==2){st.shown=2; const n=DOORS.N[r]; for(let i=0;i<n;i++){const c=i===st.bad[r]?0xe5484d:0x35c98a; st.panels[i*2].material.color.setHex(c); st.panels[i*2+1].material.color.setHex(i===st.bad[r]?0x0b1626:c);} $('#hint').textContent='The red door was the drop';}},
+  num(st){return st.open?Math.max(0,DOORS.PICK-st.lt).toFixed(1):'';},
+  move(av,st){const n=DOORS.N[st.r]; if(av.door!=null){av.x=DOORS.doorX(n,av.door); av.z=-4.75; av.vx=av.vz=0; return;}
+    if(av.z<-3.75){let d=-1; for(let i=0;i<n;i++)if(Math.abs(av.x-DOORS.doorX(n,i))<.72)d=i; if(d<0||!st.open)av.z=-3.75; else if(av.z<-4.15){av.door=d; if(av.mine)SFX.hop();}}},
+  check(av,st,t,local){if(!local)return 0; const n=DOORS.N[st.r];
+    if(!st.open&&av.door==null){let b=0,bd=99; for(let i=0;i<n;i++){const d=Math.abs(av.x-DOORS.doorX(n,i)); if(d<bd){bd=d; b=i;}} av.door=b;}   // too slow: you are pushed through the nearest door
+    return st.lt>DOORS.PICK+1.6&&av.door===st.bad[st.r]?'fall':0;},
+  ai(av,st,t,dt){const ai=av.ai, n=DOORS.N[st.r]; if(av.door!=null||!st.open){ai.dx=ai.dz=0; return;} if(ai.pick==null){ai.pick=Math.floor(Math.random()*n); ai.wait=1+Math.random()*4.5;}
+    if(st.lt<ai.wait){ai.dx=ai.dz=0; return;} const tx=DOORS.doorX(n,ai.pick), dx=tx-av.x, dz=-4.9-av.z; if(Math.abs(dx)>.25&&av.z<-2.6){ai.dx=Math.sign(dx)*.8; ai.dz=0;} else{const l=Math.hypot(dx,dz)||1; ai.dx=dx/l*.85; ai.dz=dz/l*.85;}}};
+
+/* Ghost Runner: pitch black, a torch each. The ghost hunts one player; if that player touches someone, the ghost switches to them */
+const GHOST={hint:'Run from the ghost',surv:true,max:60,dark:true,edgeAI:1.4,deck:{k:'s',h:6},
+  start(k){const c=[[-1,-1],[1,-1],[-1,1],[1,1],[0,-1],[0,1]][k%6]; return[c[0]*4.8,c[1]*4.8];},
+  draw(sc,sh){deckDraw(sc,sh,new THREE.MeshPhongMaterial({color:0xb08a5e,shininess:0}),0x555555);   // lit per pixel, so the torch beams show on the floor
+    for(const [x,z,sx,sz] of [[0,-sh.h,sh.h*2,.12],[0,sh.h,sh.h*2,.12],[-sh.h,0,.12,sh.h*2],[sh.h,0,.12,sh.h*2]])mesh(new THREE.BoxGeometry(sx,.06,sz),new THREE.MeshBasicMaterial({color:0x3d6bff}),x,.03,z,sc).castShadow=false;},
+  init(sc,rng,sh,n){const g=new THREE.Group(); sc.add(g); const body=mesh(new THREE.SphereGeometry(.5,18,14),new THREE.MeshBasicMaterial({color:0xcfe0ff,transparent:true,opacity:.8}),0,.75,0,g); body.scale.set(1,1.3,1); body.castShadow=false;
+    for(let i=0;i<5;i++){const a=i/5*6.283; mesh(new THREE.ConeGeometry(.2,.45,8),new THREE.MeshBasicMaterial({color:0xcfe0ff,transparent:true,opacity:.8}),Math.sin(a)*.3,.18,Math.cos(a)*.3,g).rotation.x=Math.PI;}
+    for(const s of [-1,1])mesh(new THREE.SphereGeometry(.09,8,6),new THREE.MeshBasicMaterial({color:0x10131f}),s*.18,.9,.42,g);
+    const ring=flatM(mesh(new THREE.RingGeometry(.5,.66,28),new THREE.MeshBasicMaterial({color:0xff3d3d,side:THREE.DoubleSide}),0,.03,0,sc)); ring.visible=false;
+    return{g,ring,sc,hs:[0,0,-1],x:0,z:0,tk:-1,cd:0,wait:0,torch:[]};},
+  // the host decides where the ghost is and who it is after; everyone else is sent that
+  host(st,t,dt){const avs=st.avs, alive=avs.filter(a=>a.alive); if(!alive.length)return st.hs; let tg=avs[st.tk];
+    st.cd-=dt; st.wait-=dt;
+    if(!tg||!tg.alive){if(tg)st.wait=1.3; tg=alive[Math.floor(Math.random()*alive.length)]; st.tk=tg.k; st.cd=1;}   // after a catch the ghost pauses, then picks someone new
+    else if(st.cd<=0)for(const o of alive)if(o!==tg&&Math.hypot(o.x-tg.x,o.z-tg.z)<.9){st.tk=o.k; tg=o; st.cd=1.2; break;}   // touched someone: the ghost is theirs now
+    if(t>2&&st.wait<=0){const sp=4.6*(.75+.15*Math.min(1,t/50)), dx=tg.x-st.x, dz=tg.z-st.z, d=Math.hypot(dx,dz)||.01, s=Math.min(d,sp*dt); st.x+=dx/d*s; st.z+=dz/d*s;}
+    return[r2(st.x),r2(st.z),st.tk];},
+  step(st,t,dt){const h=st.hs, g=st.g; g.position.x+=(h[0]-g.position.x)*Math.min(1,dt*14); g.position.z+=(h[1]-g.position.z)*Math.min(1,dt*14); g.position.y=Math.sin(t*4)*.1; st.gx=g.position.x; st.gz=g.position.z;
+    const tg=st.avs[h[2]]; if(tg&&tg.alive){g.rotation.y=Math.atan2(tg.x-st.gx,tg.z-st.gz); st.ring.visible=true; st.ring.position.set(tg.x,.03,tg.z); st.ring.scale.setScalar(1+Math.sin(t*8)*.12);} else st.ring.visible=false;
+    const me=st.avs.find(a=>a.mine); if(me&&me.alive&&t>1.5)$('#hint').textContent=h[2]===me.k?'The ghost is after YOU. Touch someone to pass it on':'Run from the ghost';
+    // one torch per player, shining the way they face
+    st.avs.forEach((a,i)=>{let L=st.torch[i]; if(!L){L=new THREE.SpotLight(0xfff1c9,2.2,11,.6,.6,1); st.sc.add(L); st.sc.add(L.target); st.torch[i]=L;}
+      L.visible=a.alive; if(!a.alive)return; const fx=Math.sin(a.face), fz=Math.cos(a.face); L.position.set(a.x-fx*.9,2.6,a.z-fz*.9); L.target.position.set(a.x+fx*2.6,0,a.z+fz*2.6);});},
+  check(av,st,t,local){if(!local||t<2||st.hs[2]!==av.k)return 0; return Math.hypot(av.x-st.gx,av.z-st.gz)<.7?'hit':0;},   // the ghost can only catch the player it is hunting
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.15; const dx=av.x-st.gx, dz=av.z-st.gz, d=Math.hypot(dx,dz)||.01, hunted=st.hs[2]===av.k, n=nearest(av,st);
+    if(hunted&&n&&n.d<2.6&&Math.random()>.25){ai.dx=(n.o.x-av.x)/n.d; ai.dz=(n.o.z-av.z)/n.d;}   // someone is close: pass it on
+    else if(d<(hunted?99:3.4)){let best=-1,bx=0,bz=0; const H=5.3;   // run to wherever ends up furthest from the ghost without leaving the deck
+      for(let i=0;i<16;i++){const a=i/16*6.283, ux=Math.sin(a), uz=Math.cos(a), px=av.x+ux*2.4, pz=av.z+uz*2.4; if(Math.abs(px)>H||Math.abs(pz)>H)continue; const v=Math.hypot(px-st.gx,pz-st.gz)+(ux*ai.dx+uz*ai.dz)*.5+Math.random()*.3; if(v>best){best=v; bx=ux; bz=uz;}}
+      ai.dx=bx; ai.dz=bz;}
+    else if(n&&n.d<1.6&&st.hs[2]===n.o.k){ai.dx=-(n.o.x-av.x)/n.d*.8; ai.dz=-(n.o.z-av.z)/n.d*.8;}   // keep away from whoever is hunted
+    else if(Math.random()<.3){const a=Math.random()*6.283; ai.dx=Math.sin(a)*.4; ai.dz=Math.cos(a)*.4;}}};
+
+const TRK={'Crab Scramble':1,'Boom Hop':1,'Hot Planks':1,'Coconut Drop':1,'Crumble Deck':1,'Slippery Slope':1,'Ticket Grab':2,'Spotlight':2,'Sumo Shove':2,'Hedge Maze':2,'Paint Fight':2,'Stomp':2,'Trap Doors':2,'Ghost Runner':1};
 const GAMES=[
  {name:'Crab Scramble',unit:'sec',surv:true,arena:true,max:51,how:'Everyone shares one small island. Drag to run and dodge the crabs, which keep getting faster. You have 3 lives. Whoever lasts longest wins.',cpu:()=>rand(100,400)/10,play:arena(CRAB)},
  {name:'Boom Hop',unit:'sec',surv:true,arena:true,max:46,how:'Everyone shares one round deck. Tap Jump to clear the swinging boom. It keeps speeding up, and it flashes yellow just before it swings back the other way.',cpu:()=>rand(50,300)/10,play:arena(BOOM)},
@@ -1910,6 +1968,8 @@ const GAMES=[
  {name:'Paint Fight',unit:'tiles',arena:true,max:36,how:'Player against player on a big square with a hole in the middle. Every tile you walk over turns your colour, including tiles the others already painted. Most tiles when time runs out wins.',cpu:()=>rand(20,60),play:arena(PAINT)},
  {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},
+ {name:'Trap Doors',unit:'sec',surv:true,arena:true,max:42,how:'Three rounds. Each round, walk into a door before the time runs out. One door is a drop and anyone behind it is out; the rest go through to the next round. There are 5 doors, then 3, then 2.',cpu:()=>rand(100,360)/10,play:arena(DOORS)},
+ {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:66,how:'It is pitch black and everyone has a torch. A ghost hunts one player at a time, marked by a red ring. If the hunted player touches someone, the ghost goes after them instead. Get caught and you are out. The ghost gets faster as the game goes on.',cpu:()=>rand(100,500)/10,play:arena(GHOST)},
  {name:'Slippery Slope',unit:'sec',surv:true,arena:true,max:46,how:'The deck is ice, so you slide and take time to turn. A giant snowball rolls around and sends anyone it hits flying. Stay on the ice the longest.',cpu:()=>rand(60,300)/10,play:arena(SLIP)},
  {name:'Bell Ringer',unit:'taps',max:10,how:'Hammer the bell as many times as you can in 5 seconds.',cpu:()=>rand(24,40),
   async play(){
