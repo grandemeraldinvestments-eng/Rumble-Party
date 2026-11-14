@@ -274,6 +274,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Menu text now says "up to 5 friends" (the game holds 6 players in total).
 - No change to the Rumble Party title. Test screenshots now load the game's real fonts, so they match what phones show.
 
+## Build 43
+
+- Ghost Runner: the camera now keeps your character in the middle of the screen. Landscape is zoomed out about 15%, and portrait uses the same close view.
+- Hedge Maze: turning the view is 20% faster (touch stick, controller stick and keys).
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
