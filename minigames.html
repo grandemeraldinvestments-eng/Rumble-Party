@@ -193,8 +193,8 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .field .crab{position:absolute; width:9%; aspect-ratio:1; background:var(--coral); border:2px solid var(--ink)}
 #opts{flex:none; width:100%}
 
-.rdy{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; width:100%; max-width:420px; flex:none}
-.rdy span:last-child:nth-child(odd){grid-column:1 / -1; justify-self:center}
+.rdy{display:flex; flex-wrap:wrap; justify-content:center; gap:6px; width:100%; max-width:420px; flex:none}
+.rdy span{flex:0 0 calc(50% - 3px); box-sizing:border-box}
 .rdy span{display:flex; align-items:center; gap:6px; border:3px solid var(--ink); background:var(--card); color:var(--ink); padding:4px 7px; font-weight:800; min-width:0}
 .rdy span b{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left}
 #stage>*{flex:none}
@@ -302,7 +302,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
   #mini.gl .mhud{align-items:flex-start; align-self:flex-start; gap:3px} #mini.gl .mhud .big{font-size:2rem} #mini.gl .sboard{flex-direction:column; align-items:flex-start}
   #stage{overflow-y:auto; gap:8px; max-width:720px; justify-content:safe center}
   #stage p.sub:not(#rdyNote){display:none}
-  .rdy{grid-template-columns:repeat(3,minmax(0,1fr)); max-width:600px}
+  #stage .rdy{max-width:640px} #stage .rdy span{flex-basis:calc(33.333% - 4px)}
   #stage p{max-width:70ch}
   .votes{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
   #chance{flex-direction:row; flex-wrap:wrap; gap:12px 20px; padding:10px}
@@ -1324,7 +1324,9 @@ async function chance(p){
   const txt=['','Won the ring toss: +6 tickets.','Tickets blew away: -4 tickets.',`Swap places with ${nm(o)}.`,'Ticket rain: everyone gets +2.','Tailwind: 3 more steps.'][k];
   await card('Chance',txt,'#ffc531','?');
   if(k===1)gain(p,6); else if(k===2)gain(p,-4); else if(k===4)S.p.forEach(q=>gain(q,2));
-  else if(k===3){const a=p.pos; p.pos=o.pos; o.pos=a; p.fly++; o.fly++; await sleep(900);}
+  else if(k===3){const A=NODES[p.pos], B=NODES[o.pos], a=p.pos, swap=()=>{p.pos=o.pos; o.pos=a; p.fly++; o.fly++;}; say(`${nm(p)} and ${nm(o)} swap places!`);
+    if(Math.hypot(A.x-B.x,A.z-B.z)<15){S.ui.cam=[(A.x+B.x)/2,(A.z+B.z)/2]; await sleep(1000); swap(); await sleep(1700); S.ui.cam=null;}   // close together: one wide shot of both
+    else{S.ui.follow=o.k; await sleep(1200); swap(); S.ui.follow=p.k; await sleep(1500); S.ui.follow=o.k; await sleep(1700); S.ui.follow=p.k; await sleep(500);}}   // far apart: visit the rival, watch the swap land, then visit where the rival ended up
   else{await sleep(600); await moveP(p,3);}
 }
 async function pickRival(p,line){const o=S.p.filter(q=>q!==p).sort((a,b)=>b.t-a.t); if(p.cpu||o.length===1)return o[0]; say(line); return o[await ask(p.k,...o.map(nm))];}

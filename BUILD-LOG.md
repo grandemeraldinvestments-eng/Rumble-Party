@@ -228,6 +228,10 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Controller: right stick moves, left stick turns the view. Keyboard: W A S D or up/down to move, left/right arrows to turn.
 - The maze is 50% bigger: corridors are half as wide again, the camera sits further back, and players run about 30% faster so the one-minute limit still works.
 
+### 32. Swap shows both players; even ready cards
+- Chance swap: the camera now shows both players. If they are close it frames both at once; if they are far apart it visits the rival, shows the swap landing, then visits where the rival ended up.
+- Ready screen: every player card is the same size. Landscape shows three per row, portrait two per row, with any leftover cards centred.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
