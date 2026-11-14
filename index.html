@@ -124,10 +124,10 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .info{align-self:center; max-width:100%; background:var(--ink); color:#fff; border:0; padding:8px 12px; font-weight:600; text-align:left; line-height:1.3; flex:none}
 #centerBtn{flex:none}
 .phead .pill{padding:2px 8px}
-.topside{display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex:none}
+.topside{display:flex; flex-direction:column; align-items:stretch; gap:5px; flex:none}
 .phead{display:flex; align-items:center; gap:8px}
 .phead .who{flex:1; min-width:0; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-#menuBtn{flex:none; width:36px; height:36px; min-height:36px; padding:0; display:grid; place-items:center}
+#menuBtn{flex:none; width:auto; height:36px; min-height:36px; padding:0; display:grid; place-items:center}
 .toprow{display:flex; gap:6px; align-items:flex-start; flex:none}
 .toprow .score{flex:1; min-width:0}
 .score.n4{gap:4px}
@@ -219,6 +219,10 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .mhud{display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none}
 .mhud .big{color:#fff; text-shadow:0 3px 0 var(--ink),3px 0 0 var(--ink),-3px 0 0 var(--ink),0 -3px 0 var(--ink),3px 3px 0 var(--ink)}
 .mhud .sub{background:var(--card); border:2px solid var(--ink); padding:1px 12px; font-weight:700}
+.sboard{display:flex; flex-wrap:wrap; justify-content:center; gap:4px; max-width:96vw}
+.sboard span{color:var(--ink); background:var(--card); border:2px solid var(--ink); border-left:8px solid var(--c); padding:0 6px; font-size:.78rem; font-weight:700}
+.sboard span.me{background:var(--sun)}
+#gfin{position:fixed; left:50%; top:42%; transform:translate(-50%,-50%); z-index:60; white-space:nowrap; font-family:var(--pix,'Press Start 2P',monospace); font-size:clamp(1.1rem,6.5vw,2.4rem); color:#fff; background:var(--ink); border:4px solid #fff; box-shadow:0 0 0 4px var(--ink); padding:.7em .8em; pointer-events:none}
 .big{font-family:var(--body); font-weight:800; font-size:clamp(2.6rem,15vw,4.2rem); line-height:1.05}
 .sub{color:var(--sub)}
 .bell{width:min(62vw,260px); aspect-ratio:1; max-width:100%; border-radius:50%; border:4px solid var(--ink); background:var(--coral); color:var(--night);
@@ -265,10 +269,11 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
   .chip{padding:3px 4px; border-width:2px; box-shadow:2px 2px 0 var(--ink)}
   .chip .nm{font-size:.72rem; gap:3px} .chip .face{width:20px; height:20px; border-width:1px}
   .chip .st{font-size:.82rem; gap:2px; margin-top:2px} .chip .bag{font-size:.6rem; min-height:0; margin-top:1px}
-  .panel{align-self:center; max-width:min(100%,900px); padding:6px 10px 8px; gap:2px 12px; box-shadow:3px 3px 0 var(--ink); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,auto); grid-template-areas:'head acts' 'msg acts'; align-items:center; text-align:left}
-  .panel .phead{grid-area:head} .panel .msg{grid-area:msg; place-items:center start; text-align:left} .panel .acts{grid-area:acts; flex-wrap:nowrap; align-self:stretch; align-items:stretch; min-width:min(44vw,400px)}
-  .panel.auto,.panel.min{grid-template-columns:minmax(0,1fr)}  .panel.auto .msg{grid-column:1 / -1}
-  .panel .who{font-size:.98rem} .panel .msg{min-height:1.6em; font-size:.88rem; line-height:1.2}
+  .panel{align-self:center; max-width:min(100%,940px); padding:5px 8px 7px; gap:0 8px; box-shadow:3px 3px 0 var(--ink); display:flex; flex-direction:row; flex-wrap:nowrap; align-items:center; text-align:left}
+  .panel .phead{display:contents} .panel .who{order:1; flex:none; max-width:24%} .panel .msg{order:2; flex:1 1 0; min-width:0; place-items:center start; text-align:left; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+  .panel .phead .pill{order:3; flex:none} .panel .acts{order:4; flex:0 1 auto; flex-wrap:nowrap; align-items:stretch; min-width:min(40vw,360px)}
+  .panel.auto .acts,.panel.min .acts{display:none}
+  .panel .who{font-size:.92rem} .panel .msg{min-height:0; font-size:.84rem; line-height:1.2}
   .panel .acts{min-height:44px; gap:6px} .panel .acts .btn{padding:6px 10px; font-size:.92rem; flex:1 1 0}
   .card{max-width:min(100%,720px); padding:12px 14px; gap:9px}
   .card h1{font-size:1.5rem}
@@ -284,6 +289,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
   #mini{gap:6px; padding-top:calc(6px + env(safe-area-inset-top,0px)); padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
   #mini h2{font-size:1rem} #mini header p{display:none}
   #mini.gl header{padding:4px 10px; align-self:flex-start}
+  #mini.gl .mhud{align-items:flex-start; align-self:flex-start; gap:3px} #mini.gl .mhud .big{font-size:2rem} #mini.gl .sboard{flex-direction:column; align-items:flex-start}
   #stage{overflow-y:auto; gap:8px; max-width:720px; justify-content:safe center}
   #stage p.sub:not(#rdyNote){display:none}
   #stage p{max-width:70ch}
@@ -302,7 +308,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 <section class="screen center" id="menu">
   <div class="card">
     <h1>Rumble Party</h1>
-    <p class="lede">A party board game for 2 to 6 players. Run around the board, win tickets in mini games and trade them for pearls. Four maps, nineteen mini games.</p>
+    <p class="lede">A party board game for 2 to 6 players. Run around the board, win tickets in mini games and trade them for pearls. Four maps, twenty mini games.</p>
     <div class="stack">
       <button class="btn" id="hostBtn" disabled>Host a game</button>
       <button class="btn" id="joinBtn" disabled>Join a game</button>
@@ -389,6 +395,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
   <div class="acts" id="mgActs"></div>
   <div id="joy" hidden><i></i></div>
   <button id="jumpBtn" hidden>Jump</button>
+  <div id="gfin" hidden>Game Finished</div>
 </section>
 
 <section id="settings" hidden>
@@ -1231,7 +1238,7 @@ async function branch(p,nx,n=1){
   if(S.tide&&S.round<=S.tide){say('The tide covers the bridge, so it is the main path only.'); await sleep(900); return nx[0];}
   if(p.cpu){await sleep(450); return d[1]<d[0]?nx[1]:nx[0];}
   const land=nx.map(t=>{let q=t; for(let r=n-1;r>0;r--)q=NODES[q].next[0]; return q;});
-  say('Fork in the path. Tap a path to preview it, then tap it again to go.'); S.ui.fork=1; askX={pick:1,land,info:['Main path','Bridge'].map((l,i)=>`${l}: the pearl is ${d[i]} spaces away. You land on ${spShort(land[i])}${land[i]===S.pearlAt?' with the pearl stall':''}. Tap again to go.`)};
+  say('Fork in the path. Pick a way.'); S.ui.fork=1; askX={pick:1,land,info:['Main path','Bridge'].map((l,i)=>`${l}: the pearl is ${d[i]} spaces away. You land on ${spShort(land[i])}${land[i]===S.pearlAt?' with the pearl stall':''}.`)};
   const c=await ask(p.k,'Main path','Bridge'); S.ui.fork=0; return nx[c];
 }
 async function moveP(p,n){
@@ -1264,8 +1271,8 @@ async function useItem(p,idx){
   say(`${nm(p)} flies a Kite to the pearl stall.`); S.ui.dice=-1; await flyTo(p,S.pearlAt); await stall(p); return 1;
 }
 async function shop(p){
-  const ids=['twin','magnet','kite'].filter(id=>p.t>=ITEMS[id].cost); say('Item shop. Tap an item to read about it, then tap it again to buy.'); S.ui.follow=p.k;
-  askX={pick:1,start:-1,info:[...ids.map(id=>`${ITEMS[id].name}, ${ITEMS[id].cost} tickets. ${ITEMS[id].desc} Tap again to buy.`),null]};
+  const ids=['twin','magnet','kite'].filter(id=>p.t>=ITEMS[id].cost); say('Item shop. Pick an item, or skip.'); S.ui.follow=p.k;
+  askX={pick:1,start:-1,info:[...ids.map(id=>`${ITEMS[id].name}, ${ITEMS[id].cost} tickets. ${ITEMS[id].desc}`),null]};
   const c=await ask(p.k,...ids.map(id=>`${ITEMS[id].name}|${ITEMS[id].cost} tickets`),'Skip');
   if(c<ids.length){p.t-=ITEMS[ids[c]].cost; p.it.push(ids[c]);}
 }
@@ -1365,7 +1372,7 @@ async function takeTurn(p){
       if(p.cpu)break;
       const opts=['Hit the dice']; if(!used)p.it.forEach(id=>opts.push(`${ITEMS[id].name}|${ITEMS[id].tip}`));
       const d=dist(p.pos,S.pearlAt); say(`The pearl is ${d} space${d===1?'':'s'} away.`);
-      if(opts.length>1)askX={pick:1,start:0,info:[null,...p.it.map(id=>`${ITEMS[id].name}. ${ITEMS[id].desc} Tap again to use it.`)]};
+      if(opts.length>1)askX={pick:1,start:0,info:[null,...p.it.map(id=>`${ITEMS[id].name}. ${ITEMS[id].desc}`)]};
       const c=await ask(p.k,...opts);
       if(c===0)break;
       n=await useItem(p,c-1); used=true; ui.dice=p.k;
@@ -1479,12 +1486,12 @@ function miniSync(){
     return;
   }
   $('#mgTitle').textContent=g.name;
-  if(m.phase==='intro'){$('#mgSub').textContent=m.prac?'Practice':m.note?'Duel':'This round\'s game'; stage.innerHTML=`${m.note?`<p><b>${m.note}</b></p>`:''}<p>${g.how}</p>${m.note||m.prac?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2. With five or six players the prizes are 10, 6, 4, 2 and 1.</p>'}${g.arena?'<p class="sub">The deck is a different shape every time. Fall off the edge and you are out. Walk into other players to shove them.</p>':''}<div class="rdy" id="rdyRow"></div>${myK()>=0&&(!m.only||m.only.includes(myK()))?'<button class="btn" id="rdyBtn">Ready</button>':''}<p class="sub" id="rdyNote"></p>`;
+  if(m.phase==='intro'){$('#mgSub').textContent=m.prac?'Practice':m.note?'Duel':'This round\'s game'; stage.innerHTML=`${m.note?`<p><b>${m.note}</b></p>`:''}<p>${g.how}</p>${m.note||m.prac?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2. With five or six players the prizes are 10, 6, 4, 2 and 1.</p>'}${g.arena&&!g.alone?'<p class="sub">Fall off the edge and you are out. Walk into other players to shove them.</p>':''}<div class="rdy" id="rdyRow"></div>${myK()>=0&&(!m.only||m.only.includes(myK()))?'<button class="btn" id="rdyBtn">Ready</button>':''}<p class="sub" id="rdyNote"></p>`;
     const rb=$('#rdyBtn'); if(rb)rb.onclick=()=>{rb.disabled=true; rb.textContent='Ready!'; setReady(m.mid);}; rdyKey=''; drawReady(m);}
   else if(m.phase==='play'){
     const k=myK(); if(k<0||(m.only&&!m.only.includes(k))){stage.innerHTML=`<p>${m.only?'The duel is under way':'Mini game in progress'}\u2026</p>`; return;}
     miniBusy=true; $('#mgSub').textContent=nameOf(k);
-    g.play({k,i:V.p[k].i,seed:m.seed}).then(v=>{miniBusy=false; if(!V||!V.mini||V.mini.mid!==m.mid)return; report(m.mid,k,v);
+    g.play({k,i:V.p[k].i,seed:m.seed}).then(async v=>{if(!g.arena)await gameFinished(); miniBusy=false; if(!V||!V.mini||V.mini.mid!==m.mid)return; report(m.mid,k,v);
       stage.innerHTML=`<div class="sub">Your score</div><div class="big">${fmt(g,v)}</div><p class="sub">Waiting for the other players…</p>`;});
   }
   else if(m.phase==='done'){$('#mgSub').textContent='Results';
@@ -1530,51 +1537,77 @@ function pad(on,jump,label){$('#jumpBtn').hidden=!(on&&jump); $('#jumpBtn').text
 
 /* arena games: everyone runs around the same deck at once. Each phone moves its own character;
    hazards come from a shared seed so every phone sees the same thing. The host moves the computers. */
-/* every arena is an irregular blob, different each time but the same on every phone (it comes from the shared seed) */
-function mkShape(rng){
-  const p=[rng()*6.283,rng()*6.283,rng()*6.283], k=2+Math.floor(rng()*2);
-  const R=t=>3.3*(1+.15*Math.cos(k*t+p[0])+.11*Math.cos((k+1)*t+p[1])+.07*Math.cos(5*t+p[2]));
-  return{R,inside:(x,z)=>Math.hypot(x,z)<=R(Math.atan2(x,z))+.12};
+/* every shared-deck game has its own set platform: a circle or a square (which may have a square hole) */
+function mkDeck(spec){
+  const sh=Object.assign({},spec);
+  if(spec.k==='c'){const R=spec.R; sh.ext=R;
+    sh.inside=(x,z)=>Math.hypot(x,z)<=R+.12;
+    sh.edge=(x,z)=>{const r=Math.hypot(x,z)||.01; return[R-r,-x/r,-z/r];};
+    sh.pt=(rng,f)=>{const a=rng()*6.283,r=Math.sqrt(rng())*(f||.9)*R; return[Math.sin(a)*r,Math.cos(a)*r];};}
+  else{const h=spec.h,o=spec.hole||0; sh.ext=h*1.12;
+    sh.inside=(x,z)=>Math.abs(x)<=h+.12&&Math.abs(z)<=h+.12&&!(o&&Math.abs(x)<o-.12&&Math.abs(z)<o-.12);
+    sh.edge=(x,z)=>{const ax=Math.abs(x),az=Math.abs(z); let d=h-Math.max(ax,az), nx=ax>az?-Math.sign(x):0, nz=ax>az?0:-Math.sign(z);
+      if(o){const dh=Math.max(ax,az)-o; if(dh<d){d=dh; nx=ax>az?(Math.sign(x)||1):0; nz=ax>az?0:(Math.sign(z)||1);}} return[d,nx,nz];};
+    sh.pt=(rng,f)=>{for(;;){const x=(rng()*2-1)*h*(f||.92),z=(rng()*2-1)*h*(f||.92); if(!o||Math.abs(x)>o+.4||Math.abs(z)>o+.4)return[x,z];}};}
+  return sh;
 }
-function shapePath(sh,a0,a1,n,fromCentre,k){const q=new THREE.Shape(); k=k||1; if(fromCentre)q.moveTo(0,0);
-  for(let i=0;i<=n;i++){const t=a0+(a1-a0)*i/n,r=sh.R(t)*k,x=Math.sin(t)*r,y=-Math.cos(t)*r; if(i===0&&!fromCentre)q.moveTo(x,y); else q.lineTo(x,y);} return q;}
-function deckShape(sc,sh){
-  const geo=new THREE.ExtrudeGeometry(shapePath(sh,0,Math.PI*2,90),{depth:.5,bevelEnabled:false});
-  const d=mesh(geo,0xc98f55,0,-.5,0,sc); d.rotation.x=-Math.PI/2; d.receiveShadow=true; d.castShadow=false;
-  const rim=mesh(geo,0xffffff,0,-.62,0,sc); rim.rotation.x=-Math.PI/2; rim.scale.set(1.05,1.05,.5); rim.castShadow=false;
+function deckDraw(sc,sh,col,rim){col=col==null?0xc98f55:col; rim=rim==null?0xffffff:rim;
+  const flat=m=>{m.receiveShadow=true; m.castShadow=false; return m;};
+  if(sh.k==='c'){flat(mesh(new THREE.CylinderGeometry(sh.R,sh.R,.5,72),col,0,-.25,0,sc)); flat(mesh(new THREE.CylinderGeometry(sh.R+.2,sh.R+.2,.3,72),rim,0,-.42,0,sc));}
+  else if(!sh.hole){flat(mesh(new THREE.BoxGeometry(sh.h*2,.5,sh.h*2),col,0,-.25,0,sc)); flat(mesh(new THREE.BoxGeometry(sh.h*2+.4,.3,sh.h*2+.4),rim,0,-.42,0,sc));}
+  else{const h=sh.h,o=sh.hole,w=h-o; for(const [x,z,sx,sz] of [[0,-(o+w/2),h*2,w],[0,o+w/2,h*2,w],[-(o+w/2),0,w,o*2],[o+w/2,0,w,o*2]]){flat(mesh(new THREE.BoxGeometry(sx,.5,sz),col,x,-.25,z,sc)); flat(mesh(new THREE.BoxGeometry(sx+.4,.3,sz+.4),rim,x,-.42,z,sc));}
+    flat(mesh(new THREE.BoxGeometry(o*2-.4,.34,o*2-.4),0x1fa3d4,0,-.42,0,sc));}
 }
+async function gameFinished(){const el=$('#gfin'); el.hidden=false; await sleep(1500); el.hidden=true;}
 function arena(G){return async function(ctx){
-  const m=miniStage(G.hint,[0,11.5,8.6],[0,0,.6]), sc=m.scene, rng=rng32(ctx.seed), sh=mkShape(rng); if(!G.noDeck)deckShape(sc,sh);
-  const st=G.init(sc,rng,sh,V.p.length);
-  const avs=V.p.map((p,k)=>{const a=k/V.p.length*6.283+.6, av={k,x:Math.sin(a)*1.5,z:Math.cos(a)*1.5,y:0,vy:0,alive:true,gone:0,fell:false,score:0,face:0,moving:false,kx:0,kz:0,bump:0,dash:0,cd:0,spd:0,ly:0,dy:0,col:CAST[p.i].hex,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
-    av.ch.position.set(av.x,0,av.z); return av;});
+  const sh=mkDeck(G.deck), cp=G.cam||[11.5,8.6,.6]; let kz=1;
+  {// pull the camera back until the whole platform fits the screen, whichever way the phone is held
+    const W=window.innerWidth,H=window.innerHeight, tv=Math.tan((W<H?60:45)*Math.PI/360), th=tv*W/H, e=G.fit||(sh.k==='c'?sh.R:sh.h), sq=sh.k!=='c';
+    const fits=k=>{const cy=cp[0]*k,cz=cp[1]*k,lz=cp[2]*k, fl=Math.hypot(cy,cz-lz), fy=-cy/fl, fz=(lz-cz)/fl;   // camera forward; right is +x; up = right x forward
+      for(const [x,z] of sq?[[e,e],[e,-e],[e,0]]:[[e,0],[0,e],[0,-e],[e*.7,e*.7]]){const dy=-cy,dz=z-cz, dep=dy*fy+dz*fz, ux=0,uy=-fz,uz=fy, v=(dy*uy+dz*uz)/dep, h=(x+.5)/dep; if(dep<1||Math.abs(h)>th*.97||v>tv*(W>H?.8:.5)||v<-tv*(W>H?.86:.72))return false;} return true;};
+    while(kz<4&&!fits(kz))kz+=.05;}
+  const m=miniStage(G.hint,[0,cp[0]*kz,cp[1]*kz],[0,0,cp[2]*kz]), sc=m.scene, rng=rng32(ctx.seed); if(G.draw)G.draw(sc,sh); else if(!G.noDeck)deckDraw(sc,sh);
+  const n=V.p.length, st=G.init(sc,rng,sh,n);
+  const avs=V.p.map((p,k)=>{const a=k/n*6.283+.6, s0=G.start?G.start(k,n,st):[Math.sin(a)*(G.ring||1.5),Math.cos(a)*(G.ring||1.5)],
+    av={k,x:s0[0],z:s0[1],y:0,vy:0,vx:0,vz:0,alive:true,gone:0,fell:false,done:false,score:0,face:0,moving:false,kx:0,kz:0,bump:0,dash:0,cd:0,spd:0,ly:0,dy:0,lives:G.lives||1,inv:0,col:CAST[p.i].hex,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
+    av.ch.position.set(av.x,0,av.z); if(G.alone&&!av.mine)av.ch.visible=false; return av;});
   const me=avs[ctx.k]; st.avs=avs; net.av={}; net.buf={}; pad(true,G.jump||G.dash,G.dash?'Dash':'Jump');
-  const out=(av,t,fell)=>{av.alive=false; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); $('#hint').textContent=fell?'You fell off!':'You are out!';}};
+  const hint=s=>{$('#hint').textContent=s;}, lives=()=>{if(G.lives)hint('Lives: '+me.lives);}; lives();
+  let sb=null, sbT=0; if(G.board){sb=document.createElement('div'); sb.className='sboard'; $('#hint').parentNode.appendChild(sb);}
+  const out=(av,t,fell)=>{av.alive=false; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); hint(fell?'You fell off!':'You are out!');}};
   await countdown($('#n'));
   let t=0,pubT=0,endT=-1;
   await m.run(dt=>{
     t+=dt; G.step(st,t,dt,sc);
     for(const av of avs){
+      if(G.alone&&!av.mine)continue;
       const ox=av.x, oz=av.z;
       if(av.mine||av.cpu){
-        if(av.alive){
+        if(av.alive&&!av.done){
           let ix=0,iz=0,j=false;
           if(av.mine){ix=joy.x; iz=joy.y; j=joy.jump; joy.jump=false;}
           else{G.ai(av,st,t,dt); ix=av.ai.dx; iz=av.ai.dz; j=av.ai.jump; av.ai.jump=false;
-            const rr=Math.hypot(av.x,av.z)||.01; if(!G.noDeck&&rr>sh.R(Math.atan2(av.x,av.z))-.8){ix-=av.x/rr*1.6; iz-=av.z/rr*1.6;}}
+            const e=sh.edge(av.x,av.z), lim=G.edgeAI||.8; if(!G.noEdge&&e[0]<lim){const pw=1.6*(1+(lim-e[0])/lim); ix+=e[1]*pw; iz+=e[2]*pw;}}
           const l=Math.hypot(ix,iz); if(l>1){ix/=l; iz/=l;}
           av.dash-=dt; av.cd-=dt; if(j&&G.dash&&av.cd<=0&&l>.15){av.dash=.22; av.cd=1.1; if(av.mine)SFX.fly();}   // a dash is a short burst that hits much harder
           const sp=4.6*(G.speed||1)*(av.dash>0?2.2:1);
-          av.bump-=dt; av.x+=(ix*sp+av.kx)*dt; av.z+=(iz*sp+av.kz)*dt; {const f=Math.exp(-dt*7); av.kx*=f; av.kz*=f;} av.moving=l>.15; if(av.moving)av.face=Math.atan2(ix,iz);
+          av.bump-=dt; av.inv-=dt;
+          if(G.ice){const f=Math.min(1,dt*G.ice); av.vx+=(ix*sp-av.vx)*f; av.vz+=(iz*sp-av.vz)*f;} else{av.vx=ix*sp; av.vz=iz*sp;}   // on ice you speed up and slow down gradually
+          av.x+=(av.vx+av.kx)*dt; av.z+=(av.vz+av.kz)*dt; {const f=Math.exp(-dt*7); av.kx*=f; av.kz*=f;} av.moving=l>.15; if(av.moving)av.face=Math.atan2(ix,iz);
           // shoving: whoever is walking pushes whoever is standing; two walkers push each other
-          for(const o of avs){if(o===av||!o.alive||Math.abs(av.y-o.y)>.6)continue; const dx=av.x-o.x,dz=av.z-o.z,d=Math.hypot(dx,dz);
+          if(!G.alone)for(const o of avs){if(o===av||!o.alive||Math.abs(av.y-o.y)>.6)continue; const dx=av.x-o.x,dz=av.z-o.z,d=Math.hypot(dx,dz);
             if(d<.8){const ov=.8-d,k=o.moving?(av.moving?.5:1):(av.moving?.3:.5),nx=d>.01?dx/d:1,nz=d>.01?dz/d:0; av.x+=nx*ov*k; av.z+=nz*ov*k;
               if(av.bump<=0&&(o.moving||av.moving)){av.bump=.4; if(o.moving){const pw=3.4*Math.min(2,Math.max(1,o.spd/4.6))*(G.shove||1); av.kx=nx*pw; av.kz=nz*pw;} if(av.mine)SFX.bump();}}}
-          const r=Math.hypot(av.x,av.z); if(G.post&&r<.9){if(r<.01){av.x=.9; av.z=0;} else{av.x*=.9/r; av.z*=.9/r;}}
+          if(G.post){const r=Math.hypot(av.x,av.z); if(r<G.post){if(r<.01){av.x=G.post; av.z=0;} else{av.x*=G.post/r; av.z*=G.post/r;}}}
+          if(G.move)G.move(av,st,t);
           if(j&&av.y===0&&G.jump){av.vy=6.5; if(av.mine)SFX.hop();}
           if(av.y>0||av.vy>0){av.y+=av.vy*dt; av.vy-=18*dt; if(av.y<=0){av.y=0; av.vy=0;}}
           if(av.y<=.02&&!sh.inside(av.x,av.z))out(av,t,true);
-          else{const c=G.check(av,st,t,true,dt); if(c==='hit')out(av,t,false); else if(c==='fall')out(av,t,true); else if(c>0){av.score+=c; if(av.mine&&!G.quiet)SFX.gain();}}
+          else{const c=G.check(av,st,t,true,dt);
+            if(c==='hit'){if(av.inv>0){} else if(av.lives>1){av.lives--; av.inv=1.6; if(av.mine){SFX.loss(); lives();}} else out(av,t,false);}
+            else if(c==='fall')out(av,t,true);
+            else if(c==='win'){av.done=true; av.moving=false; if(av.mine){SFX.win(); hint('You made it!'); endT=t+.9;}}
+            else if(typeof c==='number'&&c){av.score=Math.max(0,av.score+c); if(av.mine&&!G.quiet){if(c>0)SFX.gain(); else SFX.loss();}}}
         }
       }else{
         const a=net.av[av.k];
@@ -1584,27 +1617,39 @@ function arena(G){return async function(ctx){
       }
       av.spd+=(Math.hypot(av.x-ox,av.z-oz)/Math.max(dt,.001)-av.spd)*Math.min(1,dt*10); if(av.y!==av.ly){av.dy=av.y-av.ly; av.ly=av.y;}
       const ch=av.ch;
-      if(av.alive){ch.position.set(av.x,av.y,av.z); ch.run=av.moving?1:0; ch.air=av.y>0; ch.fig.rotation.y=av.face;}
+      if(av.alive){ch.position.set(av.x,av.y,av.z); ch.run=av.moving?1:0; ch.air=av.y>0; ch.fig.rotation.y=av.face; ch.visible=!(av.inv>0&&Math.floor(t*12)%2);}
       else if(ch.visible){av.gone-=dt; ch.run=0; ch.air=true; if(av.fell){ch.position.y-=dt*9; ch.fig.rotation.x+=dt*6;} else{ch.scale.setScalar(Math.max(.01,1.15*av.gone/.6)); ch.fig.rotation.y+=dt*14;} if(av.gone<=0)ch.visible=false;}
     }
     pubT-=dt;
     if(pubT<=0&&net.nr){pubT=.07; const pk=a=>[r2(a.x),r2(a.z),r2(a.y),a.alive?1:0,r2(a.score)], patch={a:pk(me)};
-      if(net.host){patch.cpu={}; avs.forEach(a=>{if(a.cpu)patch.cpu[a.k]=pk(a);});} net.nr.presence(patch).catch(()=>{});}
-    $('#n').textContent=G.surv?(me.alive?t:me.score).toFixed(1):G.dec?me.score.toFixed(1):me.score; $('#bar').style.transform=`scaleX(${Math.max(0,1-t/G.max)})`;
-    if(endT<0&&t>1.5&&avs.filter(a=>a.alive).length<=1)endT=t+1.4;   // last one standing ends the game
+      if(net.host&&!G.alone){patch.cpu={}; avs.forEach(a=>{if(a.cpu)patch.cpu[a.k]=pk(a);});} net.nr.presence(patch).catch(()=>{});}
+    if(sb){sbT-=dt; if(sbT<=0){sbT=.25; sb.innerHTML=avs.slice().sort((a,b)=>b.score-a.score).map(a=>`<span style="--c:${CAST[V.p[a.k].i].c}"${a.mine?' class="me"':''}>${CAST[V.p[a.k].i].name} <b>${a.score.toFixed(1)}</b></span>`).join('');}}
+    $('#n').textContent=G.left?Math.max(0,G.max-t).toFixed(1):G.surv?(me.alive?t:me.score).toFixed(1):G.dec?me.score.toFixed(1):me.score; $('#bar').style.transform=`scaleX(${Math.max(0,1-t/G.max)})`;
+    if(endT<0&&t>1.5&&!G.alone&&avs.filter(a=>a.alive).length<=1)endT=t+1.4;   // last one standing ends the game
+    if(G.alone&&endT<0&&!me.alive)endT=t+1;
     if(t>=G.max||(endT>0&&t>=endT))return 1;
   });
   avs.forEach(a=>{if(G.surv&&a.alive)a.score=G.max; if(G.dec)a.score=Math.round(a.score*10)/10;});
-  if(net.host)avs.forEach(a=>{if(a.cpu)miniRes[a.k]=a.score;});
+  if(G.final)G.final(me,st,t);
+  if(net.host)avs.forEach(a=>{if(a.cpu)miniRes[a.k]=G.cpuScore?G.cpuScore(st):a.score;});
   if(net.nr)net.nr.presence({a:[r2(me.x),r2(me.z),0,me.alive?1:0,me.score]}).catch(()=>{});
-  pad(false); if(me.alive)SFX.win(); await sleep(800); m.end(); return me.score;
+  pad(false); if(me.alive)SFX.win(); await gameFinished(); m.end(); return me.score;
 };}
 const wrapA=a=>{a=(a+Math.PI)%(Math.PI*2); if(a<0)a+=Math.PI*2; return a-Math.PI;};
-const CRAB={hint:'Drag to run',surv:true,max:30,
-  init(sc,rng){const list=[]; let t=1; while(t<30){const a=rng()*6.283,tx=(rng()-.5)*5,tz=(rng()-.5)*5,sx=Math.sin(a)*4.6,sz=Math.cos(a)*4.6,l=Math.hypot(tx-sx,tz-sz),v=2.8+t*.1;
-      list.push({t,sx,sz,vx:(tx-sx)/l*v,vz:(tz-sz)/l*v,m:null,on:false,done:false}); t+=Math.max(.32,.95-t*.022);}
-    return{list,geo:new THREE.BoxGeometry(.7,.36,.56),eg:new THREE.BoxGeometry(.12,.2,.12)};},
-  step(st,t,dt,sc){for(const c of st.list){if(t<c.t)break; if(c.done)continue; const e=t-c.t; c.x=c.sx+c.vx*e; c.z=c.sz+c.vz*e; c.on=Math.hypot(c.x,c.z)<4.9;
+const nearest=(av,st)=>{let b=null,bd=99; for(const o of st.avs){if(o===av||!o.alive)continue; const d=Math.hypot(o.x-av.x,o.z-av.z); if(d<bd){bd=d; b=o;}} return b?{o:b,d:bd}:null;};
+const flatM=(m)=>{m.rotation.x=-Math.PI/2; m.castShadow=false; m.receiveShadow=true; return m;};
+
+/* Crab Scramble: a small island twice the old size, three lives, crabs that keep getting faster and thicker */
+const CRAB={hint:'Dodge the crabs',surv:true,max:45,lives:3,post:.6,ring:2.2,deck:{k:'c',R:6.6},
+  draw(sc,sh){deckDraw(sc,sh,0xf2dfa0,0xfff6d6); flatM(mesh(new THREE.CircleGeometry(sh.R*.62,48),new THREE.MeshLambertMaterial({color:0x8fd96b}),0,.015,0,sc));
+    const tr=mesh(new THREE.CylinderGeometry(.16,.26,3,10),0xa9773f,0,1.5,0,sc); tr.rotation.z=-.08;
+    for(let i=0;i<7;i++){const a=i/7*6.283, lf=mesh(new THREE.BoxGeometry(.5,.07,1.9),0x35c98a,.12+Math.sin(a)*.85,2.95,Math.cos(a)*.85,sc); lf.rotation.y=a; lf.rotation.x=.42;}
+    for(let i=0;i<3;i++){const a=i*2.1; mesh(new THREE.SphereGeometry(.17,10,8),0x8a5a2b,.12+Math.sin(a)*.24,2.82,Math.cos(a)*.24,sc);}
+    for(let i=0;i<5;i++){const a=i*1.26+.4; mesh(new THREE.SphereGeometry(.34,8,6),0x4fbf6e,Math.sin(a)*sh.R*.5,.12,Math.cos(a)*sh.R*.5,sc).scale.set(1,.55,1);}},
+  init(sc,rng,sh){const list=[], R=sh.R; let t=1; while(t<45){const a=rng()*6.283,q=sh.pt(rng,.72),sx=Math.sin(a)*(R+1.3),sz=Math.cos(a)*(R+1.3),l=Math.hypot(q[0]-sx,q[1]-sz),v=2.6+t*.12;
+      list.push({t,sx,sz,vx:(q[0]-sx)/l*v,vz:(q[1]-sz)/l*v,m:null,on:false,done:false}); t+=Math.max(.11,.62-t*.016);}
+    return{list,R,geo:new THREE.BoxGeometry(.7,.36,.56),eg:new THREE.BoxGeometry(.12,.2,.12)};},
+  step(st,t,dt,sc){for(const c of st.list){if(t<c.t)break; if(c.done)continue; const e=t-c.t; c.x=c.sx+c.vx*e; c.z=c.sz+c.vz*e; c.on=Math.hypot(c.x,c.z)<st.R+1.6;
       if(c.on&&!c.m){c.m=mesh(st.geo,0xff4d4d,c.x,.26,c.z,sc); c.m.rotation.y=Math.atan2(c.vx,c.vz); mesh(st.eg,0xffffff,-.18,.26,.2,c.m); mesh(st.eg,0xffffff,.18,.26,.2,c.m);}
       if(c.on)c.m.position.set(c.x,.26+Math.abs(Math.sin(t*14+c.t))*.07,c.z); else if(c.m){sc.remove(c.m); c.m=null; c.done=true;}}},
   check(av,st){for(const c of st.list)if(c.on&&c.m&&Math.hypot(c.x-av.x,c.z-av.z)<.62)return'hit'; return 0;},
@@ -1612,39 +1657,50 @@ const CRAB={hint:'Drag to run',surv:true,max:30,
     for(const c of st.list){if(!c.on||!c.m)continue; const rx=c.x-av.x,rz=c.z-av.z,vv=c.vx*c.vx+c.vz*c.vz,tc=-(rx*c.vx+rz*c.vz)/vv; if(tc<0||tc>1.3)continue;
       const px=rx+c.vx*tc,pz=rz+c.vz*tc; if(Math.hypot(px,pz)<1.1&&tc<bt){bt=tc; best={c,px,pz};}}
     if(best&&Math.random()>.1){const l=Math.hypot(best.c.vx,best.c.vz),nx=-best.c.vz/l,nz=best.c.vx/l,s=(-best.px*nx-best.pz*nz)>=0?1:-1; ai.dx=nx*s; ai.dz=nz*s;}
-    else{const r=Math.hypot(av.x,av.z); if(r>2.3){ai.dx=-av.x/r*.6; ai.dz=-av.z/r*.6;} else{ai.dx=0; ai.dz=0;}}}};
-const BOOM={hint:'Jump the boom',surv:true,max:30,jump:true,post:true,
-  init(sc){mesh(new THREE.CylinderGeometry(.24,.3,1.2,16),0x7c8ea3,0,.6,0,sc); mesh(new THREE.SphereGeometry(.3,14,10),0xffc531,0,1.32,0,sc);
-    const arm=new THREE.Group(); arm.position.y=.3; sc.add(arm); mesh(new THREE.BoxGeometry(.2,.2,4.7),0xff4d4d,0,0,2.35,arm); return{arm,th:Math.PI,pth:Math.PI,w:1.8};},
-  step(st,t){st.pth=st.th; st.th=Math.PI+1.8*t+.05*t*t; st.w=1.8+.1*t; st.arm.rotation.y=st.th;},
-  check(av,st,t,local){if(!local)return 0; const r=Math.hypot(av.x,av.z); if(r<.5||av.y>.35)return 0; const ph=Math.atan2(av.x,av.z),d0=wrapA(st.pth-ph),d1=wrapA(st.th-ph); return d0<0&&d1>=0&&d1-d0<1?'hit':0;},
-  ai(av,st,t,dt){const ai=av.ai, ph=Math.atan2(av.x,av.z), d=wrapA(ph-st.th); ai.t-=dt;
-    if(ai.t<=0){ai.t=.8+Math.random(); const a=Math.random()*6.283, r=Math.hypot(av.x,av.z)||1; if(r>3){ai.dx=-av.x/r*.5; ai.dz=-av.z/r*.5;} else if(r<1.6){ai.dx=av.x/r*.5; ai.dz=av.z/r*.5;} else{ai.dx=Math.sin(a)*.3; ai.dz=Math.cos(a)*.3;}}
-    if(d>0&&d<st.w*.3){if(!ai.armed){ai.armed=true; if(Math.random()>.03+(st.w-1.8)*.03)ai.jump=true;}} else if(d<0||d>1.5)ai.armed=false;}};
-const GRAB={hint:'Grab the tickets',surv:false,max:25,
-  init(sc,rng,sh){const list=[]; for(let t=.6;t<24;t+=.42){const a=rng()*6.283,r=Math.sqrt(rng())*.82*sh.R(a); list.push({t,x:Math.sin(a)*r,z:Math.cos(a)*r,gold:rng()<.12,got:false,on:false,m:null});}
-    return{list,geo:new THREE.BoxGeometry(.5,.34,.1)};},
-  step(st,t,dt,sc){for(const c of st.list){if(t<c.t)break; c.on=!c.got&&t<c.t+4.5; if(c.on&&!c.m)c.m=mesh(st.geo,c.gold?0xff5fa8:0xffc531,c.x,.5,c.z,sc);
-      if(c.m){if(c.on){c.m.rotation.y+=dt*4; c.m.position.y=.5+Math.sin(t*5+c.t)*.08;} else{sc.remove(c.m); c.m=null;}}}},
-  check(av,st){for(const c of st.list)if(c.on&&Math.hypot(c.x-av.x,c.z-av.z)<.7){c.got=true; c.on=false; return c.gold?3:1;} return 0;},
+    else{const r=Math.hypot(av.x,av.z); if(r>st.R*.6){ai.dx=-av.x/r*.6; ai.dz=-av.z/r*.6;} else{ai.dx=0; ai.dz=0;}}}};
+
+/* Boom Hop: a round deck exactly as wide as the boom. The boom speeds up and keeps reversing; it flashes yellow just before it turns back */
+const BOOM={hint:'Jump the boom',surv:true,max:40,jump:true,post:.9,ring:2.6,deck:{k:'c',R:4.7},
+  init(sc,rng){mesh(new THREE.CylinderGeometry(.24,.3,1.2,16),0x7c8ea3,0,.6,0,sc); mesh(new THREE.SphereGeometry(.3,14,10),0xffc531,0,1.32,0,sc);
+    const arm=new THREE.Group(); arm.position.y=.3; sc.add(arm); const bar=mesh(new THREE.BoxGeometry(.2,.2,4.7),new THREE.MeshLambertMaterial({color:0xff4d4d}),0,0,2.35,arm);
+    const flips=[]; let t=6+rng()*3; while(t<40){flips.push(t); t+=Math.max(2.2,6-t*.09)+rng()*2;}
+    return{arm,bar,flips,fi:0,t0:0,th0:Math.PI,dir:1,th:Math.PI,pth:Math.PI,w:1.5,S:t=>1.5*t+.035*t*t};},
+  step(st,t){st.pth=st.th; while(st.fi<st.flips.length&&t>=st.flips[st.fi]){const f=st.flips[st.fi++]; st.th0+=st.dir*(st.S(f)-st.S(st.t0)); st.t0=f; st.dir=-st.dir;}
+    st.th=st.th0+st.dir*(st.S(t)-st.S(st.t0)); st.w=1.5+.07*t; st.arm.rotation.y=st.th;
+    const nx=st.flips[st.fi]; st.bar.material.color.setHex(nx!=null&&nx-t<.7&&Math.floor(t*10)%2?0xffc531:0xff4d4d);},
+  check(av,st,t,local){if(!local)return 0; const r=Math.hypot(av.x,av.z); if(r<.5||av.y>.35)return 0; const ph=Math.atan2(av.x,av.z),d0=wrapA(st.pth-ph),d1=wrapA(st.th-ph); return ((d0<0&&d1>=0)||(d0>0&&d1<=0))&&Math.abs(d1-d0)<1?'hit':0;},
+  ai(av,st,t,dt){const ai=av.ai, ph=Math.atan2(av.x,av.z), d=st.dir*wrapA(ph-st.th); ai.t-=dt;
+    if(ai.t<=0){ai.t=.8+Math.random(); const a=Math.random()*6.283, r=Math.hypot(av.x,av.z)||1; if(r>3.6){ai.dx=-av.x/r*.5; ai.dz=-av.z/r*.5;} else if(r<1.8){ai.dx=av.x/r*.5; ai.dz=av.z/r*.5;} else{ai.dx=Math.sin(a)*.3; ai.dz=Math.cos(a)*.3;}}
+    if(d>0&&d<st.w*.3){if(!ai.armed){ai.armed=true; if(Math.random()>.03+(st.w-1.5)*.03)ai.jump=true;}} else if(d<0||d>1.5)ai.armed=false;}};
+
+/* Ticket Grab: a big square, one minute. Tickets last 5 seconds. In the last 15 seconds one in ten is red and costs a ticket */
+const GRAB={hint:'Grab the tickets',max:60,ring:2,deck:{k:'s',h:6.6},
+  init(sc,rng,sh){const list=[]; for(let t=.6;t<59.4;t+=.3){const q=sh.pt(rng,.94), a=rng(), b=rng(); list.push({t,x:q[0],z:q[1],red:t>=45&&a<.1,gold:b<.12,got:false,on:false,m:null});}
+    list.forEach(c=>{if(c.red)c.gold=false;}); return{list,geo:new THREE.BoxGeometry(.5,.34,.1),warned:false};},
+  step(st,t,dt,sc){if(t>=45&&!st.warned){st.warned=true; $('#hint').textContent='Red tickets cost you 1';}
+    for(const c of st.list){if(t<c.t)break; c.on=!c.got&&t<c.t+5; if(c.on&&!c.m)c.m=mesh(st.geo,c.red?0xe5484d:c.gold?0xff5fa8:0xffc531,c.x,.5,c.z,sc);
+      if(c.m){if(c.on){c.m.rotation.y+=dt*4; c.m.position.y=.5+Math.sin(t*5+c.t)*.08; c.m.visible=t<c.t+4||Math.floor(t*8)%2===0;} else{sc.remove(c.m); c.m=null;}}}},
+  check(av,st){for(const c of st.list)if(c.on&&Math.hypot(c.x-av.x,c.z-av.z)<.7){c.got=true; c.on=false; return c.red?-1:c.gold?3:1;} return 0;},
   ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.25+Math.random()*.3; let b=null,bd=99;
-    for(const c of st.list){if(!c.on)continue; const d=Math.hypot(c.x-av.x,c.z-av.z); if(d<bd){bd=d; b=c;}}
+    for(const c of st.list){if(!c.on||c.red)continue; const d=Math.hypot(c.x-av.x,c.z-av.z); if(d<bd){bd=d; b=c;}}
     if(b&&bd>.2){ai.dx=(b.x-av.x)/bd*.78; ai.dz=(b.z-av.z)/bd*.78;} else{ai.dx=0; ai.dz=0;}}};
 
-const HOT={hint:'Stay off the red planks',surv:true,max:30,
-  init(sc,rng,sh){const W=[],ev=[]; for(let i=0;i<8;i++){const m=mesh(new THREE.ShapeGeometry(shapePath(sh,i*Math.PI/4+.02,(i+1)*Math.PI/4-.02,12,true,.985)),new THREE.MeshLambertMaterial({color:0xd9a066,side:THREE.DoubleSide}),0,.04,0,sc); m.rotation.x=-Math.PI/2; m.castShadow=false; m.receiveShadow=true; W.push(m);}
-    let t=2; while(t<29){const n=Math.min(6,3+Math.floor(t/8)),set=[]; while(set.length<n){const w=Math.floor(rng()*8); if(!set.includes(w))set.push(w);} const warn=Math.max(.75,1.3-t*.02); ev.push({t,set,warn}); t+=warn+.7+Math.max(.5,1.2-t*.03);}
-    return{W,ev,state:new Array(8).fill(0)};},
-  step(st,t){st.state.fill(0); for(const e of st.ev){if(t<e.t)break; const d=t-e.t; if(d<e.warn)e.set.forEach(w=>{st.state[w]=1;}); else if(d<e.warn+.7)e.set.forEach(w=>{st.state[w]=2;});}
-    st.W.forEach((m,i)=>{const q=st.state[i]; m.material.color.setHex(q===2?0xff4d4d:q===1?(Math.floor(t*8)%2?0xffc531:0xffe9a0):0xd9a066); m.position.y=q===2?-.05:.04;});},
-  check(av,st,t,local){if(!local)return 0; let a=Math.atan2(av.x,av.z); if(a<0)a+=Math.PI*2; return st.state[Math.floor(a/(Math.PI/4))%8]===2?'hit':0;},
-  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.2; let a=Math.atan2(av.x,av.z); if(a<0)a+=Math.PI*2; const w=Math.floor(a/(Math.PI/4))%8;
-    if(st.state[w]&&Math.random()>.07){let best=-1,bd=9; for(let i=0;i<8;i++){if(st.state[i])continue; const d=Math.min((i-w+8)%8,(w-i+8)%8); if(d<bd){bd=d; best=i;}}
-      if(best>=0){const ta=(best+.5)*Math.PI/4,tx=Math.sin(ta)*2.4,tz=Math.cos(ta)*2.4,l=Math.hypot(tx-av.x,tz-av.z)||1; ai.dx=(tx-av.x)/l; ai.dz=(tz-av.z)/l; return;}}
+/* Hot Planks: a big square of 16 tiles. Tiles flash yellow (still safe), then turn red. More tiles go, with less warning, as time passes */
+const HOT={hint:'Yellow is safe until it turns red',surv:true,max:40,ring:2,deck:{k:'s',h:6.6},
+  init(sc,rng,sh){const W=[],ev=[],T=sh.h/2; for(let i=0;i<16;i++){const m=flatM(mesh(new THREE.PlaneGeometry(T-.12,T-.12),new THREE.MeshLambertMaterial({color:0xd9a066}),-sh.h+T*(i%4+.5),.04,-sh.h+T*(Math.floor(i/4)+.5),sc)); W.push(m);}
+    let t=2; while(t<39.5){const n=Math.min(12,4+Math.floor(t/3.5)),set=[]; while(set.length<n){const w=Math.floor(rng()*16); if(!set.includes(w))set.push(w);} const warn=Math.max(.9,1.9-t*.03); ev.push({t,set,warn}); t+=warn+.8+Math.max(.25,1.1-t*.03);}
+    return{W,ev,T,h:sh.h,state:new Array(16).fill(0),at(x,z){const c=v=>Math.max(0,Math.min(3,Math.floor((v+sh.h)/T))); return c(x)+4*c(z);}};},
+  step(st,t){st.state.fill(0); for(const e of st.ev){if(t<e.t)break; const d=t-e.t; if(d<e.warn)e.set.forEach(w=>{st.state[w]=1;}); else if(d<e.warn+.8)e.set.forEach(w=>{st.state[w]=2;});}
+    st.W.forEach((m,i)=>{const q=st.state[i]; m.material.color.setHex(q===2?0xff4d4d:q===1?(Math.floor(t*8)%2?0xffc531:0xffe9a0):0xd9a066); m.position.y=q===2?.01:.04;});},
+  check(av,st,t,local){if(!local||av.y>.3)return 0; return st.state[st.at(av.x,av.z)]===2?'hit':0;},
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.2; const w=st.at(av.x,av.z);
+    if(st.state[w]&&Math.random()>.06){let best=-1,bd=99; for(let i=0;i<16;i++){if(st.state[i])continue; const x=-st.h+st.T*(i%4+.5),z=-st.h+st.T*(Math.floor(i/4)+.5),d=Math.hypot(x-av.x,z-av.z); if(d<bd){bd=d; best=i;}}
+      if(best>=0){const tx=-st.h+st.T*(best%4+.5),tz=-st.h+st.T*(Math.floor(best/4)+.5),l=Math.hypot(tx-av.x,tz-av.z)||1; ai.dx=(tx-av.x)/l; ai.dz=(tz-av.z)/l; return;}}
     ai.dx=0; ai.dz=0;}};
-const COCO={hint:'Watch the shadows',surv:true,max:30,
-  init(sc,rng,sh){const list=[]; let t=1.2; while(t<29){const a=rng()*6.283,r=Math.sqrt(rng())*.92*sh.R(a); list.push({t,x:Math.sin(a)*r,z:Math.cos(a)*r,m:null,s:null,done:false,hot:false}); t+=Math.max(.22,.75-t*.02);}
-    return{list,geo:new THREE.SphereGeometry(.42,14,10),sg:new THREE.CircleGeometry(.78,24)};},
+
+const COCO={hint:'Watch the shadows',surv:true,max:30,ring:1.8,deck:{k:'c',R:4.3},
+  init(sc,rng,sh){const list=[]; let t=1.2; while(t<29){const q=sh.pt(rng,.96); list.push({t,x:q[0],z:q[1],m:null,s:null,done:false,hot:false}); t+=Math.max(.14,.5-t*.013);}
+    return{list,R:sh.R,geo:new THREE.SphereGeometry(.42,14,10),sg:new THREE.CircleGeometry(.78,24)};},
   step(st,t,dt,sc){for(const c of st.list){if(t<c.t)break; if(c.done)continue; const e=(t-c.t)/1.3;
       if(!c.m){c.m=mesh(st.geo,0x8a5a2b,c.x,9,c.z,sc); c.s=mesh(st.sg,new THREE.MeshBasicMaterial({color:0x17304d,transparent:true,opacity:.1}),c.x,.02,c.z,sc); c.s.rotation.x=-Math.PI/2; c.s.castShadow=false;}
       if(e<1){c.m.position.y=9*(1-e*e)+.4; c.s.material.opacity=.1+e*.45; c.s.scale.setScalar(.4+e*.6);}
@@ -1653,59 +1709,112 @@ const COCO={hint:'Watch the shadows',surv:true,max:30,
   check(av,st,t,local){if(!local)return 0; for(const c of st.list){if(c.t>t)break; if(c.hot&&Math.hypot(c.x-av.x,c.z-av.z)<.8)return'hit';} return 0;},
   ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.2; let fx=0,fz=0;
     for(const c of st.list){if(c.t>t)break; if(c.done)continue; const dx=av.x-c.x,dz=av.z-c.z,d=Math.hypot(dx,dz)||.01; if(d<1.5){fx+=dx/d*(1.6-d); fz+=dz/d*(1.6-d);}}
-    const r=Math.hypot(av.x,av.z); if(r>3){fx-=av.x/r*.8; fz-=av.z/r*.8;} const l=Math.hypot(fx,fz); if(l>.1&&Math.random()>.08){ai.dx=fx/l; ai.dz=fz/l;} else{ai.dx=0; ai.dz=0;}}};
-const SPOT={hint:'Stay in the spotlight',max:25,dec:true,quiet:true,
-  init(sc,rng,sh){const d=mesh(new THREE.CylinderGeometry(1,1,.04,36),new THREE.MeshBasicMaterial({color:0xfff2a8,transparent:true,opacity:.8}),0,.03,0,sc); d.castShadow=false; return{d,sh,p1:rng()*6,p2:rng()*6,x:0,z:0,r:1.3};},
-  step(st,t){st.x=2.3*Math.sin(.9*t+st.p1)+.8*Math.sin(2.3*t); st.z=2.3*Math.cos(.7*t+st.p2)+.8*Math.cos(1.9*t); st.r=Math.max(.85,1.35-t*.02); {const rr=Math.hypot(st.x,st.z)||.01, lim=st.sh.R(Math.atan2(st.x,st.z))-st.r*.9; if(rr>lim){st.x*=lim/rr; st.z*=lim/rr;}} st.d.position.set(st.x,.03,st.z); st.d.scale.set(st.r,1,st.r);},
-  check(av,st,t,local,dt){return local&&Math.hypot(av.x-st.x,av.z-st.z)<st.r?dt:0;},
-  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.2+Math.random()*.3; const dx=st.x-av.x,dz=st.z-av.z,d=Math.hypot(dx,dz); if(d>.4){ai.dx=dx/d*.8; ai.dz=dz/d*.8;} else{ai.dx=0; ai.dz=0;}}};
+    const r=Math.hypot(av.x,av.z); if(r>st.R-1.3){fx-=av.x/r*.8; fz-=av.z/r*.8;} const l=Math.hypot(fx,fz); if(l>.1&&Math.random()>.08){ai.dx=fx/l; ai.dz=fz/l;} else{ai.dx=0; ai.dz=0;}}};
+
+/* Spotlight: 90 seconds and three lights. A new yellow light arrives every 30 seconds and the old ones turn red.
+   Yellow adds points, red takes them away at the same rate, and where a red and the yellow overlap is neutral (grey) */
+const SPOT={hint:'Yellow adds points, red takes them',max:90,dec:true,quiet:true,board:true,ring:1.8,deck:{k:'c',R:4.3},
+  init(sc,rng,sh){const L=[]; for(let i=0;i<3;i++){const d=mesh(new THREE.CylinderGeometry(1,1,.04,40),new THREE.MeshBasicMaterial({color:0xfff2a8,transparent:true,opacity:.85}),0,.03+i*.004,0,sc); d.castShadow=false; d.visible=false;
+      L.push({d,t0:i*30,p:[rng()*6.283,rng()*6.283,rng()*6.283,rng()*6.283],w:[.55+rng()*.35,.45+rng()*.35],x:0,z:0,r:1.35,on:false});}
+    const lens=[0,1].map(()=>{const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(46*9),3)); const q=mesh(g,new THREE.MeshBasicMaterial({color:0xb9c2cc,side:THREE.DoubleSide}),0,.05,0,sc); q.castShadow=false; q.frustumCulled=false; q.visible=false; return q;});
+    return{L,lens,R:sh.R,cur:0};},
+  step(st,t){st.cur=Math.min(2,Math.floor(t/30)); const A=st.R*.6,B=st.R*.2;
+    st.L.forEach((l,i)=>{l.on=t>=l.t0; l.d.visible=l.on; if(!l.on)return; l.x=A*Math.sin(l.w[0]*t+l.p[0])+B*Math.sin(2.1*t+l.p[2]); l.z=A*Math.cos(l.w[1]*t+l.p[1])+B*Math.cos(1.7*t+l.p[3]);
+      const rr=Math.hypot(l.x,l.z)||.01, lim=st.R-l.r*.9; if(rr>lim){l.x*=lim/rr; l.z*=lim/rr;} const grow=Math.min(1,(t-l.t0)*2+.05); l.d.position.set(l.x,l.d.position.y,l.z); l.d.scale.set(l.r*grow,1,l.r*grow);
+      l.d.material.color.setHex(i===st.cur?0xfff2a8:0xff5a5a);});
+    // the neutral patch where a red light and the yellow one overlap
+    const y=st.L[st.cur]; let li=0;
+    for(let i=0;i<st.cur;i++){const r=st.L[i], q=st.lens[li++], d=Math.hypot(r.x-y.x,r.z-y.z); if(d>=r.r+y.r){q.visible=false; continue;}
+      const pts=[]; for(const [a,b] of [[r,y],[y,r]])for(let k=0;k<22;k++){const an=k/22*6.283,px=a.x+Math.sin(an)*a.r,pz=a.z+Math.cos(an)*a.r; if(Math.hypot(px-b.x,pz-b.z)<=b.r)pts.push([px,pz]);}
+      if(pts.length<3){q.visible=false; continue;} const cx=pts.reduce((s,p)=>s+p[0],0)/pts.length, cz=pts.reduce((s,p)=>s+p[1],0)/pts.length; pts.sort((a,b)=>Math.atan2(a[0]-cx,a[1]-cz)-Math.atan2(b[0]-cx,b[1]-cz));
+      const arr=q.geometry.attributes.position.array; let o=0; for(let k=0;k<pts.length;k++){const p=pts[k],n=pts[(k+1)%pts.length]; arr[o++]=cx; arr[o++]=0; arr[o++]=cz; arr[o++]=p[0]; arr[o++]=0; arr[o++]=p[1]; arr[o++]=n[0]; arr[o++]=0; arr[o++]=n[1];}
+      q.geometry.setDrawRange(0,pts.length*3); q.geometry.attributes.position.needsUpdate=true; q.visible=true;}
+    for(;li<2;li++)st.lens[li].visible=false;},
+  check(av,st,t,local,dt){if(!local)return 0; const inL=l=>l.on&&Math.hypot(av.x-l.x,av.z-l.z)<l.r, y=inL(st.L[st.cur]); let r=false; for(let i=0;i<st.cur;i++)if(inL(st.L[i]))r=true; return y&&!r?dt:r&&!y?-dt:0;},
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.3+Math.random()*.35; const y=st.L[st.cur]; let tx=y.x,tz=y.z;
+    for(let i=0;i<st.cur;i++){const r=st.L[i],d=Math.hypot(r.x-tx,r.z-tz); if(d<r.r+.3&&d>.05){tx+=(tx-r.x)/d*.7; tz+=(tz-r.z)/d*.7;}}
+    const dx=tx-av.x,dz=tz-av.z,d=Math.hypot(dx,dz); if(d>.35){ai.dx=dx/d*.62; ai.dz=dz/d*.62;} else{ai.dx=0; ai.dz=0;}}};
 
 /* ---- player-versus-player deck games ---- */
-const nearest=(av,st)=>{let b=null,bd=99; for(const o of st.avs){if(o===av||!o.alive)continue; const d=Math.hypot(o.x-av.x,o.z-av.z); if(d<bd){bd=d; b=o;}} return b?{o:b,d:bd}:null;};
-const SUMO={hint:'Shove them into the red',surv:true,max:30,dash:true,shove:1.2,
-  init(sc,rng,sh){const geo=new THREE.ShapeGeometry(shapePath(sh,0,Math.PI*2,90,false,.99)), red=mesh(geo,new THREE.MeshBasicMaterial({color:0xff4d4d,side:THREE.DoubleSide}),0,.02,0,sc), safe=mesh(geo,new THREE.MeshLambertMaterial({color:0xd9a066,side:THREE.DoubleSide}),0,.035,0,sc);
-    red.rotation.x=safe.rotation.x=-Math.PI/2; red.castShadow=safe.castShadow=false; safe.receiveShadow=true; return{safe,sh,f:1};},
-  step(st,t){st.f=Math.max(.36,1-Math.max(0,t-2)*.026); st.safe.scale.set(st.f,st.f,1);},
-  check(av,st,t,local,dt){if(!local)return 0; const r=Math.hypot(av.x,av.z); if(av.y<.05&&t>2&&r>st.sh.R(Math.atan2(av.x,av.z))*st.f+.1){av.hot=(av.hot||0)+dt; if(av.hot>.45)return'hit';} else av.hot=0; return 0;},
-  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.15; const r=Math.hypot(av.x,av.z)||.01, lim=st.sh.R(Math.atan2(av.x,av.z))*st.f, n=nearest(av,st);
-    if(r>lim*.55){ai.dx=-av.x/r*.9; ai.dz=-av.z/r*.9;}
-    else if(t>2.5&&n&&n.d<2.6&&Math.hypot(n.o.x,n.o.z)>=r-.2){ai.dx=(n.o.x-av.x)/n.d*.9; ai.dz=(n.o.z-av.z)/n.d*.9; if(n.d<1.5&&Math.random()<.35)ai.jump=true;}
-    else{ai.dx=-av.x/r*.3; ai.dz=-av.z/r*.3;}}};
-const PADS={hint:'Stand on a pad before it turns red',surv:true,max:32,
-  init(sc,rng,sh,n){const rounds=[]; let t=1.5,k=0; while(t<30){const dur=Math.max(2.6,5-k*.4), cnt=Math.max(1,n-1-Math.floor(k/2)), pads=[]; let g=0;
-      while(pads.length<cnt&&g++<300){const a=rng()*6.283,r=Math.sqrt(rng())*.72*sh.R(a),x=Math.sin(a)*r,z=Math.cos(a)*r; if(pads.every(q=>Math.hypot(q.x-x,q.z-z)>1.9))pads.push({x,z});}
-      rounds.push({t,end:t+dur,pads}); t+=dur+1; k++;}
-    const geo=new THREE.CylinderGeometry(.62,.62,.06,28), pool=[]; for(let i=0;i<Math.max(1,n-1);i++){const m=mesh(geo,new THREE.MeshBasicMaterial({color:0x35c98a}),0,.04,0,sc); m.visible=false; m.castShadow=false; pool.push(m);}
-    return{rounds,pool,cur:null};},
-  step(st,t){const r=st.rounds.find(r=>t>=r.t&&t<r.end+.5); st.cur=r&&t<r.end?r:null;
-    st.pool.forEach((m,i)=>{const q=r&&r.pads[i]; m.visible=!!q; if(q){const u=(t-r.t)/(r.end-r.t), s=t>=r.end?1:1+.08*Math.sin(t*8); m.position.set(q.x,.04,q.z); m.material.color.setHex(t>=r.end?0xff4d4d:u>.7?0xffc531:0x35c98a); m.scale.set(s,1,s);}});},
-  check(av,st,t,local){if(!local)return 0; for(let i=av.pr||0;i<st.rounds.length&&t>=st.rounds[i].end;i++){av.pr=i+1; if(!st.rounds[i].pads.some(q=>Math.hypot(q.x-av.x,q.z-av.z)<.5))return'hit';} return 0;},
-  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.2; const r=st.cur; if(!r){const d=Math.hypot(av.x,av.z)||1; ai.dx=d>1.2?-av.x/d*.5:0; ai.dz=d>1.2?-av.z/d*.5:0; return;}
-    const ds=q=>Math.hypot(q.x-av.x,q.z-av.z), sorted=r.pads.slice().sort((a,b)=>ds(a)-ds(b)), free=sorted.find(q=>st.avs.every(o=>o===av||!o.alive||Math.hypot(q.x-o.x,q.z-o.z)>ds(q)-.2))||sorted[0], d=ds(free);
-    if(d>.12){ai.dx=(free.x-av.x)/d*.9; ai.dz=(free.z-av.z)/d*.9;} else{ai.dx=0; ai.dz=0;}}};
-const PAINT={hint:'Paint the most tiles',max:25,quiet:true,
-  init(sc,rng,sh){const S=.9,cells=[],map={}; for(let gx=-6;gx<=6;gx++)for(let gz=-6;gz<=6;gz++){const x=gx*S,z=gz*S; if(Math.hypot(x,z)<sh.R(Math.atan2(x,z))-.35){const c={x,z,o:-1,m:null}; cells.push(c); map[gx+','+gz]=c;}}
-    return{S,cells,map,sc,geo:new THREE.BoxGeometry(.84,.05,.84)};},
+/* Sumo Shove: a square deck. The red closes in around two safe circles, then the circles roam, faster and faster. Red is instant death */
+const SUMO={hint:'Stay out of the red',surv:true,max:45,dash:true,shove:1.2,ring:2,deck:{k:'s',h:5},
+  init(sc,rng,sh){const h=sh.h, c0=[[-(1.6+rng()*1.4),-(1.2+rng()*1.6)],[1.6+rng()*1.4,1.2+rng()*1.6]]; if(rng()<.5){c0[0][1]*=-1; c0[1][1]*=-1;}
+    const u={c1:{value:new THREE.Vector2()},c2:{value:new THREE.Vector2()},r:{value:20}};
+    const red=flatM(mesh(new THREE.PlaneGeometry(h*2,h*2),new THREE.ShaderMaterial({uniforms:u,vertexShader:'varying vec2 p; void main(){p=position.xy; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+      fragmentShader:'uniform vec2 c1; uniform vec2 c2; uniform float r; varying vec2 p; void main(){float d=min(distance(p,c1),distance(p,c2)); if(d<r)discard; gl_FragColor=vec4(1.0,0.30,0.30,1.0); if(d<r+0.09)gl_FragColor=vec4(1.0,1.0,1.0,1.0);}'}),0,.02,0,sc));
+    return{u,red,h,c0,ph:[rng()*6.283,rng()*6.283,rng()*6.283,rng()*6.283],c:[[0,0],[0,0]],r:20};},
+  step(st,t){const RE=1.75, T0=2, T1=17, e=Math.min(1,Math.max(0,(t-T0)/(T1-T0))); st.r=t<T0?20:RE+(15-RE)*Math.pow(1-e,2.2);
+    const tau=Math.max(0,t-T1), u=tau+.06*tau*tau, lim=st.h-RE;
+    for(let i=0;i<2;i++){const p=st.ph[i*2], q=st.ph[i*2+1], w=i?.47:.55, v=i?.6:.41; let x=st.c0[i][0]+2.9*(Math.sin(w*u+p)-Math.sin(p)), z=st.c0[i][1]+2.9*(Math.sin(v*u+q)-Math.sin(q));
+      st.c[i][0]=Math.max(-lim,Math.min(lim,x)); st.c[i][1]=Math.max(-lim,Math.min(lim,z));}
+    // the plane lies flat, so its local y is -z in the world
+    st.u.c1.value.set(st.c[0][0],-st.c[0][1]); st.u.c2.value.set(st.c[1][0],-st.c[1][1]); st.u.r.value=st.r;},
+  safe(st,x,z){return Math.min(Math.hypot(x-st.c[0][0],z-st.c[0][1]),Math.hypot(x-st.c[1][0],z-st.c[1][1]))<st.r+.12;},
+  check(av,st,t,local,dt){if(!local)return 0; if(av.y<.05&&t>2&&!SUMO.safe(st,av.x,av.z)){av.hot=(av.hot||0)+dt; if(av.hot>.1)return'hit';} else av.hot=0; return 0;},
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.12+Math.random()*.12; const d0=Math.hypot(av.x-st.c[0][0],av.z-st.c[0][1]),d1=Math.hypot(av.x-st.c[1][0],av.z-st.c[1][1]),c=d0<d1?st.c[0]:st.c[1],d=Math.min(d0,d1)||.01, n=nearest(av,st), rr=Math.min(st.r,6);
+    if(d>rr*.5){ai.dx=(c[0]-av.x)/d; ai.dz=(c[1]-av.z)/d;}
+    else if(t>2.5&&n&&n.d<2.4&&Math.hypot(n.o.x-c[0],n.o.z-c[1])>=d-.2){ai.dx=(n.o.x-av.x)/n.d*.9; ai.dz=(n.o.z-av.z)/n.d*.9; if(n.d<1.5&&Math.random()<.35)ai.jump=true;}
+    else{ai.dx=(c[0]-av.x)/d*.4; ai.dz=(c[1]-av.z)/d*.4;}}};
+
+/* Hedge Maze: everyone gets the same random maze but runs it alone. First out of the far side wins; one minute */
+const MAZE={hint:'Find the way out at the top',max:60,alone:true,left:true,noEdge:true,speed:.92,cam:[15.5,4.2,.25],fit:7.2,deck:{k:'s',h:9},
+  N:11,S:1.15,
+  draw(){},
+  init(sc,rng){const N=MAZE.N,S=MAZE.S,half=N*S/2, open=new Uint8Array(N*N), seen=new Uint8Array(N*N), D=[[1,0,1,4],[0,1,2,8],[-1,0,4,1],[0,-1,8,2]];
+    const sx=N>>1, ex=Math.floor(rng()*N), stack=[sx+N*(N-1)]; seen[stack[0]]=1;
+    while(stack.length){const c=stack[stack.length-1],i=c%N,j=(c-i)/N,opts=[]; for(const d of D){const a=i+d[0],b=j+d[1]; if(a>=0&&b>=0&&a<N&&b<N&&!seen[a+N*b])opts.push(d);}
+      if(!opts.length){stack.pop(); continue;} const d=opts[Math.floor(rng()*opts.length)],nc=i+d[0]+N*(j+d[1]); open[c]|=d[2]; open[nc]|=d[3]; seen[nc]=1; stack.push(nc);}
+    const walls=[], X=i=>-half+i*S, T=.08;
+    for(let j=0;j<=N;j++)for(let i=0;i<N;i++){const has=j===0?i!==ex:j===N?true:!(open[i+N*j]&8); if(has)walls.push([X(i+.5),X(j),S/2+T,T]);}
+    for(let i=0;i<=N;i++)for(let j=0;j<N;j++){const has=i===0||i===N||!(open[i-1+N*j]&1); if(has)walls.push([X(i),X(j+.5),T,S/2+T]);}
+    // shortest route length, used for the computer players' times
+    const dist=new Int16Array(N*N).fill(-1), q=[sx+N*(N-1)]; dist[q[0]]=0; for(let h=0;h<q.length;h++){const c=q[h],i=c%N,j=(c-i)/N; for(const d of D)if(open[c]&d[2]){const nc=i+d[0]+N*(j+d[1]); if(dist[nc]<0){dist[nc]=dist[c]+1; q.push(nc);}}}
+    flatM(mesh(new THREE.PlaneGeometry(N*S+.5,N*S+.5),new THREE.MeshLambertMaterial({color:0xe9d9a6}),0,0,0,sc));
+    mesh(new THREE.BoxGeometry(N*S+1.2,.4,N*S+1.2),0xc9b47a,0,-.21,0,sc).castShadow=false;
+    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,.5,1),new THREE.MeshLambertMaterial({color:0x2f8f5b}),walls.length), o=new THREE.Object3D(); walls.forEach((w,k)=>{o.position.set(w[0],.25,w[1]); o.scale.set(w[2]*2,1,w[3]*2); o.updateMatrix(); im.setMatrixAt(k,o.matrix);}); im.castShadow=false; sc.add(im);
+    flatM(mesh(new THREE.PlaneGeometry(S-.2,S-.2),new THREE.MeshBasicMaterial({color:0x4fa8ff}),X(sx+.5),.01,X(N-.5),sc));
+    flatM(mesh(new THREE.PlaneGeometry(S*1.6,1.3),new THREE.MeshBasicMaterial({color:0x35c98a}),X(ex+.5),.01,-half-.75,sc));
+    const fl=mesh(new THREE.CylinderGeometry(.05,.05,1.8,8),0xffffff,X(ex+.5)+.6,.9,-half-.9,sc); mesh(new THREE.BoxGeometry(.7,.42,.04),0x35c98a,.36,.62,0,fl);
+    return{walls,half,start:[X(sx+.5),X(N-.5)],len:dist[ex]+1};},
+  start(k,n,st){return st.start;},
+  step(){},
+  move(av,st){const R=.3, x1=av.x, z1=av.z, x0=av.px==null?x1:av.px, z0=av.pz==null?z1:av.pz, n=Math.max(1,Math.ceil(Math.hypot(x1-x0,z1-z0)/.18)); av.x=x0; av.z=z0;   // small steps, so a slow frame cannot carry you through a hedge
+    for(let i=0;i<n;i++){av.x+=(x1-x0)/n; av.z+=(z1-z0)/n; MAZE.push(av,st,R);} av.px=av.x; av.pz=av.z;},
+  push(av,st,R){for(let p=0;p<2;p++)for(const w of st.walls){const dx=av.x-w[0],dz=av.z-w[1]; if(Math.abs(dx)>w[2]+R||Math.abs(dz)>w[3]+R)continue;
+      const cx=Math.max(-w[2],Math.min(w[2],dx)),cz=Math.max(-w[3],Math.min(w[3],dz)),ex=dx-cx,ez=dz-cz,d=Math.hypot(ex,ez);
+      if(d>=R)continue; if(d>.0001){av.x+=ex/d*(R-d); av.z+=ez/d*(R-d);} else if(w[2]<w[3])av.x=w[0]+(dx>=0?1:-1)*(w[2]+R); else av.z=w[1]+(dz>=0?1:-1)*(w[3]+R);}},
+  check(av,st,t,local){if(local&&av.z<-st.half-.45){av.score=Math.max(.1,Math.round((60-t)*10)/10); return'win';} return 0;},
+  ai(av){av.ai.dx=0; av.ai.dz=0;},
+  cpuScore(st){const T=st.len*MAZE.S/(4.6*MAZE.speed*(.2+Math.random()*.28)); return T<60?Math.round((60-T)*10)/10:0;}};
+
+/* Paint Fight: a big square with a square hole in the middle */
+const PAINT={hint:'Paint the most tiles',max:30,quiet:true,ring:3.9,deck:{k:'s',h:6.6,hole:2.2},
+  init(sc,rng,sh){const S=.88,cells=[],map={}; for(let gx=-7;gx<=7;gx++)for(let gz=-7;gz<=7;gz++){if(Math.abs(gx)<=2&&Math.abs(gz)<=2)continue; const c={x:gx*S,z:gz*S,o:-1,m:null}; cells.push(c); map[gx+','+gz]=c;}
+    return{S,cells,map,sc,hole:sh.hole,geo:new THREE.BoxGeometry(.82,.05,.82)};},
   step(){},
   check(av,st,t,local){if(av.y<.3){const c=st.map[Math.round(av.x/st.S)+','+Math.round(av.z/st.S)];
       if(c&&c.o!==av.k){c.o=av.k; if(!c.m){c.m=mesh(st.geo,new THREE.MeshLambertMaterial({color:av.col}),c.x,.03,c.z,st.sc); c.m.castShadow=false;} else c.m.material.color.setHex(av.col);}}
     if(local){let n=0; for(const c of st.cells)if(c.o===av.k)n++; av.score=n;} return 0;},
-  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.2+Math.random()*.2; let b=null,bd=99; for(const c of st.cells){if(c.o===av.k)continue; const d=Math.hypot(c.x-av.x,c.z-av.z)+Math.random()*.6; if(d<bd){bd=d; b=c;}}
-    if(b){const d=Math.hypot(b.x-av.x,b.z-av.z)||1; ai.dx=(b.x-av.x)/d*.85; ai.dz=(b.z-av.z)/d*.85;} else{ai.dx=0; ai.dz=0;}}};
-const CRUMBLE={hint:'The floor crumbles behind you',surv:true,max:30,noDeck:true,speed:.8,
-  init(sc,rng,sh){const S=.8,cells=[],map={},geo=new THREE.BoxGeometry(S-.05,.4,S-.05); for(let gx=-7;gx<=7;gx++)for(let gz=-7;gz<=7;gz++){const x=gx*S,z=gz*S; if(Math.hypot(x,z)<sh.R(Math.atan2(x,z))-.15){const m=mesh(geo,(gx+gz)&1?0xc98f55:0xd9a066,x,-.2,z,sc); m.castShadow=false; m.receiveShadow=true; const c={x,z,s:0,tm:0,m,mat:m.material}; cells.push(c); map[gx+','+gz]=c;}}
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.2+Math.random()*.2; let b=null,bd=99; const H=st.hole+.5;
+    for(const c of st.cells){if(c.o===av.k)continue; let d=Math.hypot(c.x-av.x,c.z-av.z)+Math.random()*.6; for(const f of [.25,.5,.75]){const mx=av.x+(c.x-av.x)*f,mz=av.z+(c.z-av.z)*f; if(Math.abs(mx)<H&&Math.abs(mz)<H){d+=8; break;}} if(d<bd){bd=d; b=c;}}
+    if(b){let tx=b.x,tz=b.z; const mx=(av.x+b.x)/2,mz=(av.z+b.z)/2; if(Math.abs(mx)<H&&Math.abs(mz)<H){if(Math.abs(av.x)>Math.abs(av.z)){tx=av.x; tz=Math.sign(b.z-av.z||1)*(H+1);} else{tz=av.z; tx=Math.sign(b.x-av.x||1)*(H+1);}}   // walk round the hole, not across it
+      const d=Math.hypot(tx-av.x,tz-av.z)||1; ai.dx=(tx-av.x)/d*.85; ai.dz=(tz-av.z)/d*.85;} else{ai.dx=0; ai.dz=0;}}};
+
+/* Crumble Deck: a square of tiles. Tiles drop sooner and sooner as the game goes on */
+const CRUMBLE={hint:'The floor crumbles behind you',surv:true,max:30,noDeck:true,speed:.8,ring:1.6,deck:{k:'s',h:4.4},
+  init(sc,rng,sh){const S=.8,cells=[],map={},geo=new THREE.BoxGeometry(S-.05,.4,S-.05); for(let gx=-5;gx<=5;gx++)for(let gz=-5;gz<=5;gz++){const x=gx*S,z=gz*S,m=mesh(geo,(gx+gz)&1?0xc98f55:0xd9a066,x,-.2,z,sc); m.castShadow=false; m.receiveShadow=true; const c={x,z,s:0,tm:0,m,mat:m.material}; cells.push(c); map[gx+','+gz]=c;}
     return{S,cells,map,at:(x,z)=>map[Math.round(x/S)+','+Math.round(z/S)],crack:new THREE.MeshLambertMaterial({color:0xe0566b})};},
   step(st,t,dt){for(const c of st.cells){if(c.s===1){c.tm-=dt; c.m.position.y=-.2+Math.sin(t*40)*.025; if(c.tm<=0){c.s=2; c.tm=3+t*.25;}}   // a dropped tile grows back after a few seconds, more slowly as the game goes on
       else if(c.s===2){c.tm-=dt; c.m.position.y-=dt*8; if(c.m.position.y<-7)c.m.visible=false; if(c.tm<=0){c.s=0; c.m.material=c.mat; c.m.visible=true; c.m.position.y=-.2;}}}},
-  check(av,st,t,local){if(av.y>.05)return 0; const c=st.at(av.x,av.z); if(c&&c.s===0&&t>1.6){c.s=1; c.tm=1.2; c.m.material=st.crack;} return local&&(!c||c.s===2)?'fall':0;},
-  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.08+Math.random()*.05; let best=-1,bx=0,bz=0; const at=st.at, ok=c=>c&&c.s!==2&&!(c.s===1&&c.tm<.3), S=st.S, here=at(av.x,av.z);
+  check(av,st,t,local){if(av.y>.05)return 0; const c=st.at(av.x,av.z); if(c&&c.s===0&&t>1.6){c.s=1; c.tm=Math.max(.38,1.2-t*.03); c.m.material=st.crack;} return local&&(!c||c.s===2)?'fall':0;},
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.08+Math.random()*.05; let best=-1,bx=0,bz=0; const at=st.at, ok=c=>c&&c.s!==2&&!(c.s===1&&c.tm<.25), S=st.S, here=at(av.x,av.z);
     if(here&&(here.s===0||(here.s===1&&here.tm>.42+(ai.lag||(ai.lag=Math.random()*.12))))){ai.dx=0; ai.dz=0; return;}   // wait on a tile until it is about to drop, then step off
     for(let i=0;i<8;i++){const a=i*Math.PI/4,dx=Math.sin(a),dz=Math.cos(a),n1=at(av.x+dx*S*.55,av.z+dz*S*.55),c=at(av.x+dx*S*1.1,av.z+dz*S*1.1); if(!ok(n1)||!ok(c)||(i&1&&(!ok(at(av.x+dx*S*.8,av.z))||!ok(at(av.x,av.z+dz*S*.8)))))continue; let v=c.s===0?4:.5;
       for(let j=0;j<8;j++){const b=j*Math.PI/4,n=at(c.x+Math.sin(b)*S*1.1,c.z+Math.cos(b)*S*1.1); if(n&&n.s===0)v+=1;}
       for(const o of st.avs)if(o!==av&&o.alive&&Math.hypot(o.x-c.x,o.z-c.z)<1.2)v-=2;
       v+=Math.random()+(dx*ai.dx+dz*ai.dz)*1.6; if(v>best){best=v; bx=dx; bz=dz;}}
     ai.dx=bx*.8; ai.dz=bz*.8;}};
-const STOMP={hint:'Jump on their heads',surv:true,max:30,jump:true,
+const STOMP={hint:'Jump on their heads',surv:true,max:30,jump:true,ring:1.8,deck:{k:'c',R:4},
   init(){return{};}, step(){},
   check(av,st,t,local){if(!local)return 0; for(const o of st.avs){if(o===av||!o.alive||Math.hypot(o.x-av.x,o.z-av.z)>.62)continue;
       if(av.y<.15&&o.y>.25&&o.y<1.05&&o.dy<0&&t>1.5)return'hit';
@@ -1715,18 +1824,36 @@ const STOMP={hint:'Jump on their heads',surv:true,max:30,jump:true,
     if(n.o.y>.2&&n.d<1.7){ai.dx=-ux*.9; ai.dz=-uz*.9;}
     else{ai.dx=ux*.75; ai.dz=uz*.75; if(av.y===0&&n.d>1.5&&n.d<2.2&&Math.random()<.5)ai.jump=true;}}};
 
+/* Slippery Slope: an ice rink. You slide, and a giant snowball rolls around knocking players flying */
+const SLIP={hint:'Keep clear of the snowball',surv:true,max:40,ice:1.5,edgeAI:2.2,ring:3.4,deck:{k:'c',R:5},
+  draw(sc,sh){deckDraw(sc,sh,0x8fd3f7,0xffffff); for(let i=0;i<9;i++){const a=i*.7+.3,r=1+((i*37)%30)/10, s=flatM(mesh(new THREE.PlaneGeometry(1.3,.05),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.7}),Math.sin(a)*r,.012,Math.cos(a)*r,sc)); s.rotation.z=a*1.7;}},
+  init(sc,rng,sh){const b=mesh(new THREE.IcosahedronGeometry(1.25,1),new THREE.MeshLambertMaterial({color:0xdfe9f5,flatShading:true}),0,1.25,0,sc);
+    const sh2=flatM(mesh(new THREE.CircleGeometry(1.2,28),new THREE.MeshBasicMaterial({color:0x17304d,transparent:true,opacity:.22}),0,.015,0,sc));
+    return{b,sh2,R:sh.R,p:[rng()*6.283,rng()*6.283,rng()*6.283,rng()*6.283],x:0,z:0,vx:0,vz:0,r:1.25};},
+  pos(st,t){const u=t+.014*t*t, A=st.R-1.7, e=Math.min(1,t/1.5); return[e*(A*.78*Math.sin(.8*u+st.p[0])+A*.22*Math.sin(1.9*u+st.p[1])),e*(A*.78*Math.cos(.62*u+st.p[2])+A*.22*Math.sin(1.5*u+st.p[3]))];},
+  step(st,t,dt){const q=SLIP.pos(st,t), ox=st.x, oz=st.z; st.x=q[0]; st.z=q[1]; st.vx=(st.x-ox)/Math.max(dt,.001); st.vz=(st.z-oz)/Math.max(dt,.001);
+    st.b.position.set(st.x,1.25,st.z); st.b.rotation.x+=(st.z-oz)/st.r; st.b.rotation.z-=(st.x-ox)/st.r; st.sh2.position.set(st.x,.015,st.z);},
+  check(av,st,t,local){if(!local||t<1.5||av.y>1.2)return 0; const dx=av.x-st.x,dz=av.z-st.z,d=Math.hypot(dx,dz);
+    if(d<st.r+.3&&av.bump<=0){const nx=d>.01?dx/d:1,nz=d>.01?dz/d:0; av.bump=.5; av.vx=nx*8.5+st.vx*.6; av.vz=nz*8.5+st.vz*.6; av.x=st.x+nx*(st.r+.32); av.z=st.z+nz*(st.r+.32); if(av.mine)SFX.bump();} return 0;},
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.12+Math.random()*.15; const f=SLIP.pos(st,t+.7), dx=av.x-f[0],dz=av.z-f[1],d=Math.hypot(dx,dz)||.01, r=Math.hypot(av.x,av.z)||.01;
+    let fx=-av.vx*.12, fz=-av.vz*.12;   // brake a little, so they do not slide off on their own
+    if(d<3.4&&Math.random()>.05){const s=(dx*-av.z+dz*av.x)>=0?1:-1; fx+=dx/d*1.1+(-av.z/r)*s*.5; fz+=dz/d*1.1+(av.x/r)*s*.5;}
+    if(r>st.R*.45){fx-=av.x/r*.6; fz-=av.z/r*.6;}
+    const l=Math.hypot(fx,fz); if(l>.12){ai.dx=fx/Math.max(1,l); ai.dz=fz/Math.max(1,l);} else{ai.dx=0; ai.dz=0;}}};
+
 const GAMES=[
- {name:'Crab Scramble',unit:'sec',surv:true,arena:true,max:34,how:'Everyone shares one deck. Drag to run and dodge the crabs. Whoever lasts longest wins.',cpu:()=>rand(60,230)/10,play:arena(CRAB)},
- {name:'Boom Hop',unit:'sec',surv:true,arena:true,max:34,how:'Everyone shares one deck. Drag to run and tap Jump to clear the swinging boom. It keeps speeding up.',cpu:()=>rand(50,220)/10,play:arena(BOOM)},
- {name:'Ticket Grab',unit:'tickets',arena:true,max:29,how:'Everyone shares one deck. Drag to run and grab tickets before the others do. Pink tickets are worth 3.',cpu:()=>rand(8,18),play:arena(GRAB)},
- {name:'Hot Planks',unit:'sec',surv:true,arena:true,max:34,how:'Everyone shares one deck. Planks flash yellow, then turn red. Run to a safe plank before they do.',cpu:()=>rand(60,230)/10,play:arena(HOT)},
- {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:34,how:'Everyone shares one deck. Coconuts are falling. Watch for the shadows and keep out from under them.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
- {name:'Spotlight',unit:'sec',dec:true,arena:true,max:29,how:'Everyone shares one deck. A spotlight sweeps around. Whoever spends the most time inside it wins.',cpu:()=>rand(40,140)/10,play:arena(SPOT)},
- {name:'Sumo Shove',unit:'sec',surv:true,arena:true,max:34,how:'Player against player. The safe floor shrinks and the red burns. Walk into the others to shove them out, and tap Dash for a charge that hits much harder.',cpu:()=>rand(60,230)/10,play:arena(SUMO)},
- {name:'Musical Pads',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. There is always one pad fewer than there are players. Be standing on a pad when it turns red, and shove the others off yours.',cpu:()=>rand(60,230)/10,play:arena(PADS)},
- {name:'Paint Fight',unit:'tiles',arena:true,max:29,how:'Player against player. Every tile you walk over turns your colour, including tiles the others already painted. Most tiles when time runs out wins.',cpu:()=>rand(10,26),play:arena(PAINT)},
- {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:34,how:'Player against player. Every tile anyone steps on shakes and drops away, then grows back a few seconds later. Keep moving, cut the others off, and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
- {name:'Stomp',unit:'sec',surv:true,arena:true,max:34,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},
+ {name:'Crab Scramble',unit:'sec',surv:true,arena:true,max:51,how:'Everyone shares one small island. Drag to run and dodge the crabs, which keep getting faster. You have 3 lives. Whoever lasts longest wins.',cpu:()=>rand(100,400)/10,play:arena(CRAB)},
+ {name:'Boom Hop',unit:'sec',surv:true,arena:true,max:46,how:'Everyone shares one round deck. Tap Jump to clear the swinging boom. It keeps speeding up, and it flashes yellow just before it swings back the other way.',cpu:()=>rand(50,300)/10,play:arena(BOOM)},
+ {name:'Ticket Grab',unit:'tickets',arena:true,max:66,how:'One minute on a big square. Grab tickets before the others do; each one lasts 5 seconds. Pink tickets are worth 3. In the last 15 seconds red tickets appear, and each one costs you 1.',cpu:()=>rand(14,40),play:arena(GRAB)},
+ {name:'Hot Planks',unit:'sec',surv:true,arena:true,max:46,how:'Sixteen big tiles. Tiles flash yellow, and are safe to walk on, until they turn red. More tiles go, with less warning, as time passes.',cpu:()=>rand(60,300)/10,play:arena(HOT)},
+ {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:36,how:'Everyone shares one deck. Coconuts are falling. Watch for the shadows and keep out from under them.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
+ {name:'Spotlight',unit:'pts',dec:true,arena:true,max:96,how:'Ninety seconds. Stand in the yellow spotlight to score. Every 30 seconds a new yellow light arrives and the old one turns red, which takes points away just as fast. Where red and yellow overlap is neutral.',cpu:()=>rand(100,400)/10,play:arena(SPOT)},
+ {name:'Sumo Shove',unit:'sec',surv:true,arena:true,max:51,how:'Player against player. The red closes in around two safe circles, then the circles start to roam. Touch the red and you are out. Shove the others into it, and tap Dash for a charge that hits much harder.',cpu:()=>rand(60,300)/10,play:arena(SUMO)},
+ {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. Start at the blue square and find the way out at the top. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
+ {name:'Paint Fight',unit:'tiles',arena:true,max:36,how:'Player against player on a big square with a hole in the middle. Every tile you walk over turns your colour, including tiles the others already painted. Most tiles when time runs out wins.',cpu:()=>rand(20,60),play:arena(PAINT)},
+ {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
+ {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},
+ {name:'Slippery Slope',unit:'sec',surv:true,arena:true,max:46,how:'The deck is ice, so you slide and take time to turn. A giant snowball rolls around and sends anyone it hits flying. Stay on the ice the longest.',cpu:()=>rand(60,300)/10,play:arena(SLIP)},
  {name:'Bell Ringer',unit:'taps',max:10,how:'Hammer the bell as many times as you can in 5 seconds.',cpu:()=>rand(24,40),
   async play(){
     stage.innerHTML=`<div class="big" id="n">3</div><button class="bell" id="bell" disabled>WAIT</button><div class="bar"><i id="bar"></i></div>`;

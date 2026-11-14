@@ -14,7 +14,7 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 |---|---|
 | Maps | Island, Carnival, Farm, Volcano |
 | Board | 45-space loop plus a 15-space bridge shortcut, 3 shops, 5 fixed pearl stall spots |
-| Mini games | 19. A random shared-deck game ends each round; own-screen games are used for duels |
+| Mini games | 20. A random shared-deck game ends each round; own-screen games are used for duels |
 | Players | 2 to 6, any mix of people and computer players |
 | Game length | 5, 10 or 15 rounds |
 | Items | Twin Dice, Magnet, Kite |
@@ -177,10 +177,26 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 - Controller: the on-screen pointer is removed. The left stick or d-pad moves a box between the buttons and A presses the boxed one. The box jumps to the main button when one appears.
 - In the touch-only duel games the stick slides, the d-pad taps a side and A taps.
 
+### 26. Set platforms and reworked shared-deck games
+- Every shared-deck game has its own fixed platform (a circle or a square) in place of the random blob, and the camera pulls back to fit it in portrait or landscape.
+- Every mini game ends with a "Game Finished" banner.
+- Crab Scramble: a small island twice the old width with grass and a palm tree, 3 lives, crabs that get faster and more frequent.
+- Boom Hop: a round deck as wide as the boom. The boom speeds up and reverses, flashing yellow just before it turns back.
+- Ticket Grab: a square twice the old width, one minute, tickets last 5 seconds, and in the last 15 seconds one in ten is red and costs a ticket.
+- Hot Planks: a square of 16 tiles. Yellow tiles are safe until they turn red; more tiles go, with less warning, over time.
+- Coconut Drop: deck 30% bigger. Stomp: 20% bigger.
+- Spotlight: 90 seconds, deck 30% bigger, live scoreboard. A new yellow light every 30 seconds; old lights turn red and take points away; red and yellow overlap is neutral.
+- Sumo Shove: a square 50% bigger. The red closes in around two safe circles, which then roam faster and faster. Touching red knocks you out.
+- Hedge Maze replaces Musical Pads: the same random maze for everyone, run alone, one minute, fastest out wins.
+- Paint Fight: a square twice the old width with a square hole in the middle.
+- Crumble Deck: a square 30% bigger; tiles drop sooner as the game goes on.
+- Slippery Slope (new): an ice rink where players slide, and a giant snowball knocks anyone it hits flying.
+- Interface: the menu button is as wide as the round label, the repeated "tap again" lines are gone, and the landscape action bar is one thin row.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
-Crab Scramble, Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Musical Pads, Paint Fight, Crumble Deck, Stomp.
+Crab Scramble, Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Crumble Deck, Stomp, Slippery Slope.
 
 **Own screen (everyone plays at the same time, separately)**
 Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon Pop, Crate Stack.
