@@ -1487,7 +1487,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=46; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=47; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1675,12 +1675,12 @@ function arena(G){return async function(ctx){
     if(pubT<=0&&net.nr){pubT=.07; const pk=a=>[r2(a.x),r2(a.z),r2(a.y),a.alive?1:0,r2(a.score)], patch={a:pk(me)};
       if(net.host&&!G.alone){patch.cpu={}; avs.forEach(a=>{if(a.cpu)patch.cpu[a.k]=pk(a);});} if(net.host&&G.host)patch.hs=st.hs; net.nr.presence(patch).catch(()=>{});}
     if(sb){sbT-=dt; if(sbT<=0){sbT=.25; sb.innerHTML=avs.slice().sort((a,b)=>b.score-a.score).map(a=>`<span style="--c:${CAST[V.p[a.k].i].c}"${a.mine?' class="me"':''}>${CAST[V.p[a.k].i].name} <b>${a.score.toFixed(1)}</b></span>`).join('');}}
-    $('#n').textContent=G.num?G.num(st,t):G.left?Math.max(0,G.max-t).toFixed(1):G.surv?(me.alive?t:me.score).toFixed(1):G.dec?me.score.toFixed(1):me.score; $('#bar').style.transform=`scaleX(${Math.max(0,1-t/G.max)})`;
+    $('#n').textContent=G.num?G.num(st,t):G.left?Math.max(0,(st.max||G.max)-t).toFixed(1):G.surv?(me.alive?t:me.score).toFixed(1):G.dec?me.score.toFixed(1):me.score; $('#bar').style.transform=`scaleX(${Math.max(0,1-t/(st.max||G.max))})`;
     if(endT<0&&t>1.5&&!G.alone&&avs.filter(a=>a.alive).length<=1)endT=t+1.4;   // last one standing ends the game
     if(G.alone&&endT<0&&!me.alive)endT=t+1;
-    if(t>=G.max||(endT>0&&t>=endT))return 1;
+    if(t>=(st.max||G.max)||(endT>0&&t>=endT))return 1;
   });
-  avs.forEach(a=>{if(G.surv&&a.alive)a.score=G.max; if(G.dec)a.score=Math.round(a.score*10)/10;});
+  avs.forEach(a=>{if(G.surv&&a.alive)a.score=st.max||G.max; if(G.dec)a.score=Math.round(a.score*10)/10;});
   if(G.final)G.final(me,st,t);
   if(net.host)avs.forEach(a=>{if(a.cpu)miniRes[a.k]=G.cpuScore?G.cpuScore(st):a.score;});
   if(net.nr)net.nr.presence({a:[r2(me.x),r2(me.z),0,me.alive?1:0,me.score]}).catch(()=>{});
@@ -1913,21 +1913,21 @@ const SLIP={hint:'Keep clear of the snowball',surv:true,max:40,ice:1.5,edgeAI:2.
 /* Trap Doors: four rounds. One player per door, and no coming back out. One door each round is a drop.
    5 doors, then one fewer each round (5, 4, 3, 2) - or one per player still in, if that is more. At the reveal the camera goes round the back,
    where you can see under the doors, and whoever chose wrong drops through the floor */
-const DOORS={hint:'Pick a door',surv:true,max:52,ring:2,speed:.9,allFall:true,deck:{k:'s',h:5},
+const DOORS={hint:'Pick a door',surv:true,max:65,ring:2,speed:.9,allFall:true,deck:{k:'s',h:5},
   BASE:[5,3,2,2], PICK:8.5, LEN:13,
   sp:n=>n<=2?3.6:n===3?2.9:n===4?2.3:n===5?1.9:1.6, hw:n=>Math.min(.72,DOORS.sp(n)/2-.18),
   doorX(n,i){return (i-(n-1)/2)*DOORS.sp(n);},
   start(k,n){return[(k-(n-1)/2)*1.3,2.6];},
   draw(sc){const fl=m=>{m.castShadow=false; m.receiveShadow=true;}; fl(mesh(new THREE.BoxGeometry(10,.5,9.1),0xc98f55,0,-.25,.45,sc)); fl(mesh(new THREE.BoxGeometry(10.4,.3,9.5),0xffffff,0,-.42,.45,sc));},   // the floor stops at the wall; each door has its own pad behind it
-  init(sc,rng){return{u:[rng(),rng(),rng(),rng()],bad:-1,n:5,sc,r:-1,g:null,panels:[],pads:[],shown:0};},
+  init(sc,rng,sh,n){const n0=Math.max(5,Math.min(6,n)); return{u:[rng(),rng(),rng(),rng(),rng()],bad:-1,n:n0,n0,max:(n0-1)*DOORS.LEN,sc,r:-1,g:null,panels:[],pads:[],shown:0};},   // 5 doors and 4 rounds; with 6 players, 6 doors and 5 rounds
   build(st,r){if(st.g)st.sc.remove(st.g); const g=new THREE.Group(); st.sc.add(g); st.g=g; st.panels=[]; st.pads=[]; st.leafs=[]; const n=st.n, Z=-4.35, hw=DOORS.hw(n);
     let x0=-5.2; for(let i=0;i<=n;i++){const x1=i<n?DOORS.doorX(n,i)-hw-.08:5.2; if(x1>x0+.05)mesh(new THREE.BoxGeometry(x1-x0,2.4,.5),0x7a5a3a,(x0+x1)/2,1.2,Z,g).castShadow=false; if(i<n)x0=DOORS.doorX(n,i)+hw+.08;}
     for(let i=0;i<n;i++){const x=DOORS.doorX(n,i); mesh(new THREE.BoxGeometry(hw*2+.46,.3,.6),0xffc531,x,2.25,Z,g).castShadow=false; for(const s of [-1,1])mesh(new THREE.BoxGeometry(.16,2.2,.6),0xffc531,x+s*(hw+.15),1.1,Z,g).castShadow=false;
       const hinge=new THREE.Group(); hinge.position.set(x,0,-4.1); g.add(hinge); const pad=mesh(new THREE.BoxGeometry(hw*2+.3,.26,1.15),new THREE.MeshLambertMaterial({color:0xb9824c}),0,-.13,-.58,hinge); pad.castShadow=false; st.pads.push({hinge,pad});
       const dh=new THREE.Group(); dh.position.set(x-hw-.05,0,-4.08); dh.rotation.y=-1.45; g.add(dh); mesh(new THREE.BoxGeometry(hw*2+.1,2.05,.1),0x5a3d24,hw+.05,1.04,0,dh).castShadow=false; mesh(new THREE.SphereGeometry(.09,8,6),0xffc531,hw*2-.12,1,.09,dh).castShadow=false; st.leafs.push({h:dh,shut:false});}},   // each doorway has a door standing open; it slams shut behind whoever walks in
-  step(st,t,dt){const r=Math.min(3,Math.floor(t/DOORS.LEN)), lt=t-r*DOORS.LEN;
-    if(r!==st.r){st.r=r; st.shown=0; {const al=st.avs.filter(a=>a.alive).length; if(!r)st.n0=Math.max(5,al); st.n=Math.max(2,st.n0-r,al);} /* one door fewer each round, but never fewer doors than players */ st.bad=Math.floor(st.u[r]*st.n); DOORS.build(st,r);
-      st.avs.forEach((a,k)=>{a.door=null; if(a.alive&&(a.mine||a.cpu)){const s=DOORS.start(k,st.avs.length); a.x=s[0]; a.z=s[1]; a.ai.pick=null;}}); $('#hint').textContent=`Round ${r+1} of 4: one player per door`;}
+  step(st,t,dt){const r=Math.min(st.n0-2,Math.floor(t/DOORS.LEN)), lt=t-r*DOORS.LEN;
+    if(r!==st.r){st.r=r; st.shown=0; {const al=st.avs.filter(a=>a.alive).length; st.n=Math.max(2,st.n0-r,al);} /* one door fewer each round, but never fewer doors than players */ st.bad=Math.floor(st.u[r]*st.n); DOORS.build(st,r);
+      st.avs.forEach((a,k)=>{a.door=null; if(a.alive&&(a.mine||a.cpu)){const s=DOORS.start(k,st.avs.length); a.x=s[0]; a.z=s[1]; a.ai.pick=null;}}); $('#hint').textContent=`Round ${r+1} of ${st.n0-1}: one player per door`;}
     st.lt=lt; st.open=lt<DOORS.PICK;
     (st.leafs||[]).forEach((d,i)=>{if(!d.shut){const x=DOORS.doorX(st.n,i); if(st.avs.some(a=>a.alive&&a.z<-4.3&&Math.abs(a.x-x)<DOORS.hw(st.n)+.1)){d.shut=true; SFX.bump();}} else d.h.rotation.y=Math.min(0,d.h.rotation.y+dt*9);});
     if(!st.open&&!st.shown){st.shown=1; $('#hint').textContent='One of them is a drop…';}
@@ -1948,8 +1948,8 @@ const DOORS={hint:'Pick a door',surv:true,max:52,ring:2,speed:.9,allFall:true,de
     if(st.lt<ai.wait){ai.dx=ai.dz=0; return;} const tx=DOORS.doorX(n,ai.pick), dx=tx-av.x, dz=-4.9-av.z; if(Math.abs(dx)>.22&&av.z<-2.6){ai.dx=Math.sign(dx)*.8; ai.dz=.15;} else{const l=Math.hypot(dx,dz)||1; ai.dx=dx/l*.85; ai.dz=dz/l*.85;}}};
 
 /* Ghost Runner: pitch black, a torch each. The ghost hunts one player; if that player touches someone, the ghost switches to them.
-   Anyone who touches a ghost is caught. Half way through it splits in two */
-const GHOST={hint:'Run from the ghost',surv:true,max:60,dark:true,tight:true,cam:[14,2.2,-.22],edgeAI:1.4,deck:{k:'s',h:8.28},SPLIT:30,
+   Anyone who touches a ghost is caught. Half way through it splits into one ghost per player still in */
+const GHOST={hint:'Run from the ghost',surv:true,max:80,dark:true,tight:true,cam:[14,2.2,-.22],edgeAI:1.4,deck:{k:'s',h:8.28},SPLIT:40,COL:[0xf2f6ff,0x3dff5c,0xff4fd0,0x35d0ff,0xff5a3a,0xa45cff],
   start(k){const c=[[-1,-1],[1,-1],[-1,1],[1,1],[0,-1],[0,1]][k%6]; return[c[0]*6.7,c[1]*6.7];},
   draw(sc,sh){deckDraw(sc,sh,new THREE.MeshPhongMaterial({color:0xb08a5e,shininess:0}),new THREE.MeshPhongMaterial({color:0x6b5335,shininess:0}));},   // lit per pixel, so only the torch beams show the floor; the edge is not marked
   // sideways the deck is zoomed to the full width of the screen, and the camera slides up and down the deck with your character
@@ -1957,31 +1957,31 @@ const GHOST={hint:'Run from the ghost',surv:true,max:60,dark:true,tight:true,cam
       D=(hh+.15)*1.15*H/(tv*Math.max(W,H)),   // the same scale both ways round (characters the same size on screen), with you kept in the middle
       tz=me.z, tx=me.x, k=Math.min(1,dt*5);
     cam.cz=cam.cz==null?tz:cam.cz+(tz-cam.cz)*k; cam.cx=cam.cx==null?tx:cam.cx+(tx-cam.cx)*k; cam.position.set(cam.cx,oy/ol*D,cam.cz+oz/ol*D); cam.lookAt(cam.cx,0,cam.cz);},
-  init(sc,rng,sh,n){const gm=new THREE.MeshPhongMaterial({color:0xf2f6ff,shininess:0}), em=new THREE.MeshBasicMaterial({color:0x10131f});   // no glow: you only see a ghost when a torch is on it
-    const mk=()=>{const g=new THREE.Group(); sc.add(g); const body=mesh(new THREE.SphereGeometry(.5,18,14),gm,0,.75,0,g); body.scale.set(1,1.3,1); body.castShadow=false;
-      for(let i=0;i<5;i++){const a=i/5*6.283; mesh(new THREE.ConeGeometry(.2,.45,8),gm,Math.sin(a)*.3,.18,Math.cos(a)*.3,g).rotation.x=Math.PI;}
+  init(sc,rng,sh,n){const em=new THREE.MeshBasicMaterial({color:0x10131f});   // no glow: you only see a ghost when a torch is on it
+    const mk=i=>{const col=GHOST.COL[i%6], gm=new THREE.MeshPhongMaterial({color:col,shininess:0}), g=new THREE.Group(); sc.add(g); const body=mesh(new THREE.SphereGeometry(.5,18,14),gm,0,.75,0,g); body.scale.set(1,1.3,1); body.castShadow=false;
+      for(let j=0;j<5;j++){const a=j/5*6.283; mesh(new THREE.ConeGeometry(.2,.45,8),gm,Math.sin(a)*.3,.18,Math.cos(a)*.3,g).rotation.x=Math.PI;}
       for(const s of [-1,1])mesh(new THREE.SphereGeometry(.09,8,6),em,s*.18,.9,.42,g);
-      const ring=flatM(mesh(new THREE.RingGeometry(.5,.66,28),new THREE.MeshPhongMaterial({color:0xff3d3d,shininess:0,side:THREE.DoubleSide}),0,.03,0,sc)); ring.visible=false; return{g,ring,on:false};};
-    const gs=[mk(),mk()]; gs[1].g.visible=false;
-    return{gs,sc,hs:[0,0,-1,0,0,-2],gh:[{x:0,z:0,tk:-1,cd:0,wait:0}],gp:[],torch:[],mineN:0};},
-  // the host decides where the ghosts are and who each is after; everyone else is sent that. Half way through the ghost splits in two
+      const ring=flatM(mesh(new THREE.RingGeometry(.5,.66,28),new THREE.MeshPhongMaterial({color:i?col:0xff3d3d,shininess:0,side:THREE.DoubleSide}),0,.03,0,sc)); ring.visible=false; g.visible=false; return{g,ring,on:false};};
+    return{mk,gs:[],sc,hs:[0,0,-1],gh:[{x:0,z:0,tk:-1,cd:0,wait:0}],gp:[],torch:[],mineN:0,did:false};},
+  // the host decides where the ghosts are and who each is after; everyone else is sent that.
+  // In the second half the ghost splits into one ghost for every player still in
   host(st,t,dt){const avs=st.avs, alive=avs.filter(a=>a.alive), gh=st.gh; if(!alive.length)return st.hs;
-    const pick=(g,o)=>{const free=alive.filter(a=>!o||a.k!==o.tk), l=free.length?free:alive; return l[Math.floor(Math.random()*l.length)];};   // a different player from the other ghost, when there is one
-    if(t>=GHOST.SPLIT&&gh.length<2){const a=gh[0], tg=pick(null,a); gh.push({x:a.x,z:a.z,tk:tg.k,cd:1,wait:1}); a.wait=Math.max(a.wait,.4);}
-    gh.forEach((g,i)=>{const o=gh[1-i]; let tg=avs[g.tk]; g.cd-=dt; g.wait-=dt;
-      if(!tg||!tg.alive){if(tg)g.wait=1.3; tg=pick(g,o); g.tk=tg.k; g.cd=1;}   // after a catch the ghost pauses, then picks someone new
-      else if(g.cd<=0)for(const q of alive)if(q!==tg&&Math.hypot(q.x-tg.x,q.z-tg.z)<.9){if(o&&o.tk===tg.k)o.cd=Math.max(o.cd,1.2); g.tk=q.k; tg=q; g.cd=1.2; break;}   // touched someone: this ghost is theirs now. With two on you, one touch only passes one on
+    const load=k=>gh.filter(g=>g.tk===k).length, pick=g=>{let l=alive.filter(a=>a.k!==g.tk), m=Math.min(...l.map(a=>load(a.k))); l=l.filter(a=>load(a.k)===m); if(!l.length)l=alive; return l[Math.floor(Math.random()*l.length)];};   // whoever has the fewest ghosts on them
+    if(t>=GHOST.SPLIT&&!st.did){st.did=true; const a=gh[0]; a.wait=Math.max(a.wait,.5); if(!alive.some(p=>p.k===a.tk))a.tk=alive[0].k; for(const p of alive)if(p.k!==a.tk&&gh.length<6)gh.push({x:a.x,z:a.z,tk:p.k,cd:1,wait:1});}
+    gh.forEach(g=>{let tg=avs[g.tk]; g.cd-=dt; g.wait-=dt;
+      if(!tg||!tg.alive){if(tg)g.wait=1.3; tg=pick(g); g.tk=tg.k; g.cd=1;}   // after a catch the ghost pauses, then picks someone new
+      else if(g.cd<=0)for(const q of alive)if(q!==tg&&Math.hypot(q.x-tg.x,q.z-tg.z)<.9){for(const o of gh)if(o!==g&&o.tk===tg.k)o.cd=Math.max(o.cd,1.2); g.tk=q.k; tg=q; g.cd=1.2; break;}   // touched someone: this ghost is theirs now. One touch only passes one ghost on
       if(t>2&&g.wait<=0){const sp=4.6*(.75+.15*Math.min(1,t/50)), dx=tg.x-g.x, dz=tg.z-g.z, d=Math.hypot(dx,dz)||.01, s=Math.min(d,sp*dt); g.x+=dx/d*s; g.z+=dz/d*s;}});
-    const a=gh[0], b=gh[1]; return[r2(a.x),r2(a.z),a.tk,b?r2(b.x):0,b?r2(b.z):0,b?b.tk:-2];},
-  step(st,t,dt){const h=st.hs, me=st.avs.find(a=>a.mine); st.gp=[]; let mineN=0;
-    st.gs.forEach((G,i)=>{const x=h[i*3], z=h[i*3+1], tk=h[i*3+2], g=G.g, on=tk!=null&&tk>-2; g.visible=on; if(!on){G.ring.visible=false; return;}
-      if(!G.on){G.on=true; g.position.x=x; g.position.z=z; if(i===1&&t>1){SFX.loss(); splash('Two ghosts!',1400);}}
+    const out=[]; for(const g of gh)out.push(r2(g.x),r2(g.z),g.tk); return out;},
+  step(st,t,dt){const h=st.hs, N=Math.floor(h.length/3), me=st.avs.find(a=>a.mine), seen={}; st.gp=[]; let mineN=0;
+    for(let i=0;i<N;i++){const x=h[i*3], z=h[i*3+1], tk=h[i*3+2], G=st.gs[i]||(st.gs[i]=st.mk(i)), g=G.g; g.visible=true;
+      if(!G.on){G.on=true; g.position.x=x; g.position.z=z; if(i===1&&t>1){SFX.loss(); splash('A ghost each!',1400);}}
       g.position.x+=(x-g.position.x)*Math.min(1,dt*14); g.position.z+=(z-g.position.z)*Math.min(1,dt*14); g.position.y=Math.sin(t*4+i*2)*.1; st.gp.push([g.position.x,g.position.z,tk]);
-      const tg=st.avs[tk]; if(tg&&tg.alive){g.rotation.y=Math.atan2(tg.x-g.position.x,tg.z-g.position.z); G.ring.visible=true; G.ring.position.set(tg.x,.03+i*.01,tg.z); G.ring.scale.setScalar((i&&h[2]===tk?1.45:1)+Math.sin(t*8+i)*.12);} else G.ring.visible=false;   // two rings on a player with both ghosts
-      if(me&&me.alive&&t>1.5&&tk===me.k)mineN++;}); window.__ghosts=st.gp;
-    if(me&&me.alive&&t>1.5)$('#hint').textContent=mineN?'Touch someone to pass it on':'Run from the ghost'+(st.gp.length>1?'s':'');
+      const tg=st.avs[tk]; if(tg&&tg.alive){const c=seen[tk]=(seen[tk]||0)+1; g.rotation.y=Math.atan2(tg.x-g.position.x,tg.z-g.position.z); G.ring.visible=true; G.ring.position.set(tg.x,.03+i*.01,tg.z); G.ring.scale.setScalar(1+(c-1)*.42+Math.sin(t*8+i)*.1);} else G.ring.visible=false;   // one ring for each ghost on a player
+      if(me&&me.alive&&t>1.5&&tk===me.k)mineN++;} window.__ghosts=st.gp;
+    if(me&&me.alive&&t>1.5)$('#hint').textContent=mineN?'Touch someone to pass it on':'Run from the ghost'+(N>1?'s':'');
     if(!st.boo){st.boo=document.createElement('div'); st.boo.id='boo'; st.boo.hidden=true; $('#stage').appendChild(st.boo);}
-    if(mineN!==st.mineN){if(mineN>st.mineN)SFX.loss(); st.mineN=mineN; st.boo.hidden=!mineN; st.boo.textContent=mineN>1?'2 Boos are after You':'Boo is after You';}
+    if(mineN!==st.mineN){if(mineN>st.mineN)SFX.loss(); st.mineN=mineN; st.boo.hidden=!mineN; st.boo.textContent=mineN>1?mineN+' Boos are after You':'Boo is after You';}
     // a burning torch each: a pool of light all the way round the player
     st.avs.forEach((a,i)=>{let L=st.torch[i]; if(!L){L=new THREE.PointLight(0xffb45e,2.1,6,1.1); st.sc.add(L); L.flame=mesh(new THREE.SphereGeometry(.13,8,6),new THREE.MeshBasicMaterial({color:0xffc04d}),0,0,0,st.sc); L.flame.castShadow=false; st.torch[i]=L;}
       L.visible=L.flame.visible=a.alive; if(!a.alive)return; const fx=Math.sin(a.face+.9), fz=Math.cos(a.face+.9), fl=1+Math.sin(t*23+i*2)*.06+Math.sin(t*37+i)*.04;   // held out to one side, flickering
@@ -2008,8 +2008,8 @@ const GAMES=[
  {name:'Paint Fight',unit:'tiles',arena:true,max:36,how:'Player against player on a big square with a hole in the middle. Every tile you walk over turns your colour, including tiles the others already painted. Most tiles when time runs out wins.',cpu:()=>rand(20,60),play:arena(PAINT)},
  {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},
- {name:'Trap Doors',unit:'sec',surv:true,arena:true,max:58,how:'Four rounds. Each round, walk into a door before the time runs out. Only one player fits in a door, and once you are in you cannot come back out. A door shuts behind whoever walks in. One door is a drop: whoever is behind it falls through the floor. There are 5 doors to start with and one fewer each round, but always at least one per player still in.',cpu:()=>rand(100,520)/10,play:arena(DOORS)},
- {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:66,how:'It is pitch black. Everyone carries a burning torch that lights a circle around them. You cannot see the ghost or the edge of the deck until they come into the light. A ghost hunts one player at a time. If the hunted player touches someone, the ghost goes after them instead. Anyone who touches a ghost is out. Half way through the ghost splits in two, and each half hunts a different player. With two after you, a touch only passes one of them on. The ghosts get faster as the game goes on.',cpu:()=>rand(100,500)/10,play:arena(GHOST)},
+ {name:'Trap Doors',unit:'sec',surv:true,arena:true,max:71,how:'Four rounds, or five with 6 players. Each round, walk into a door before the time runs out. Only one player fits in a door, and once you are in you cannot come back out. A door shuts behind whoever walks in. One door is a drop: whoever is behind it falls through the floor. There are 5 doors to start with (6 with 6 players) and one fewer each round, but always at least one per player still in.',cpu:()=>rand(100,650)/10,play:arena(DOORS)},
+ {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:88,how:'It is pitch black. Everyone carries a burning torch that lights a circle around them. You cannot see the ghost or the edge of the deck until they come into the light. A ghost hunts one player at a time. If the hunted player touches someone, the ghost goes after them instead. Anyone who touches a ghost is out. Half way through the ghost splits into one ghost for every player still in, each a different colour and each hunting its own player. A touch passes one of your ghosts on to the player you touched. The ghosts get faster as the game goes on.',cpu:()=>rand(100,650)/10,play:arena(GHOST)},
  {name:'Slippery Slope',unit:'sec',surv:true,arena:true,max:46,how:'The deck is ice, so you slide and take time to turn. A giant snowball rolls around and sends anyone it hits flying. Stay on the ice the longest.',cpu:()=>rand(60,300)/10,play:arena(SLIP)},
  {name:'Bell Ringer',unit:'taps',max:10,how:'Hammer the bell as many times as you can in 5 seconds.',cpu:()=>rand(24,40),
   async play(){

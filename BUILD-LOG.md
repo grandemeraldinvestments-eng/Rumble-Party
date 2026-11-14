@@ -297,6 +297,12 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Trap Doors: one door fewer each round (5, 4, 3, 2), never fewer doors than players still in.
 - All shared-platform mini games: the camera is refitted when the phone is turned or goes full screen after the game was set up. Before, a game set up in portrait stayed zoomed far out in landscape.
 
+## Build 47
+
+- Trap Doors: with 6 players there are 6 doors and 5 rounds (6, 5, 4, 3, 2). With fewer players it stays 5 doors and 4 rounds.
+- Ghost Runner: the game is 80 seconds. At 40 seconds the ghost splits into one ghost for every player still in, each a different colour and each hunting its own player. Touching someone still passes one of your ghosts on.
+- Mini games can now set their own length per match.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
