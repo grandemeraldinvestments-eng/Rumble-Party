@@ -283,6 +283,12 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 
 - Ghost Runner: portrait now uses the same zoom level as landscape, so characters are the same size on screen both ways round.
 
+## Build 45
+
+- Trap Doors: every doorway now has a door that stands open and slams shut behind the player who walks in.
+- Trap Doors: a fourth round with 2 doors (5, 3, 2, 2). The game now lasts up to 52 seconds.
+- Hedge Maze: the camera sits further behind your character when there is room, and turning the view is 30% faster.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
