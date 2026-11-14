@@ -236,6 +236,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 @keyframes boo{from{transform:translateX(-50%) scale(1)} to{transform:translateX(-50%) scale(1.08)}}
 @media (prefers-reduced-motion:reduce){#boo{animation:none}}
 .ver{margin:0; font-size:.72rem; opacity:.65; text-align:center}
+.lede.warn{font-weight:800; color:var(--ink)}
 #gfin{position:fixed; left:50%; top:42%; transform:translate(-50%,-50%); z-index:60; white-space:nowrap; font-family:var(--pix,'Press Start 2P',monospace); font-size:clamp(1.1rem,6.5vw,2.4rem); color:#fff; background:var(--ink); border:4px solid #fff; box-shadow:0 0 0 4px var(--ink); padding:.7em .8em; pointer-events:none}
 .big{font-family:var(--body); font-weight:800; font-size:clamp(2.6rem,15vw,4.2rem); line-height:1.05}
 .sub{color:var(--sub)}
@@ -327,7 +328,8 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 <section class="screen center" id="menu">
   <div class="card">
     <h1>Rumble Party</h1>
-    <p class="lede">A party board game for 2 to 6 players. Run around the board, win tickets in mini games and trade them for pearls. Four maps, 22 mini games.</p>
+    <p class="lede">Come one, come all! Join the party and compete with up to 6 friends to catch the magical pearls that await.</p>
+    <p class="lede warn">Caution: this game is known to turn friends into enemies.</p>
     <div class="stack">
       <button class="btn" id="hostBtn" disabled>Host a game</button>
       <button class="btn" id="joinBtn" disabled>Join a game</button>
@@ -1484,7 +1486,8 @@ function startGame(prac=-1){
   if(prac<0)gameLoop(); else{S.prac=1; S.ui.who=-1; practiceRun(prac);}
 }
 /* practice: one chosen mini game against computer players, then back to the list */
-const PRAC_ONLY=true, BUILD=40;   // BUILD goes up by one with every published update, so you can tell which version a phone is running let pracN=3; const pracDone=new Set();
+/* BUILD goes up by one with every published update, so you can tell which version a phone is running */
+const PRAC_ONLY=true, BUILD=41; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';

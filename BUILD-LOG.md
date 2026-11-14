@@ -265,6 +265,10 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - The offline worker now always re-checks the page with the server, bypassing the browser's 10-minute cache. Before this, a phone could keep showing the previous version for up to 10 minutes after an update.
 - The main menu and the practice list show a build number, which goes up with every published update.
 
+### 40. Practice list fix and new menu text
+- Fixed: the Practice mini games button and the mini game tester page stopped working in build 40. A comment added with the build number had swallowed the rest of its line. Every publish now runs an automatic check that the tester page opens on its list.
+- New menu text: an invitation line and a caution line.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
