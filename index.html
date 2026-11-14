@@ -171,6 +171,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 #chText{margin:0; background:var(--card); border:3px solid var(--ink); box-shadow:4px 4px 0 var(--ink); padding:10px 16px; font-weight:800; font-size:1.15rem; max-width:84%; text-align:center}
 #chance.spin #chText{visibility:hidden}
 #chG svg{width:108px; height:108px; display:block}
+@media (orientation:landscape) and (max-height:560px){#chG svg{width:70px; height:70px}}
 .chip .bag .it{background:none; padding:0; display:block}
 .chip .bag .it svg{width:20px; height:20px; display:block}
 .acts .btn svg{width:22px; height:22px; vertical-align:-5px; margin-right:5px}
@@ -496,7 +497,7 @@ const FACE=CAST.map((_,i)=>drawFace(i,true).toDataURL());
 const face=i=>`<img class="face${CHARON?' ph':''}" src="${FACE[i]}" alt="" style="--c:${CAST[i].c}">`;
 const ITEMS={twin:{name:'Twin Dice',tag:'x2',cost:5,tip:'roll two dice',desc:'Roll two dice on one turn and move the total.'},magnet:{name:'Magnet',tag:'MAG',cost:8,tip:'take 5 tickets',desc:'Take 5 tickets from the richest rival.'},kite:{name:'Kite',tag:'KITE',cost:15,tip:'fly to the pearl',desc:'Fly straight to the pearl stall, wherever it is.'}};
 ITEMS.twin.svg='<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="17" width="24" height="24" rx="5" fill="#fff" stroke="#17304d" stroke-width="3" transform="rotate(-10 16 29)"/><circle cx="11" cy="25" r="2.4" fill="#17304d"/><circle cx="21" cy="34" r="2.4" fill="#17304d"/><rect x="22" y="5" width="22" height="22" rx="5" fill="#ffc531" stroke="#17304d" stroke-width="3" transform="rotate(12 33 16)"/><circle cx="33" cy="16" r="2.3" fill="#17304d"/><circle cx="28" cy="10.5" r="2.1" fill="#17304d"/><circle cx="38" cy="21.5" r="2.1" fill="#17304d"/></svg>';
-ITEMS.magnet.svg='<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M9 6v18a15 15 0 0 0 30 0V6H28v18a4 4 0 0 1-8 0V6z" fill="#ff4d4d" stroke="#17304d" stroke-width="3" stroke-linejoin="round"/><path d="M9 6h11v9H9zM28 6h11v9H28z" fill="#fff" stroke="#17304d" stroke-width="3" stroke-linejoin="round"/></svg>';
+ITEMS.magnet.svg='<svg viewBox="0 0 48 48" aria-hidden="true"><g transform="translate(0 1.5)"><path d="M9 6v18a15 15 0 0 0 30 0V6H28v18a4 4 0 0 1-8 0V6z" fill="#ff4d4d" stroke="#17304d" stroke-width="3" stroke-linejoin="round"/><path d="M9 6h11v9H9zM28 6h11v9H28z" fill="#fff" stroke="#17304d" stroke-width="3" stroke-linejoin="round"/></g></svg>';
 ITEMS.kite.svg='<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M27 3 41 18 24 33 12 17z" fill="#2f8fff" stroke="#17304d" stroke-width="3" stroke-linejoin="round"/><path d="M27 3 24 33M12 17l29 1" stroke="#17304d" stroke-width="2.5"/><path d="M24 33q-8 3-4 7t-6 5" fill="none" stroke="#17304d" stroke-width="2.5" stroke-linecap="round"/><path d="M17 37l5 2M13 42l5 1" stroke="#ff4d4d" stroke-width="3.5" stroke-linecap="round"/></svg>';
 const itemLine=id=>`${ITEMS[id].name}. ${ITEMS[id].desc} Use it at the start of a turn.`;
 
@@ -1544,11 +1545,11 @@ function mkDeck(spec){
     sh.inside=(x,z)=>Math.hypot(x,z)<=R+.12;
     sh.edge=(x,z)=>{const r=Math.hypot(x,z)||.01; return[R-r,-x/r,-z/r];};
     sh.pt=(rng,f)=>{const a=rng()*6.283,r=Math.sqrt(rng())*(f||.9)*R; return[Math.sin(a)*r,Math.cos(a)*r];};}
-  else{const h=spec.h,o=spec.hole||0; sh.ext=h*1.12;
-    sh.inside=(x,z)=>Math.abs(x)<=h+.12&&Math.abs(z)<=h+.12&&!(o&&Math.abs(x)<o-.12&&Math.abs(z)<o-.12);
-    sh.edge=(x,z)=>{const ax=Math.abs(x),az=Math.abs(z); let d=h-Math.max(ax,az), nx=ax>az?-Math.sign(x):0, nz=ax>az?0:-Math.sign(z);
+  else{const h0=spec.h,o=spec.hole||0; sh.ext=h0*1.12; sh.sc=1;
+    sh.inside=(x,z)=>{const h=h0*sh.sc; return Math.abs(x)<=h+.12&&Math.abs(z)<=h+.12&&!(o&&Math.abs(x)<o-.12&&Math.abs(z)<o-.12);};
+    sh.edge=(x,z)=>{const h=h0*sh.sc, ax=Math.abs(x),az=Math.abs(z); let d=h-Math.max(ax,az), nx=ax>az?-Math.sign(x):0, nz=ax>az?0:-Math.sign(z);
       if(o){const dh=Math.max(ax,az)-o; if(dh<d){d=dh; nx=ax>az?(Math.sign(x)||1):0; nz=ax>az?0:(Math.sign(z)||1);}} return[d,nx,nz];};
-    sh.pt=(rng,f)=>{for(;;){const x=(rng()*2-1)*h*(f||.92),z=(rng()*2-1)*h*(f||.92); if(!o||Math.abs(x)>o+.4||Math.abs(z)>o+.4)return[x,z];}};}
+    sh.pt=(rng,f)=>{const h=h0; for(;;){const x=(rng()*2-1)*h*(f||.92),z=(rng()*2-1)*h*(f||.92); if(!o||Math.abs(x)>o+.4||Math.abs(z)>o+.4)return[x,z];}};}
   return sh;
 }
 function deckDraw(sc,sh,col,rim){col=col==null?0xc98f55:col; rim=rim==null?0xffffff:rim;
@@ -1567,7 +1568,7 @@ function arena(G){return async function(ctx){
       for(const [x,z] of sq?[[e,e],[e,-e],[e,0]]:[[e,0],[0,e],[0,-e],[e*.7,e*.7]]){const dy=-cy,dz=z-cz, dep=dy*fy+dz*fz, ux=0,uy=-fz,uz=fy, v=(dy*uy+dz*uz)/dep, h=(x+.5)/dep; if(dep<1||Math.abs(h)>th*.97||v>tv*(W>H?.8:.5)||v<-tv*(W>H?.86:.72))return false;} return true;};
     while(kz<4&&!fits(kz))kz+=.05;}
   const m=miniStage(G.hint,[0,cp[0]*kz,cp[1]*kz],[0,0,cp[2]*kz]), sc=m.scene, rng=rng32(ctx.seed); if(G.draw)G.draw(sc,sh); else if(!G.noDeck)deckDraw(sc,sh);
-  const n=V.p.length, st=G.init(sc,rng,sh,n);
+  const n=V.p.length, st=G.init(sc,rng,sh,n); st.zoom=f=>{m.cam.position.set(0,cp[0]*kz*f,cp[1]*kz*f); m.cam.lookAt(0,0,cp[2]*kz*f);};
   const avs=V.p.map((p,k)=>{const a=k/n*6.283+.6, s0=G.start?G.start(k,n,st):[Math.sin(a)*(G.ring||1.5),Math.cos(a)*(G.ring||1.5)],
     av={k,x:s0[0],z:s0[1],y:0,vy:0,vx:0,vz:0,alive:true,gone:0,fell:false,done:false,score:0,face:0,moving:false,kx:0,kz:0,bump:0,dash:0,cd:0,spd:0,ly:0,dy:0,lives:G.lives||1,inv:0,col:CAST[p.i].hex,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
     av.ch.position.set(av.x,0,av.z); if(G.alone&&!av.mine)av.ch.visible=false; return av;});
@@ -1673,11 +1674,15 @@ const BOOM={hint:'Jump the boom',surv:true,max:40,jump:true,post:.9,ring:2.6,dec
     if(ai.t<=0){ai.t=.8+Math.random(); const a=Math.random()*6.283, r=Math.hypot(av.x,av.z)||1; if(r>3.6){ai.dx=-av.x/r*.5; ai.dz=-av.z/r*.5;} else if(r<1.8){ai.dx=av.x/r*.5; ai.dz=av.z/r*.5;} else{ai.dx=Math.sin(a)*.3; ai.dz=Math.cos(a)*.3;}}
     if(d>0&&d<st.w*.3){if(!ai.armed){ai.armed=true; if(Math.random()>.03+(st.w-1.5)*.03)ai.jump=true;}} else if(d<0||d>1.5)ai.armed=false;}};
 
-/* Ticket Grab: a big square, one minute. Tickets last 5 seconds. In the last 15 seconds one in ten is red and costs a ticket */
+/* Ticket Grab: a big square, one minute. Tickets last 5 seconds. From 15 to 45 seconds the deck shrinks to half its size.
+   In the last 15 seconds half the tickets are red and cost a ticket */
 const GRAB={hint:'Grab the tickets',max:60,ring:2,deck:{k:'s',h:6.6},
-  init(sc,rng,sh){const list=[]; for(let t=.6;t<59.4;t+=.3){const q=sh.pt(rng,.94), a=rng(), b=rng(); list.push({t,x:q[0],z:q[1],red:t>=45&&a<.1,gold:b<.12,got:false,on:false,m:null});}
-    list.forEach(c=>{if(c.red)c.gold=false;}); return{list,geo:new THREE.BoxGeometry(.5,.34,.1),warned:false};},
-  step(st,t,dt,sc){if(t>=45&&!st.warned){st.warned=true; $('#hint').textContent='Red tickets cost you 1';}
+  size:t=>1-.5*Math.min(1,Math.max(0,(t-15)/30)),
+  draw(sc,sh){sh.g=new THREE.Group(); sc.add(sh.g); deckDraw(sh.g,sh);},
+  init(sc,rng,sh){const list=[]; for(let t=.6;t<59.4;t+=.3){const q=sh.pt(rng,.94), a=rng(), b=rng(), k=GRAB.size(t+5); list.push({t,x:q[0]*k,z:q[1]*k,red:t>=45&&a<.5,gold:b<.12,got:false,on:false,m:null});}   // each ticket lands where the deck will still be when it expires
+    list.forEach(c=>{if(c.red)c.gold=false;}); return{list,sh,geo:new THREE.BoxGeometry(.5,.34,.1),warned:0};},
+  step(st,t,dt,sc){const k=GRAB.size(t); st.sh.sc=k; st.sh.g.scale.set(k,1,k); st.zoom(.35+.65*k);   // the camera closes in as the deck shrinks
+    if(t>=15&&st.warned<1){st.warned=1; $('#hint').textContent='The deck is shrinking';} if(t>=45&&st.warned<2){st.warned=2; $('#hint').textContent='Red tickets cost you 1';}
     for(const c of st.list){if(t<c.t)break; c.on=!c.got&&t<c.t+5; if(c.on&&!c.m)c.m=mesh(st.geo,c.red?0xe5484d:c.gold?0xff5fa8:0xffc531,c.x,.5,c.z,sc);
       if(c.m){if(c.on){c.m.rotation.y+=dt*4; c.m.position.y=.5+Math.sin(t*5+c.t)*.08; c.m.visible=t<c.t+4||Math.floor(t*8)%2===0;} else{sc.remove(c.m); c.m=null;}}}},
   check(av,st){for(const c of st.list)if(c.on&&Math.hypot(c.x-av.x,c.z-av.z)<.7){c.got=true; c.on=false; return c.red?-1:c.gold?3:1;} return 0;},
@@ -1844,7 +1849,7 @@ const SLIP={hint:'Keep clear of the snowball',surv:true,max:40,ice:1.5,edgeAI:2.
 const GAMES=[
  {name:'Crab Scramble',unit:'sec',surv:true,arena:true,max:51,how:'Everyone shares one small island. Drag to run and dodge the crabs, which keep getting faster. You have 3 lives. Whoever lasts longest wins.',cpu:()=>rand(100,400)/10,play:arena(CRAB)},
  {name:'Boom Hop',unit:'sec',surv:true,arena:true,max:46,how:'Everyone shares one round deck. Tap Jump to clear the swinging boom. It keeps speeding up, and it flashes yellow just before it swings back the other way.',cpu:()=>rand(50,300)/10,play:arena(BOOM)},
- {name:'Ticket Grab',unit:'tickets',arena:true,max:66,how:'One minute on a big square. Grab tickets before the others do; each one lasts 5 seconds. Pink tickets are worth 3. In the last 15 seconds red tickets appear, and each one costs you 1.',cpu:()=>rand(14,40),play:arena(GRAB)},
+ {name:'Ticket Grab',unit:'tickets',arena:true,max:66,how:'One minute on a big square. Grab tickets before the others do; each one lasts 5 seconds. Pink tickets are worth 3. After 15 seconds the deck shrinks to half its size. In the last 15 seconds half the tickets are red, and each one costs you 1.',cpu:()=>rand(14,40),play:arena(GRAB)},
  {name:'Hot Planks',unit:'sec',surv:true,arena:true,max:46,how:'Sixteen big tiles. Tiles flash yellow, and are safe to walk on, until they turn red. More tiles go, with less warning, as time passes.',cpu:()=>rand(60,300)/10,play:arena(HOT)},
  {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:36,how:'Everyone shares one deck. Coconuts are falling. Watch for the shadows and keep out from under them.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
  {name:'Spotlight',unit:'pts',dec:true,arena:true,max:96,how:'Ninety seconds. Stand in the yellow spotlight to score. Every 30 seconds a new yellow light arrives and the old one turns red, which takes points away just as fast. Where red and yellow overlap is neutral.',cpu:()=>rand(100,400)/10,play:arena(SPOT)},

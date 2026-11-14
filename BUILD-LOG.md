@@ -193,6 +193,10 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 - Slippery Slope (new): an ice rink where players slide, and a giant snowball knocks anyone it hits flying.
 - Interface: the menu button is as wide as the round label, the repeated "tap again" lines are gone, and the landscape action bar is one thin row.
 
+### 27. Ticket Grab shrink and item icon fix
+- Ticket Grab: from 15 to 45 seconds the deck shrinks to half its size and the camera closes in with it. In the last 15 seconds half the tickets are red.
+- The item icon on the reveal card is centred in its circle in landscape.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
