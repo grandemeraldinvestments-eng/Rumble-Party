@@ -14,7 +14,7 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 |---|---|
 | Maps | Island, Carnival, Farm, Volcano |
 | Board | 45-space loop plus a 15-space bridge shortcut, 3 shops, 5 fixed pearl stall spots |
-| Mini games | 19, chosen each round by a 10-second vote between three |
+| Mini games | 19. A random shared-deck game ends each round; own-screen games are used for duels |
 | Players | 2 to 6, any mix of people and computer players |
 | Game length | 5, 10 or 15 rounds |
 | Items | Twin Dice, Magnet, Kite |
@@ -170,6 +170,12 @@ A 3D party board game for 2 to 6 players. Players roll a dice, move around a 60-
 - Sideways, the action window is a bar along the bottom: player name and message on the left, buttons on the right.
 - Items work like the fork: tap an item in the shop or in your bag to read what it does (it turns yellow), tap it again to buy or use it. Skip and Hit the dice act on the first tap.
 - The pearl stall is an open clam with the pearl inside, sitting beside its space on the side clearest of the path.
+
+### 25. No vote, game cycle and button-only controller
+- The vote is gone. Each round ends with a random shared-deck game, and none repeats until all 11 have been played.
+- Own-screen games are kept for duels (all of them except Balloon Pop, which needs touch aiming and is in Practice only).
+- Controller: the on-screen pointer is removed. The left stick or d-pad moves a box between the buttons and A presses the boxed one. The box jumps to the main button when one appears.
+- In the touch-only duel games the stick slides, the d-pad taps a side and A taps.
 
 ## Mini games
 
