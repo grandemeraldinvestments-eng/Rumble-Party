@@ -261,6 +261,10 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - A red banner at the top middle, "Boo is after You", shows while the ghost is hunting you.
 - Torches are a little brighter and held higher so characters are easier to see.
 
+### 39. Updates arrive straight away; build number
+- The offline worker now always re-checks the page with the server, bypassing the browser's 10-minute cache. Before this, a phone could keep showing the previous version for up to 10 minutes after an update.
+- The main menu and the practice list show a build number, which goes up with every published update.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
