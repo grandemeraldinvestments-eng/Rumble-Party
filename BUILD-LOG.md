@@ -256,6 +256,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Each player carries a burning torch that lights a circle all the way round them, in place of a forward beam. The flame flickers.
 - The deck is 20% bigger.
 
+### 38. Ghost Runner: landscape zoom and a hunted banner
+- In landscape the deck is zoomed to the full width of the screen and the camera slides along the deck with your character.
+- A red banner at the top middle, "Boo is after You", shows while the ghost is hunting you.
+- Torches are a little brighter and held higher so characters are easier to see.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
