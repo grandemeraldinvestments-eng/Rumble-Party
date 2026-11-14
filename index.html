@@ -1487,7 +1487,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=47; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=48; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1970,8 +1970,11 @@ const GHOST={hint:'Run from the ghost',surv:true,max:80,dark:true,tight:true,cam
     if(t>=GHOST.SPLIT&&!st.did){st.did=true; const a=gh[0]; a.wait=Math.max(a.wait,.5); if(!alive.some(p=>p.k===a.tk))a.tk=alive[0].k; for(const p of alive)if(p.k!==a.tk&&gh.length<6)gh.push({x:a.x,z:a.z,tk:p.k,cd:1,wait:1});}
     gh.forEach(g=>{let tg=avs[g.tk]; g.cd-=dt; g.wait-=dt;
       if(!tg||!tg.alive){if(tg)g.wait=1.3; tg=pick(g); g.tk=tg.k; g.cd=1;}   // after a catch the ghost pauses, then picks someone new
-      else if(g.cd<=0)for(const q of alive)if(q!==tg&&Math.hypot(q.x-tg.x,q.z-tg.z)<.9){for(const o of gh)if(o!==g&&o.tk===tg.k)o.cd=Math.max(o.cd,1.2); g.tk=q.k; tg=q; g.cd=1.2; break;}   // touched someone: this ghost is theirs now. One touch only passes one ghost on
       if(t>2&&g.wait<=0){const sp=4.6*(.75+.15*Math.min(1,t/50)), dx=tg.x-g.x, dz=tg.z-g.z, d=Math.hypot(dx,dz)||.01, s=Math.min(d,sp*dt); g.x+=dx/d*s; g.z+=dz/d*s;}});
+    // two players touch: one ghost changes hands. The colours rank white, green, pink, cyan, red, purple (the order they are made in),
+    // and whoever holds the highest-ranked ghost of the two passes that ghost to the other player
+    for(let i=0;i<alive.length;i++)for(let j=i+1;j<alive.length;j++){const A=alive[i], B=alive[j]; if(Math.hypot(A.x-B.x,A.z-B.z)>=.9)continue;
+      const on=gh.filter(g=>g.tk===A.k||g.tk===B.k); if(!on.length||on.some(g=>g.cd>0))continue; const top=on[0]; top.tk=top.tk===A.k?B.k:A.k; on.forEach(g=>{g.cd=1.2;});}
     const out=[]; for(const g of gh)out.push(r2(g.x),r2(g.z),g.tk); return out;},
   step(st,t,dt){const h=st.hs, N=Math.floor(h.length/3), me=st.avs.find(a=>a.mine), seen={}; st.gp=[]; let mineN=0;
     for(let i=0;i<N;i++){const x=h[i*3], z=h[i*3+1], tk=h[i*3+2], G=st.gs[i]||(st.gs[i]=st.mk(i)), g=G.g; g.visible=true;
@@ -2009,7 +2012,7 @@ const GAMES=[
  {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},
  {name:'Trap Doors',unit:'sec',surv:true,arena:true,max:71,how:'Four rounds, or five with 6 players. Each round, walk into a door before the time runs out. Only one player fits in a door, and once you are in you cannot come back out. A door shuts behind whoever walks in. One door is a drop: whoever is behind it falls through the floor. There are 5 doors to start with (6 with 6 players) and one fewer each round, but always at least one per player still in.',cpu:()=>rand(100,650)/10,play:arena(DOORS)},
- {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:88,how:'It is pitch black. Everyone carries a burning torch that lights a circle around them. You cannot see the ghost or the edge of the deck until they come into the light. A ghost hunts one player at a time. If the hunted player touches someone, the ghost goes after them instead. Anyone who touches a ghost is out. Half way through the ghost splits into one ghost for every player still in, each a different colour and each hunting its own player. A touch passes one of your ghosts on to the player you touched. The ghosts get faster as the game goes on.',cpu:()=>rand(100,650)/10,play:arena(GHOST)},
+ {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:88,how:'It is pitch black. Everyone carries a burning torch that lights a circle around them. You cannot see the ghost or the edge of the deck until they come into the light. A ghost hunts one player at a time. If the hunted player touches someone, the ghost goes after them instead. Anyone who touches a ghost is out. Half way through the ghost splits into one ghost for every player still in, each a different colour and each hunting its own player. When two players touch, one ghost changes hands: the colours rank white, green, pink, cyan, red, purple, and whoever has the highest-ranked ghost of the two passes it to the other player. The ghosts get faster as the game goes on.',cpu:()=>rand(100,650)/10,play:arena(GHOST)},
  {name:'Slippery Slope',unit:'sec',surv:true,arena:true,max:46,how:'The deck is ice, so you slide and take time to turn. A giant snowball rolls around and sends anyone it hits flying. Stay on the ice the longest.',cpu:()=>rand(60,300)/10,play:arena(SLIP)},
  {name:'Bell Ringer',unit:'taps',max:10,how:'Hammer the bell as many times as you can in 5 seconds.',cpu:()=>rand(24,40),
   async play(){

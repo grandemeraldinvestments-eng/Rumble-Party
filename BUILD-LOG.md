@@ -303,6 +303,10 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Ghost Runner: the game is 80 seconds. At 40 seconds the ghost splits into one ghost for every player still in, each a different colour and each hunting its own player. Touching someone still passes one of your ghosts on.
 - Mini games can now set their own length per match.
 
+## Build 48
+
+- Ghost Runner: the ghost colours now have a ranking: white, green, pink, cyan, red, purple. When two players touch, whoever holds the highest-ranked ghost of the two passes that ghost to the other player. One touch moves one ghost.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
