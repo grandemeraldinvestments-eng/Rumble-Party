@@ -598,7 +598,7 @@ function init3D(){
     pearl.lid=new THREE.Group(); pearl.lid.position.set(0,.5,-.85); pearl.add(pearl.lid); shell(pearl.lid,false);
     pearl.orb=mesh(new THREE.SphereGeometry(.44,24,16),new THREE.MeshLambertMaterial({color:0xffffff,emissive:0x8f70d8}),0,.66,.12,pearl);
     pearl.halo=mesh(new THREE.TorusGeometry(.64,.045,8,32),new THREE.MeshBasicMaterial({color:0xffe27a}),0,.66,.12,pearl); pearl.halo.rotation.x=1.1; pearl.halo.castShadow=false;
-    mesh(new THREE.CylinderGeometry(.2,.2,5,16,1,true),new THREE.MeshBasicMaterial({color:0xd9c2ff,transparent:true,opacity:.16,depthWrite:false,side:THREE.DoubleSide}),0,4.4,.12,pearl).castShadow=false; pearl.scale.setScalar(1.45);}
+    mesh(new THREE.CylinderGeometry(.2,.2,5,16,1,true),new THREE.MeshBasicMaterial({color:0xd9c2ff,transparent:true,opacity:.16,depthWrite:false,side:THREE.DoubleSide}),0,4.4,.12,pearl).castShadow=false; pearl.scale.setScalar(.725);}
   arrows=new THREE.Group(); arrows.visible=false; scene.add(arrows);
   // lava particles for the eruption, and a group for trap flags
   {const LN=140,lg=new THREE.BufferGeometry(),lc=new Float32Array(LN*3); for(let i=0;i<LN;i++)lc.set(i%3?[1,.45,.05]:[1,.85,.2],i*3);
@@ -875,7 +875,7 @@ function setNum(n){if(n===numShown)return; numShown=n; const g=numC.getContext('
 function resize(){const w=window.innerWidth,h=window.innerHeight,px=1; R.setSize(w,h,false);
   cam.aspect=w/h; cam.fov=w<h?58:42; cam.updateProjectionMatrix(); if(MS){MS.cam.aspect=w/h; MS.cam.updateProjectionMatrix();}}
 function pearlSide(i){const n=NODES[i]; let best=[0,2.1],bd=-1;   // the clam sits beside its space, on whichever side is clearest of the path
-  for(let k=0;k<16;k++){const a=k/16*Math.PI*2, x=n.x+Math.sin(a)*2.5, z=n.z+Math.cos(a)*2.5; let d=1e9; NODES.forEach((q,j)=>{if(j!==i)d=Math.min(d,Math.hypot(q.x-x,q.z-z));}); if(PLAT)d=Math.min(d,Math.hypot(PLAT.x-x,PLAT.z-z)-1.6); d+=Math.cos(a)*.25; if(d>bd){bd=d; best=[x-n.x,z-n.z];}}
+  for(let k=0;k<16;k++){const a=k/16*Math.PI*2, x=n.x+Math.sin(a)*1.9, z=n.z+Math.cos(a)*1.9; let d=1e9; NODES.forEach((q,j)=>{if(j!==i)d=Math.min(d,Math.hypot(q.x-x,q.z-z));}); if(PLAT)d=Math.min(d,Math.hypot(PLAT.x-x,PLAT.z-z)-1.6); d+=Math.cos(a)*.25; if(d>bd){bd=d; best=[x-n.x,z-n.z];}}
   return best;}
 function placePearl(i,inst){const o=pearlSide(i); pearl.at=i; pearl.tx=NODES[i].x+o[0]; pearl.tz=NODES[i].z+o[1]; if(inst){pearl.position.x=pearl.tx; pearl.position.z=pearl.tz;}}
 function burst(x,z){const P=conf.geometry.attributes.position.array,Vv=conf.v;
