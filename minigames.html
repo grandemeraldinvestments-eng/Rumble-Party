@@ -1121,7 +1121,8 @@ function gpPoll(dt){
   if(!gp.on&&any){gp.on=true; gp.x=window.innerWidth/2; gp.y=window.innerHeight*.6;}
   if(gp.on){
     gp.idle=any?0:gp.idle+dt;
-    if(joy.on){cur.hidden=true; if(joy.id===null&&(ax||ay||dx||dy||gp.steer)){joy.x=ax||dx; joy.y=ay||dy; gp.steer=!!(ax||ay||dx||dy);} if(hit(0)||hit(1)||hit(2)||hit(3))joy.jump=true;}
+    if(joy.on&&joy.split){cur.hidden=true; const rx=dz(p.axes[2]||0), ry=dz(p.axes[3]||0); joy.gturn=ax; if(joy.id===null&&(rx||ry||dx||dy||gp.steer)){joy.x=rx||dx; joy.y=ry||dy; gp.steer=!!(rx||ry||dx||dy);}}   // right stick moves, left stick turns the view
+    else if(joy.on){cur.hidden=true; if(joy.id===null&&(ax||ay||dx||dy||gp.steer)){joy.x=ax||dx; joy.y=ay||dy; gp.steer=!!(ax||ay||dx||dy);} if(hit(0)||hit(1)||hit(2)||hit(3))joy.jump=true;}
     else{
       const W=window.innerWidth,H=window.innerHeight, fire=(el,type,x,y)=>{try{el.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:77,pointerType:'mouse',isPrimary:true,buttons:type==='pointerup'?0:1,clientX:x,clientY:y}));}catch(e){}};
       const list=[...document.querySelectorAll('button:not([disabled]),input,a[href]')].map(el=>{const r=el.getBoundingClientRect(); return{el,r,x:r.left+r.width/2,y:r.top+r.height/2,w:r.width};}).filter(q=>{if(!q.w||q.x<0||q.y<0||q.x>W||q.y>H)return false; const t=document.elementFromPoint(q.x,q.y); return t&&(t===q.el||q.el.contains(t));});
@@ -1543,16 +1544,18 @@ function miniStage(hint,pos,look){
 /* joystick: drag anywhere to steer, plus a jump button; arrow keys and space on a keyboard */
 const mapC={x:0,y:0}, mapBB={m:'',n:0,x:0,z:0,a:1,b:1};
 const joy={x:0,y:0,jump:false,id:null,ox:0,oy:0,keys:{},on:false};
-function pad(on,jump,label){$('#jumpBtn').hidden=!(on&&jump); $('#jumpBtn').textContent=label||'Jump'; $('#joy').hidden=true; joy.x=joy.y=0; joy.id=null; joy.jump=false; joy.on=on;}
+function pad(on,jump,label,split){$('#jumpBtn').hidden=!(on&&jump); $('#jumpBtn').textContent=label||'Jump'; $('#joy').hidden=true; joy.x=joy.y=0; joy.id=null; joy.jump=false; joy.on=on; joy.split=!!(on&&split); joy.lid=null; joy.dyaw=0; joy.turn=0; joy.gturn=0;}
 (function(){
   const el=$('#mini'), j=$('#joy'), knob=j.firstElementChild;
   el.addEventListener('pointerdown',e=>{if(!joy.on)return; if(e.target.id==='jumpBtn'){joy.jump=true; e.preventDefault(); return;}
+    if(joy.split&&e.clientX<window.innerWidth/2){if(joy.lid===null){joy.lid=e.pointerId; joy.lx=e.clientX;} e.preventDefault(); return;}   // left half: drag to look around
     if(joy.id!==null)return; joy.id=e.pointerId; joy.ox=e.clientX; joy.oy=e.clientY; j.hidden=false; j.style.left=e.clientX+'px'; j.style.top=e.clientY+'px'; knob.style.transform=''; e.preventDefault();});
-  el.addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return; let dx=(e.clientX-joy.ox)/46, dy=(e.clientY-joy.oy)/46; const l=Math.hypot(dx,dy); if(l>1){dx/=l; dy/=l;}
+  el.addEventListener('pointermove',e=>{if(e.pointerId===joy.lid&&joy.lid!==null){joy.dyaw+=(e.clientX-joy.lx)*.0085; joy.lx=e.clientX; return;} if(e.pointerId!==joy.id)return; let dx=(e.clientX-joy.ox)/46, dy=(e.clientY-joy.oy)/46; const l=Math.hypot(dx,dy); if(l>1){dx/=l; dy/=l;}
     joy.x=dx; joy.y=dy; knob.style.transform=`translate(${dx*32}px,${dy*32}px)`;});
-  const up=e=>{if(e.pointerId!==joy.id)return; joy.id=null; joy.x=joy.y=0; j.hidden=true;};
+  const up=e=>{if(e.pointerId===joy.lid){joy.lid=null; return;} if(e.pointerId!==joy.id)return; joy.id=null; joy.x=joy.y=0; j.hidden=true;};
   el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up);
   const key=(e,d)=>{joy.keys[e.key]=d; if(!joy.on)return; if(d&&e.key===' ')joy.jump=true; const k=joy.keys;
+    if(joy.split){joy.turn=(k.ArrowRight||k.e?1:0)-(k.ArrowLeft||k.q?1:0); if(joy.id===null){joy.x=(k.d?1:0)-(k.a?1:0); joy.y=(k.ArrowDown||k.s?1:0)-(k.ArrowUp||k.w?1:0);} return;}   // keyboard: W A S D or up/down move, left/right arrows turn
     if(joy.id===null){joy.x=(k.ArrowRight||k.d?1:0)-(k.ArrowLeft||k.a?1:0); joy.y=(k.ArrowDown||k.s?1:0)-(k.ArrowUp||k.w?1:0);}};
   window.addEventListener('keydown',e=>key(e,true)); window.addEventListener('keyup',e=>key(e,false));
 })();
@@ -1593,7 +1596,7 @@ function arena(G){return async function(ctx){
   const avs=V.p.map((p,k)=>{const a=k/n*6.283+.6, s0=G.start?G.start(k,n,st):[Math.sin(a)*(G.ring||1.5),Math.cos(a)*(G.ring||1.5)],
     av={k,x:s0[0],z:s0[1],y:0,vy:0,vx:0,vz:0,alive:true,gone:0,fell:false,done:false,score:0,face:0,moving:false,kx:0,kz:0,bump:0,dash:0,cd:0,spd:0,ly:0,dy:0,lives:G.lives||1,inv:0,col:CAST[p.i].hex,mine:k===ctx.k,cpu:p.cpu&&net.host,ch:makeChar(p.i,sc),ai:{t:Math.random(),dx:0,dz:0,jump:false,armed:false}};
     av.ch.position.set(av.x,0,av.z); if(G.alone&&!av.mine)av.ch.visible=false; return av;});
-  const me=avs[ctx.k]; st.avs=avs; net.av={}; net.buf={}; pad(true,G.jump||G.dash,G.dash?'Dash':'Jump');
+  const me=avs[ctx.k]; st.avs=avs; window.__arenaMe=me; net.av={}; net.buf={}; pad(true,G.jump||G.dash,G.dash?'Dash':'Jump',G.split);
   const hint=s=>{$('#hint').textContent=s;}, lives=()=>{if(G.lives)hint('Lives: '+me.lives);}; lives();
   let sb=null, sbT=0; if(G.board){sb=document.createElement('div'); sb.className='sboard'; $('#hint').parentNode.appendChild(sb);}
   const out=(av,t,fell)=>{av.alive=false; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); hint(fell?'You fell off!':'You are out!');}};
@@ -1642,7 +1645,7 @@ function arena(G){return async function(ctx){
       if(av.alive){ch.position.set(av.x,av.y,av.z); ch.run=av.moving?1:0; ch.air=av.y>0; ch.fig.rotation.y=av.face; ch.visible=!(av.inv>0&&Math.floor(t*12)%2);}
       else if(ch.visible){av.gone-=dt; ch.run=0; ch.air=true; if(av.fell){ch.position.y-=dt*9; ch.fig.rotation.x+=dt*6;} else{ch.scale.setScalar(Math.max(.01,1.15*av.gone/.6)); ch.fig.rotation.y+=dt*14;} if(av.gone<=0)ch.visible=false;}
     }
-    if(G.view)G.view(m.cam,me,dt);
+    if(G.view)G.view(m.cam,me,dt,st);
     pubT-=dt;
     if(pubT<=0&&net.nr){pubT=.07; const pk=a=>[r2(a.x),r2(a.z),r2(a.y),a.alive?1:0,r2(a.score)], patch={a:pk(me)};
       if(net.host&&!G.alone){patch.cpu={}; avs.forEach(a=>{if(a.cpu)patch.cpu[a.k]=pk(a);});} net.nr.presence(patch).catch(()=>{});}
@@ -1784,7 +1787,7 @@ const SUMO={hint:'Stay out of the red',surv:true,max:45,dash:true,shove:1.2,ring
     else{ai.dx=(c[0]-av.x)/d*.4; ai.dz=(c[1]-av.z)/d*.4;}}};
 
 /* Hedge Maze: everyone gets the same random maze but runs it alone. First out of the far side wins; one minute */
-const MAZE={hint:'Up to walk, left and right to turn',max:60,alone:true,left:true,noEdge:true,speed:.92,cam:[15.5,4.2,.25],fit:7.2,deck:{k:'s',h:9},
+const MAZE={hint:'Right side: move. Left side: look',max:60,split:true,alone:true,left:true,noEdge:true,speed:.92,cam:[15.5,4.2,.25],fit:7.2,deck:{k:'s',h:9},
   N:11,S:1.15,
   draw(){},
   init(sc,rng){const N=MAZE.N,S=MAZE.S,half=N*S/2, open=new Uint8Array(N*N), seen=new Uint8Array(N*N), D=[[1,0,1,4],[0,1,2,8],[-1,0,4,1],[0,-1,8,2]];
@@ -1801,17 +1804,22 @@ const MAZE={hint:'Up to walk, left and right to turn',max:60,alone:true,left:tru
     sc.fog=new THREE.Fog(0xcfeeff,2.5,13);
     MAZE.h0=(open[sx+N*(N-1)]&8)?0:(open[sx+N*(N-1)]&1)?Math.PI/2:-Math.PI/2;
     mesh(new THREE.BoxGeometry(N*S+1.2,.4,N*S+1.2),0xc9b47a,0,-.21,0,sc).castShadow=false;
-    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,2.6,1),new THREE.MeshLambertMaterial({map:(()=>{const q=tex((g,s)=>{g.fillStyle='#2f8f5b'; g.fillRect(0,0,s,s); let r=7; const rnd=()=>{r=(r*1103515245+12345)&0x7fffffff; return r/0x7fffffff;}; for(let i=0;i<150;i++){g.fillStyle=['#267a4c','#3aa56b','#23683f','#45b578'][i%4]; const x=rnd()*s,y=rnd()*s; g.beginPath(); g.ellipse(x,y,2.6,1.5,rnd()*3,0,6.3); g.fill();} g.fillStyle='rgba(15,60,35,.55)'; g.fillRect(0,s-5,s,5); g.fillStyle='rgba(120,220,150,.5)'; g.fillRect(0,0,s,3);}); q.wrapS=THREE.RepeatWrapping; q.repeat.set(2,1); return q;})()}),walls.length), o=new THREE.Object3D(); walls.forEach((w,k)=>{o.position.set(w[0],1.3,w[1]); o.scale.set(w[2]*2,1,w[3]*2); o.updateMatrix(); im.setMatrixAt(k,o.matrix);}); im.castShadow=false; sc.add(im);
+    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,3.2,1),new THREE.MeshLambertMaterial({map:(()=>{const q=tex((g,s)=>{g.fillStyle='#2f8f5b'; g.fillRect(0,0,s,s); let r=7; const rnd=()=>{r=(r*1103515245+12345)&0x7fffffff; return r/0x7fffffff;}; for(let i=0;i<150;i++){g.fillStyle=['#267a4c','#3aa56b','#23683f','#45b578'][i%4]; const x=rnd()*s,y=rnd()*s; g.beginPath(); g.ellipse(x,y,2.6,1.5,rnd()*3,0,6.3); g.fill();} g.fillStyle='rgba(15,60,35,.55)'; g.fillRect(0,s-5,s,5); g.fillStyle='rgba(120,220,150,.5)'; g.fillRect(0,0,s,3);}); q.wrapS=q.wrapT=THREE.RepeatWrapping; q.repeat.set(3,3); return q;})()}),walls.length), o=new THREE.Object3D(); walls.forEach((w,k)=>{o.position.set(w[0],1.6,w[1]); o.scale.set(w[2]*2,1,w[3]*2); o.updateMatrix(); im.setMatrixAt(k,o.matrix);}); im.castShadow=false; sc.add(im);
     flatM(mesh(new THREE.PlaneGeometry(S-.2,S-.2),new THREE.MeshBasicMaterial({color:0x4fa8ff}),X(sx+.5),.01,X(N-.5),sc));
     flatM(mesh(new THREE.PlaneGeometry(S*1.6,1.3),new THREE.MeshBasicMaterial({color:0x35c98a}),X(ex+.5),.01,-half-.75,sc));
     const fl=mesh(new THREE.CylinderGeometry(.05,.05,1.8,8),0xffffff,X(ex+.5)+.6,.9,-half-.9,sc); mesh(new THREE.BoxGeometry(.7,.42,.04),0x35c98a,.36,.62,0,fl);
     return{walls,half,start:[X(sx+.5),X(N-.5)],len:dist[ex]+1};},
   start(k,n,st){return st.start;},
-  // you are inside the maze, looking through your character's eyes; the hedges are too tall to see over
-  // up walks forward, down backs up, left and right turn
-  steer(av,ix,iz,dt){if(av.head==null)av.head=MAZE.h0||0; av.head+=ix*2.7*dt; const f=-iz, dx=Math.sin(av.head), dz=-Math.cos(av.head); av.look=[dx,dz]; return[dx*f,dz*f];},
-  view(cam,me){if(!cam.fp){cam.fp=true; cam.fov=window.innerWidth<window.innerHeight?82:62; cam.near=.04; cam.updateProjectionMatrix();}
-    const h=MAZE.h0||0, d=me.look||[Math.sin(h),-Math.cos(h)]; me.ch.visible=false; cam.position.set(me.x,1.15,me.z); cam.lookAt(me.x+d[0],1.08,me.z+d[1]);},
+  // third person: the camera sits just behind your character, inside the maze, and the hedges are too tall to see over.
+  // The right half of the screen (or right stick) moves you; the left half (or left stick) turns the view
+  steer(av,ix,iz,dt){if(av.head==null)av.head=MAZE.h0||0; av.head+=joy.dyaw+(joy.turn+joy.gturn)*2.5*dt; joy.dyaw=0; const f=-iz, dx=Math.sin(av.head), dz=-Math.cos(av.head); return[dx*f+(-dz)*ix,dz*f+dx*ix];},
+  blocked(st,x,z,r){for(const w of st.walls)if(Math.abs(x-w[0])<w[2]+r&&Math.abs(z-w[1])<w[3]+r)return true; return false;},
+  view(cam,me,dt,st){if(!cam.tp){cam.tp=true; cam.fov=window.innerWidth<window.innerHeight?80:60; cam.near=.05; cam.updateProjectionMatrix(); cam.dd=.4; me.ch.scale.setScalar(.68);}   // a smaller character, so it does not fill the view in a narrow corridor
+    const h=me.head==null?(MAZE.h0||0):me.head, dx=Math.sin(h), dz=-Math.cos(h);
+    let d=.3; for(;d<1.35;d+=.1)if(MAZE.blocked(st,me.x-dx*(d+.12),me.z-dz*(d+.12),.2))break;   // back off behind the player until a hedge is in the way
+    cam.dd+=(d-cam.dd)*Math.min(1,dt*(d<cam.dd?30:6)); const q=cam.dd;
+    cam.position.set(me.x-dx*q,2.5,me.z-dz*q); cam.lookAt(me.x+dx*1.25,.55,me.z+dz*1.25);   // above and behind, but still below the top of the hedges
+    if(!me.moving)me.face=Math.atan2(dx,dz);},
   step(){},
   move(av,st){const R=.3, x1=av.x, z1=av.z, x0=av.px==null?x1:av.px, z0=av.pz==null?z1:av.pz, n=Math.max(1,Math.ceil(Math.hypot(x1-x0,z1-z0)/.18)); av.x=x0; av.z=z0;   // small steps, so a slow frame cannot carry you through a hedge
     for(let i=0;i<n;i++){av.x+=(x1-x0)/n; av.z+=(z1-z0)/n; MAZE.push(av,st,R);} av.px=av.x; av.pz=av.z;},
@@ -1885,7 +1893,7 @@ const GAMES=[
  {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:36,how:'Everyone shares one deck. Coconuts are falling. Watch for the shadows and keep out from under them.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
  {name:'Spotlight',unit:'pts',dec:true,arena:true,max:96,how:'Ninety seconds. Stand in the yellow spotlight to score. Every 30 seconds a new yellow light arrives and the old one turns red, which takes points away just as fast. Where red and yellow overlap is neutral.',cpu:()=>rand(100,400)/10,play:arena(SPOT)},
  {name:'Sumo Shove',unit:'sec',surv:true,arena:true,max:51,how:'Player against player. The red closes in around two safe circles, then the circles start to roam. Touch the red and you are out. Shove the others into it, and tap Dash for a charge that hits much harder.',cpu:()=>rand(60,300)/10,play:arena(SUMO)},
- {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You are inside it and cannot see over the hedges. Push up to walk forward and left or right to turn. The exit is somewhere on the far side, marked in green. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
+ {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You are inside it and cannot see over the hedges. Drag on the right side of the screen to move, and on the left side to look around. With a controller the right stick moves and the left stick looks. The exit is somewhere on the far side, marked in green. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
  {name:'Paint Fight',unit:'tiles',arena:true,max:36,how:'Player against player on a big square with a hole in the middle. Every tile you walk over turns your colour, including tiles the others already painted. Most tiles when time runs out wins.',cpu:()=>rand(20,60),play:arena(PAINT)},
  {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},

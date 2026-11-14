@@ -222,6 +222,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Leafy hedge texture, tiled floor and a light haze give a sense of depth. You start facing an open corridor.
 - In landscape, Map and Hide are always in the right corner of the action bar, with the action buttons between them and the text.
 
+### 31. Hedge Maze in third person with split controls
+- The camera sits above and behind the character, inside the maze and below the top of the hedges, and moves in closer when a hedge is behind you.
+- Touch: drag on the right half of the screen to move, drag on the left half to turn the view.
+- Controller: right stick moves, left stick turns the view. Keyboard: W A S D or up/down to move, left/right arrows to turn.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
