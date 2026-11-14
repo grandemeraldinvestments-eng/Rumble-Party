@@ -1487,7 +1487,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=43; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=44; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1948,7 +1948,7 @@ const GHOST={hint:'Run from the ghost',surv:true,max:60,dark:true,tight:true,cam
   draw(sc,sh){deckDraw(sc,sh,new THREE.MeshPhongMaterial({color:0xb08a5e,shininess:0}),new THREE.MeshPhongMaterial({color:0x6b5335,shininess:0}));},   // lit per pixel, so only the torch beams show the floor; the edge is not marked
   // sideways the deck is zoomed to the full width of the screen, and the camera slides up and down the deck with your character
   view(cam,me,dt,st){const W=window.innerWidth,H=window.innerHeight, b=st.camBase, ox=b.p[0]-b.l[0], oy=b.p[1]-b.l[1], oz=b.p[2]-b.l[2], ol=Math.hypot(ox,oy,oz), tv=Math.tan(cam.fov*Math.PI/360), hh=GHOST.deck.h,
-      D=(hh+.15)/(tv*Math.max(W,H)/Math.min(W,H))*1.15,   // the same close view both ways round, with you kept in the middle of the screen
+      D=(hh+.15)*1.15*H/(tv*Math.max(W,H)),   // the same scale both ways round (characters the same size on screen), with you kept in the middle
       tz=me.z, tx=me.x, k=Math.min(1,dt*5);
     cam.cz=cam.cz==null?tz:cam.cz+(tz-cam.cz)*k; cam.cx=cam.cx==null?tx:cam.cx+(tx-cam.cx)*k; cam.position.set(cam.cx,oy/ol*D,cam.cz+oz/ol*D); cam.lookAt(cam.cx,0,cam.cz);},
   init(sc,rng,sh,n){const g=new THREE.Group(); sc.add(g); const gm=new THREE.MeshPhongMaterial({color:0xf2f6ff,shininess:0}), body=mesh(new THREE.SphereGeometry(.5,18,14),gm,0,.75,0,g); body.scale.set(1,1.3,1); body.castShadow=false;   // no glow: you only see the ghost when a torch is on it

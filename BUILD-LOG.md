@@ -279,6 +279,10 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Ghost Runner: the camera now keeps your character in the middle of the screen. Landscape is zoomed out about 15%, and portrait uses the same close view.
 - Hedge Maze: turning the view is 20% faster (touch stick, controller stick and keys).
 
+## Build 44
+
+- Ghost Runner: portrait now uses the same zoom level as landscape, so characters are the same size on screen both ways round.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
