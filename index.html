@@ -279,9 +279,10 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
   .chip{padding:3px 4px; border-width:2px; box-shadow:2px 2px 0 var(--ink)}
   .chip .nm{font-size:.72rem; gap:3px} .chip .face{width:20px; height:20px; border-width:1px}
   .chip .st{font-size:.82rem; gap:2px; margin-top:2px} .chip .bag{font-size:.6rem; min-height:0; margin-top:1px}
-  .panel{align-self:center; max-width:min(100%,940px); padding:4px 8px 7px; gap:0 8px; box-shadow:3px 3px 0 var(--ink); grid-template-columns:minmax(0,1fr) auto auto auto minmax(0,auto)}
+  .panel{align-self:center; max-width:min(100%,940px); padding:4px 8px 7px; gap:0 8px; box-shadow:3px 3px 0 var(--ink); grid-template-columns:minmax(0,1fr) minmax(0,auto) auto auto auto}
+  .panel #centerBtn{grid-column:3} .panel #mapBtn{grid-column:4} .panel #minBtn{grid-column:5}
   .panel .msg{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
-  .panel .acts{grid-column:5; grid-row:1 / 3; margin-top:0; flex-wrap:nowrap; align-items:stretch; min-width:min(40vw,360px)}
+  .panel .acts{grid-column:2; grid-row:1 / 3; margin-top:0; flex-wrap:nowrap; align-items:stretch; min-width:min(40vw,360px)}
   .panel .who{font-size:.92rem} .panel .msg{min-height:0; font-size:.84rem; line-height:1.2}
   .panel .acts{min-height:44px; gap:6px} .panel .acts .btn{padding:6px 10px; font-size:.92rem; flex:1 1 0}
   .card{max-width:min(100%,720px); padding:12px 14px; gap:9px}
@@ -1606,7 +1607,7 @@ function arena(G){return async function(ctx){
       if(av.mine||av.cpu){
         if(av.alive&&!av.done){
           let ix=0,iz=0,j=false;
-          if(av.mine){ix=joy.x; iz=joy.y; j=joy.jump; joy.jump=false;}
+          if(av.mine){ix=joy.x; iz=joy.y; j=joy.jump; joy.jump=false; if(G.steer){const q=G.steer(av,ix,iz,dt); ix=q[0]; iz=q[1];}}
           else{G.ai(av,st,t,dt); ix=av.ai.dx; iz=av.ai.dz; j=av.ai.jump; av.ai.jump=false;
             const e=sh.edge(av.x,av.z), lim=G.edgeAI||.8; if(!G.noEdge&&e[0]<lim){const pw=1.6*(1+(lim-e[0])/lim); ix+=e[1]*pw; iz+=e[2]*pw;}}
           const l=Math.hypot(ix,iz); if(l>1){ix/=l; iz/=l;}
@@ -1783,7 +1784,7 @@ const SUMO={hint:'Stay out of the red',surv:true,max:45,dash:true,shove:1.2,ring
     else{ai.dx=(c[0]-av.x)/d*.4; ai.dz=(c[1]-av.z)/d*.4;}}};
 
 /* Hedge Maze: everyone gets the same random maze but runs it alone. First out of the far side wins; one minute */
-const MAZE={hint:'Find the way out',max:60,alone:true,left:true,noEdge:true,speed:.92,cam:[15.5,4.2,.25],fit:7.2,deck:{k:'s',h:9},
+const MAZE={hint:'Up to walk, left and right to turn',max:60,alone:true,left:true,noEdge:true,speed:.92,cam:[15.5,4.2,.25],fit:7.2,deck:{k:'s',h:9},
   N:11,S:1.15,
   draw(){},
   init(sc,rng){const N=MAZE.N,S=MAZE.S,half=N*S/2, open=new Uint8Array(N*N), seen=new Uint8Array(N*N), D=[[1,0,1,4],[0,1,2,8],[-1,0,4,1],[0,-1,8,2]];
@@ -1795,17 +1796,22 @@ const MAZE={hint:'Find the way out',max:60,alone:true,left:true,noEdge:true,spee
     for(let i=0;i<=N;i++)for(let j=0;j<N;j++){const has=i===0||i===N||!(open[i-1+N*j]&1); if(has)walls.push([X(i),X(j+.5),T,S/2+T]);}
     // shortest route length, used for the computer players' times
     const dist=new Int16Array(N*N).fill(-1), q=[sx+N*(N-1)]; dist[q[0]]=0; for(let h=0;h<q.length;h++){const c=q[h],i=c%N,j=(c-i)/N; for(const d of D)if(open[c]&d[2]){const nc=i+d[0]+N*(j+d[1]); if(dist[nc]<0){dist[nc]=dist[c]+1; q.push(nc);}}}
-    flatM(mesh(new THREE.PlaneGeometry(N*S+.5,N*S+.5),new THREE.MeshLambertMaterial({color:0xe9d9a6}),0,0,0,sc));
+    const ft=tex((g,s)=>{g.fillStyle='#e9d9a6'; g.fillRect(0,0,s,s); g.strokeStyle='#cdb87a'; g.lineWidth=2.5; g.strokeRect(0,0,s,s); g.fillStyle='#dcc98f'; for(let i=0;i<14;i++)g.fillRect((i*37)%s,(i*53)%s,3,2);}); ft.wrapS=ft.wrapT=THREE.RepeatWrapping; ft.repeat.set(N*2,N*2);
+    flatM(mesh(new THREE.PlaneGeometry(N*S+.5,N*S+.5),new THREE.MeshLambertMaterial({map:ft}),0,0,0,sc));
+    sc.fog=new THREE.Fog(0xcfeeff,2.5,13);
+    MAZE.h0=(open[sx+N*(N-1)]&8)?0:(open[sx+N*(N-1)]&1)?Math.PI/2:-Math.PI/2;
     mesh(new THREE.BoxGeometry(N*S+1.2,.4,N*S+1.2),0xc9b47a,0,-.21,0,sc).castShadow=false;
-    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,.9,1),new THREE.MeshLambertMaterial({color:0x2f8f5b}),walls.length), o=new THREE.Object3D(); walls.forEach((w,k)=>{o.position.set(w[0],.45,w[1]); o.scale.set(w[2]*2,1,w[3]*2); o.updateMatrix(); im.setMatrixAt(k,o.matrix);}); im.castShadow=false; sc.add(im);
+    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,2.6,1),new THREE.MeshLambertMaterial({map:(()=>{const q=tex((g,s)=>{g.fillStyle='#2f8f5b'; g.fillRect(0,0,s,s); let r=7; const rnd=()=>{r=(r*1103515245+12345)&0x7fffffff; return r/0x7fffffff;}; for(let i=0;i<150;i++){g.fillStyle=['#267a4c','#3aa56b','#23683f','#45b578'][i%4]; const x=rnd()*s,y=rnd()*s; g.beginPath(); g.ellipse(x,y,2.6,1.5,rnd()*3,0,6.3); g.fill();} g.fillStyle='rgba(15,60,35,.55)'; g.fillRect(0,s-5,s,5); g.fillStyle='rgba(120,220,150,.5)'; g.fillRect(0,0,s,3);}); q.wrapS=THREE.RepeatWrapping; q.repeat.set(2,1); return q;})()}),walls.length), o=new THREE.Object3D(); walls.forEach((w,k)=>{o.position.set(w[0],1.3,w[1]); o.scale.set(w[2]*2,1,w[3]*2); o.updateMatrix(); im.setMatrixAt(k,o.matrix);}); im.castShadow=false; sc.add(im);
     flatM(mesh(new THREE.PlaneGeometry(S-.2,S-.2),new THREE.MeshBasicMaterial({color:0x4fa8ff}),X(sx+.5),.01,X(N-.5),sc));
     flatM(mesh(new THREE.PlaneGeometry(S*1.6,1.3),new THREE.MeshBasicMaterial({color:0x35c98a}),X(ex+.5),.01,-half-.75,sc));
     const fl=mesh(new THREE.CylinderGeometry(.05,.05,1.8,8),0xffffff,X(ex+.5)+.6,.9,-half-.9,sc); mesh(new THREE.BoxGeometry(.7,.42,.04),0x35c98a,.36,.62,0,fl);
     return{walls,half,start:[X(sx+.5),X(N-.5)],len:dist[ex]+1};},
   start(k,n,st){return st.start;},
-  // no overview: the camera rides just above your own character, so you only see the hedges around you
-  view(cam,me,dt){const tall=window.innerWidth<window.innerHeight, hy=tall?8.2:5.6, f=cam.mz==null?1:Math.min(1,dt*8); cam.mx=(cam.mx==null?me.x:cam.mx)+(me.x-(cam.mx==null?me.x:cam.mx))*f; cam.mz=(cam.mz==null?me.z:cam.mz)+(me.z-(cam.mz==null?me.z:cam.mz))*f;
-    cam.position.set(cam.mx,hy,cam.mz+hy*.3); cam.lookAt(cam.mx,.3,cam.mz-.5);},
+  // you are inside the maze, looking through your character's eyes; the hedges are too tall to see over
+  // up walks forward, down backs up, left and right turn
+  steer(av,ix,iz,dt){if(av.head==null)av.head=MAZE.h0||0; av.head+=ix*2.7*dt; const f=-iz, dx=Math.sin(av.head), dz=-Math.cos(av.head); av.look=[dx,dz]; return[dx*f,dz*f];},
+  view(cam,me){if(!cam.fp){cam.fp=true; cam.fov=window.innerWidth<window.innerHeight?82:62; cam.near=.04; cam.updateProjectionMatrix();}
+    const h=MAZE.h0||0, d=me.look||[Math.sin(h),-Math.cos(h)]; me.ch.visible=false; cam.position.set(me.x,1.15,me.z); cam.lookAt(me.x+d[0],1.08,me.z+d[1]);},
   step(){},
   move(av,st){const R=.3, x1=av.x, z1=av.z, x0=av.px==null?x1:av.px, z0=av.pz==null?z1:av.pz, n=Math.max(1,Math.ceil(Math.hypot(x1-x0,z1-z0)/.18)); av.x=x0; av.z=z0;   // small steps, so a slow frame cannot carry you through a hedge
     for(let i=0;i<n;i++){av.x+=(x1-x0)/n; av.z+=(z1-z0)/n; MAZE.push(av,st,R);} av.px=av.x; av.pz=av.z;},
@@ -1879,7 +1885,7 @@ const GAMES=[
  {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:36,how:'Everyone shares one deck. Coconuts are falling. Watch for the shadows and keep out from under them.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
  {name:'Spotlight',unit:'pts',dec:true,arena:true,max:96,how:'Ninety seconds. Stand in the yellow spotlight to score. Every 30 seconds a new yellow light arrives and the old one turns red, which takes points away just as fast. Where red and yellow overlap is neutral.',cpu:()=>rand(100,400)/10,play:arena(SPOT)},
  {name:'Sumo Shove',unit:'sec',surv:true,arena:true,max:51,how:'Player against player. The red closes in around two safe circles, then the circles start to roam. Touch the red and you are out. Shove the others into it, and tap Dash for a charge that hits much harder.',cpu:()=>rand(60,300)/10,play:arena(SUMO)},
- {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You only see the hedges around you, so you have to find the exit yourself. It is somewhere on the far side. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
+ {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You are inside it and cannot see over the hedges. Push up to walk forward and left or right to turn. The exit is somewhere on the far side, marked in green. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
  {name:'Paint Fight',unit:'tiles',arena:true,max:36,how:'Player against player on a big square with a hole in the middle. Every tile you walk over turns your colour, including tiles the others already painted. Most tiles when time runs out wins.',cpu:()=>rand(20,60),play:arena(PAINT)},
  {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},

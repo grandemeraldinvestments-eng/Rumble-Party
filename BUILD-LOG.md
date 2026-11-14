@@ -216,6 +216,12 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Action window: the player name sits top left with the text directly under it, and Map and Hide to the right. In portrait the window is about 22% shorter; in landscape the text has the full width up to the Map button.
 - Ready screen: player names are two per row (three rows for six players) and the rules no longer overlap the title.
 
+### 30. Hedge Maze from the inside
+- Hedge Maze is played through the character's eyes. The hedges are too tall to see over, so nothing beyond the corridor you are in is visible.
+- Controls in the maze: push up to walk forward, down to back up, left and right to turn.
+- Leafy hedge texture, tiled floor and a light haze give a sense of depth. You start facing an open corridor.
+- In landscape, Map and Hide are always in the right corner of the action bar, with the action buttons between them and the text.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
