@@ -1492,7 +1492,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=53; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=54; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1873,12 +1873,13 @@ const MAZE={hint:'Left stick: look. Right stick: move',max:60,split:true,alone:t
   // The right half of the screen (or right stick) moves you; the left half (or left stick) turns the view
   steer(av,ix,iz,dt){if(av.head==null)av.head=MAZE.h0||0; av.head+=(joy.turn+joy.gturn+joy.sturn)*3.75*dt; const f=-iz, dx=Math.sin(av.head), dz=-Math.cos(av.head); return[dx*f+(-dz)*ix,dz*f+dx*ix];},
   blocked(st,x,z,r){for(const w of st.walls)if(Math.abs(x-w[0])<w[2]+r&&Math.abs(z-w[1])<w[3]+r)return true; return false;},
-  view(cam,me,dt,st){if(!cam.tp){cam.tp=true; cam.fov=window.innerWidth<window.innerHeight?80:60; cam.near=.05; cam.updateProjectionMatrix(); cam.dd=.4; me.ch.scale.setScalar(.85);}   // a smaller character, so it does not fill the view in a narrow corridor
-    const h=me.head==null?(MAZE.h0||0):me.head, dx=Math.sin(h), dz=-Math.cos(h);
-    let d=.3; for(;d<2.9;d+=.1)if(MAZE.blocked(st,me.x-dx*(d+.12),me.z-dz*(d+.12),.2))break;   // back off behind the player until a hedge is in the way
-    cam.dd+=(d-cam.dd)*Math.min(1,dt*(d<cam.dd?30:6)); const q=cam.dd, rx=-dz, rz=dx;
-    let o=.5; for(;o>0;o-=.1)if(!MAZE.blocked(st,me.x-dx*q+rx*o,me.z-dz*q+rz*o,.2))break; cam.oo=(cam.oo||0)+(Math.max(0,o)-(cam.oo||0))*Math.min(1,dt*8);   // look over the right shoulder when there is room
-    cam.position.set(me.x-dx*q+rx*cam.oo,1.45,me.z-dz*q+rz*cam.oo); cam.lookAt(me.x+dx*3+rx*cam.oo*.4,1.05,me.z+dz*3+rz*cam.oo*.4);   // near eye level, looking along the corridor
+  // first person: the camera is your eyes, and your own character is hidden. A marker in your colour is dropped every step or so,
+  // so you can tell which corridors you have already been down
+  view(cam,me,dt,st){if(!cam.tp){cam.tp=true; cam.near=.05; st.mk=[]; st.mg=new THREE.CylinderGeometry(.17,.17,.04,10); st.mm=new THREE.MeshBasicMaterial({color:me.col});}
+    const fov=window.innerWidth<window.innerHeight?82:66; if(cam.fov!==fov){cam.fov=fov; cam.updateProjectionMatrix();}
+    const h=me.head==null?(MAZE.h0||0):me.head, dx=Math.sin(h), dz=-Math.cos(h); me.ch.visible=false;
+    cam.position.set(me.x,1.4,me.z); cam.lookAt(me.x+dx*3,1.3,me.z+dz*3);
+    if(st.mk.length<500&&!st.mk.some(q=>Math.hypot(q[0]-me.x,q[1]-me.z)<.95)){st.mk.push([me.x,me.z]); mesh(st.mg,st.mm,me.x,.03,me.z,st.sc||cam.parent||MS.scene).castShadow=false;}
     if(!me.moving)me.face=Math.atan2(dx,dz);},
   step(){},
   move(av,st){const R=.3, x1=av.x, z1=av.z, x0=av.px==null?x1:av.px, z0=av.pz==null?z1:av.pz, n=Math.max(1,Math.ceil(Math.hypot(x1-x0,z1-z0)/.18)); av.x=x0; av.z=z0;   // small steps, so a slow frame cannot carry you through a hedge
@@ -2074,7 +2075,7 @@ const GAMES=[
  {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:36,how:'Everyone shares one deck. Small coconuts are falling, and plenty of them. Watch for the shadows and keep out from under them. You also have a stun gun with 3 shots: tap Shoot to fire the way you are facing, and a hit freezes that player for over a second.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
  {name:'Spotlight',unit:'pts',dec:true,arena:true,max:96,how:'Ninety seconds. Stand in the yellow spotlight to score. Every 30 seconds a new yellow light arrives and the old one turns red, which takes points away just as fast. Where red and yellow overlap is neutral.',cpu:()=>rand(100,400)/10,play:arena(SPOT)},
  {name:'Sumo Shove',unit:'sec',surv:true,arena:true,max:51,how:'Player against player. The red closes in around two safe circles, then the circles start to roam. Touch the red and you are out. Shove the others into it, and tap Dash for a charge that hits much harder. You only get 5 dashes, and each one ends with a small kick backwards.',cpu:()=>rand(60,300)/10,play:arena(SUMO)},
- {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You are inside it and cannot see over the hedges. Use the two on-screen sticks: the left one turns your view and the right one moves you. A controller works the same way. The exit is somewhere on the far side, marked in green. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
+ {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You see it through your own eyes and cannot see over the hedges. Markers in your colour are dropped behind you as you walk, so you can tell where you have already been. Use the two on-screen sticks: the left one turns your view and the right one moves you. A controller works the same way. The exit is somewhere on the far side, marked in green. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
  {name:'Paint Fight',unit:'tiles',arena:true,max:36,how:'Player against player on a big square with a hole in the middle. Every tile you walk over turns your colour, including tiles the others already painted. Every 10 seconds a colour bomb lands somewhere: walk over it to pick it up, then tap Bomb to paint a 4 by 4 block of tiles around you. Most tiles when time runs out wins.',cpu:()=>rand(20,60),play:arena(PAINT)},
  {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. You have 5 jumps; when everyone has used theirs, everyone gets 5 more. You also have one Stun: it freezes the nearest player for a moment, but you cannot jump until it wears off, and it is never topped up. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},

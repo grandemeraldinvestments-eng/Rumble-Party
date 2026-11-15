@@ -333,6 +333,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 
 - Coconut Drop: the stun now lasts 1.4 seconds, twice as long as before.
 
+## Build 54
+
+- Hedge Maze: first-person view again. The camera is your character's eyes and your own character is hidden.
+- Hedge Maze: a marker in your colour is dropped on the floor every step or so, so you can backtrack and see which corridors you have already walked.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
