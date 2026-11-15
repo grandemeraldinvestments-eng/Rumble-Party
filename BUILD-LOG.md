@@ -353,6 +353,15 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Award ceremony: the spotlight now searches for 2.5 seconds longer before each winner is shown, with a drum roll that builds up to the reveal.
 - Crab Scramble: crabs are 10% slower.
 
+## Build 57
+
+- New mini game, Conveyor Chaos: a race across eight moving belts that run left, right, back or forward and change direction every few seconds (they flash before they change). Carried off the side and you go back to the start.
+- New mini game, Lantern Match: six coloured lanterns light up in a sequence; walk over them in the same order. One more is added each round. The wrong lantern, or running out of time, puts you out.
+- Hedge Maze: seen from above, following your character, but only the part your character can see is shown. Anything round a corner or behind a hedge is blacked out. One stick again; trail markers kept.
+- Crab Scramble: crabs 10% slower again and 10% fewer of them.
+- Ready screen: a live preview of the game, played by computer players, runs behind the ready panel. The written rules are behind a Rules button.
+- Every mini game now opens with a big 3, 2, 1, GO! countdown.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
