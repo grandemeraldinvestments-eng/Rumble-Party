@@ -367,6 +367,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Hedge Maze: the unseen areas are now one soft-edged sheet of darkness that fades in and out smoothly and follows your character's real line of sight, instead of switching whole squares on and off. Your view also fades with distance.
 - Hedge Maze: the exit flag no longer shows above the darkness before you can see the exit.
 
+## Build 59
+
+- Conveyor Chaos: the course is three times as long (24 belts instead of 8) and the camera follows you down it. The time limit is now 100 seconds.
+- Conveyor Chaos: belt direction changes are staggered, so they no longer change in bunches early on.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

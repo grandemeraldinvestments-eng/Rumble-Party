@@ -1532,7 +1532,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=58; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=59; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -2189,17 +2189,18 @@ const GHOST={hint:'Run from the ghost',surv:true,max:80,dark:true,tight:true,cam
 /* Conveyor Chaos: a race across a deck of moving belts. Each belt runs left, right, back towards the start or on towards the finish,
    and changes direction every few seconds (it flashes white just before). Get carried off the side and you start again.
    The belts and their changes come from the shared seed, so every phone has the same course */
-const BELT={hint:'Race to the far side',max:40,left:true,ring:2,speed:.62,deck:{k:'s',h:7},NB:8,V:{L:[-3.4,0],R:[3.4,0],B:[0,2.9],F:[0,-3]},
+const BELT={hint:'Race to the far side',max:100,left:true,ring:2,speed:.62,noEdge:true,fit:7,deck:{k:'s',h:60},W:7,NB:24,BD:1.3,V:{L:[-3.4,0],R:[3.4,0],B:[0,2.9],F:[0,-3]},
   start(k,n,st){return[(k-(n-1)/2)*1.5,st.h-.9];},
-  draw(sc,sh){deckDraw(sc,sh,0x5b6b7d,0xffffff);},
-  init(sc,rng,sh){const h=sh.h, z0=h-2, z1=-h+1.6, d=(z0-z1)/BELT.NB, belts=[], pick=()=>{const r=rng(); return r<.31?'L':r<.62?'R':r<.92?'B':'F';};
+  draw(sc){const W=BELT.W, len=2+BELT.NB*BELT.BD+1.6; mesh(new THREE.BoxGeometry(W*2+.5,.5,len+.5),0xffffff,0,-.3,W-len/2,sc).castShadow=false; const top=mesh(new THREE.BoxGeometry(W*2,.5,len),0x5b6b7d,0,-.25,W-len/2,sc); top.castShadow=false; top.receiveShadow=true;},   // a long course: three screens deep, with the camera following you
+  view(cam,me,dt,st){const b=st.camBase, off=Math.max(st.z1-1.6+BELT.W,Math.min(0,me.z-3)); cam.oz=cam.oz==null?off:cam.oz+(off-cam.oz)*Math.min(1,dt*5); cam.position.set(b.p[0],b.p[1],b.p[2]+cam.oz); cam.lookAt(b.l[0],b.l[1],b.l[2]+cam.oz);},
+  init(sc,rng,sh){const h=BELT.W, z0=h-2, d=BELT.BD, z1=z0-d*BELT.NB, belts=[], pick=()=>{const r=rng(); return r<.31?'L':r<.62?'R':r<.92?'B':'F';};
     const at=tex((g,s)=>{g.fillStyle='#eef2f7'; g.fillRect(0,0,s,s); g.fillStyle='#17304d'; g.beginPath(); g.moveTo(s*.5,s*.16); g.lineTo(s*.8,s*.56); g.lineTo(s*.6,s*.56); g.lineTo(s*.6,s*.84); g.lineTo(s*.4,s*.84); g.lineTo(s*.4,s*.56); g.lineTo(s*.2,s*.56); g.closePath(); g.fill();});   // one arrow, pointing up the texture
-    for(let i=0;i<BELT.NB;i++){const zc=z0-d*(i+.5), sw=[]; let t=0, dir=pick(); while(t<BELT.max+2){sw.push({t,d:dir}); t+=2.2+rng()*1.8; let nd=pick(); if(nd===dir)nd=dir==='L'?'R':'L'; dir=nd;}
+    for(let i=0;i<BELT.NB;i++){const zc=z0-d*(i+.5), sw=[]; let t=-rng()*3.6, dir=pick(); while(t<BELT.max+2){   /* staggered, so the belts do not all change together */ sw.push({t,d:dir}); t+=2.2+rng()*1.8; let nd=pick(); if(nd===dir)nd=dir==='L'?'R':'L'; dir=nd;}
       const tx=at.clone(); tx.needsUpdate=true; tx.wrapS=tx.wrapT=THREE.RepeatWrapping; tx.repeat.set(1,1);
       const m=flatM(mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshLambertMaterial({map:tx}),0,.03,zc,sc)); belts.push({zc,za:zc-d/2+.06,zb:zc+d/2-.06,d:d-.12,sw,m,tx,cur:''});}
     flatM(mesh(new THREE.PlaneGeometry(h*2,2),new THREE.MeshLambertMaterial({color:0x4fa8ff}),0,.025,h-1,sc));
     const fin=tex((g,s)=>{for(let i=0;i<8;i++)for(let j=0;j<8;j++){g.fillStyle=(i+j)&1?'#ffffff':'#17304d'; g.fillRect(i*s/8,j*s/8,s/8,s/8);}}); fin.wrapS=fin.wrapT=THREE.RepeatWrapping; fin.repeat.set(7,.8);
-    flatM(mesh(new THREE.PlaneGeometry(h*2,1.6),new THREE.MeshLambertMaterial({map:fin}),0,.025,-h+.8,sc));
+    flatM(mesh(new THREE.PlaneGeometry(h*2,1.6),new THREE.MeshLambertMaterial({map:fin}),0,.025,z1-.8,sc));
     return{h,belts,z1,dt:0};},
   dir(b,t){let d=b.sw[0].d, nx=1e9; for(const q of b.sw){if(q.t<=t)d=q.d; else{nx=q.t; break;}} return[d,nx-t];},
   step(st,t,dt){st.dt=dt; for(const b of st.belts){const [d,left]=BELT.dir(b,t), v=BELT.V[d];
@@ -2254,7 +2255,7 @@ const GAMES=[
  {name:'Trap Doors',unit:'sec',surv:true,arena:true,max:71,how:'Four rounds, or five with 6 players. Each round, walk into a door before the time runs out. Only one player fits in a door, and once you are in you cannot come back out. A door shuts behind whoever walks in. One door is a drop: whoever is behind it falls through the floor. There are 5 doors to start with (6 with 6 players) and one fewer each round, but always at least one per player still in.',cpu:()=>rand(100,650)/10,play:arena(DOORS)},
  {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:88,how:'It is pitch black. Everyone carries a burning torch that lights a circle around them. You cannot see the ghost or the edge of the deck until they come into the light. A ghost hunts one player at a time. If the hunted player touches someone, the ghost goes after them instead. Anyone who touches a ghost is out. Half way through the ghost splits into one ghost for every player still in, each a different colour and each hunting its own player. When two players touch, one ghost changes hands: the colours rank white, green, pink, cyan, red, purple, and whoever has the highest-ranked ghost of the two passes it to the other player. The ghosts get faster as the game goes on.',cpu:()=>rand(100,650)/10,play:arena(GHOST)},
  {name:'Slippery Slope',unit:'sec',surv:true,arena:true,max:46,how:'The deck is ice, so you slide and take time to turn. A giant snowball rolls straight across the deck from one side to the other, then changes course, and sends anyone it hits flying. Stay on the ice the longest.',cpu:()=>rand(60,300)/10,play:arena(SLIP)},
- {name:'Conveyor Chaos',unit:'sec left',arena:true,max:44,how:'A race across a deck of moving belts. Each belt runs left, right, back towards the start or on towards the finish, and changes direction every few seconds; it flashes white just before it does. If a belt carries you off the side you go back to the start. First across the chequered line wins. You have 40 seconds.',cpu:()=>rand(0,300)/10,play:arena(BELT)},
+ {name:'Conveyor Chaos',unit:'sec left',arena:true,max:104,how:'A race down a long deck of moving belts. Each belt runs left, right, back towards the start or on towards the finish, and changes direction every few seconds; it flashes white just before it does. If a belt carries you off the side you go back to the start. The course is long, and the view follows you. First across the chequered line wins. You have 100 seconds.',cpu:()=>rand(300,750)/10,play:arena(BELT)},
  {name:'Lantern Match',unit:'sec',surv:true,arena:true,max:99,how:'Six coloured lanterns light up in a sequence. When it is your turn, walk over the lanterns in the same order. Each round adds one more to the sequence. Step on the wrong lantern, or run out of time, and you are out. Last player in wins.',cpu:()=>rand(100,600)/10,play:arena(LANT)},
  {name:'Bell Ringer',unit:'taps',max:10,how:'Hammer the bell as many times as you can in 5 seconds.',cpu:()=>rand(24,40),
   async play(){
