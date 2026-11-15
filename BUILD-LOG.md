@@ -318,6 +318,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Sumo Shove: 5 dashes each, shown on the Dash button, and each dash ends with a small kick backwards.
 - Mini games can now send extra per-player state (jumps, stuns) between phones, and can have a second action button.
 
+## Build 51
+
+- Paint Fight: a colour bomb lands on a random tile every 10 seconds. Walk over it to pick it up, then tap the new Bomb button to paint a 4 by 4 block of tiles around you.
+- View check of all 14 shared-platform games in portrait and landscape. Landscape platforms now stop short of the timer bar, and the Trap Doors wall fits inside the screen.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
