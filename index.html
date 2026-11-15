@@ -1487,7 +1487,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=48; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=49; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1898,8 +1898,12 @@ const SLIP={hint:'Keep clear of the snowball',surv:true,max:40,ice:1.5,edgeAI:2.
   draw(sc,sh){deckDraw(sc,sh,0x8fd3f7,0xffffff); for(let i=0;i<9;i++){const a=i*.7+.3,r=1+((i*37)%30)/10, s=flatM(mesh(new THREE.PlaneGeometry(1.3,.05),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.7}),Math.sin(a)*r,.012,Math.cos(a)*r,sc)); s.rotation.z=a*1.7;}},
   init(sc,rng,sh){const b=mesh(new THREE.IcosahedronGeometry(1.25,1),new THREE.MeshLambertMaterial({color:0xdfe9f5,flatShading:true}),0,1.25,0,sc);
     const sh2=flatM(mesh(new THREE.CircleGeometry(1.2,28),new THREE.MeshBasicMaterial({color:0x17304d,transparent:true,opacity:.22}),0,.015,0,sc));
-    return{b,sh2,R:sh.R,p:[rng()*6.283,rng()*6.283,rng()*6.283,rng()*6.283],x:0,z:0,vx:0,vz:0,r:1.25};},
-  pos(st,t){const u=t+.014*t*t, A=st.R-1.7, e=Math.min(1,t/1.5); return[e*(A*.78*Math.sin(.8*u+st.p[0])+A*.22*Math.sin(1.9*u+st.p[1])),e*(A*.78*Math.cos(.62*u+st.p[2])+A*.22*Math.sin(1.5*u+st.p[3]))];},
+    // the snowball rolls straight across the deck from one side to the other, then sets off on a new course. The route is drawn up
+    // front from the shared seed, so every phone sees the same ball. It gets faster as the game goes on
+    const A=sh.R-.9, path=[{t:1.5,x:0,z:0}]; let a=rng()*6.283, T=1.5, px=0, pz=0;
+    while(T<SLIP.max+3){const x=Math.sin(a)*A, z=Math.cos(a)*A, v=3+.075*T; T+=Math.hypot(x-px,z-pz)/v; path.push({t:T,x,z}); px=x; pz=z; a+=Math.PI+(rng()-.5)*2.3;}
+    return{b,sh2,R:sh.R,path,x:0,z:0,vx:0,vz:0,r:1.25};},
+  pos(st,t){const P=st.path; if(t<=P[0].t)return[0,0]; let i=1; while(i<P.length-1&&P[i].t<t)i++; const p=P[i-1], q=P[i], k=Math.min(1,(t-p.t)/(q.t-p.t)); return[p.x+(q.x-p.x)*k,p.z+(q.z-p.z)*k];},
   step(st,t,dt){const q=SLIP.pos(st,t), ox=st.x, oz=st.z; st.x=q[0]; st.z=q[1]; st.vx=(st.x-ox)/Math.max(dt,.001); st.vz=(st.z-oz)/Math.max(dt,.001);
     st.b.position.set(st.x,1.25,st.z); st.b.rotation.x+=(st.z-oz)/st.r; st.b.rotation.z-=(st.x-ox)/st.r; st.sh2.position.set(st.x,.015,st.z);},
   check(av,st,t,local){if(!local||t<1.5||av.y>1.2)return 0; const dx=av.x-st.x,dz=av.z-st.z,d=Math.hypot(dx,dz);
@@ -2013,7 +2017,7 @@ const GAMES=[
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},
  {name:'Trap Doors',unit:'sec',surv:true,arena:true,max:71,how:'Four rounds, or five with 6 players. Each round, walk into a door before the time runs out. Only one player fits in a door, and once you are in you cannot come back out. A door shuts behind whoever walks in. One door is a drop: whoever is behind it falls through the floor. There are 5 doors to start with (6 with 6 players) and one fewer each round, but always at least one per player still in.',cpu:()=>rand(100,650)/10,play:arena(DOORS)},
  {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:88,how:'It is pitch black. Everyone carries a burning torch that lights a circle around them. You cannot see the ghost or the edge of the deck until they come into the light. A ghost hunts one player at a time. If the hunted player touches someone, the ghost goes after them instead. Anyone who touches a ghost is out. Half way through the ghost splits into one ghost for every player still in, each a different colour and each hunting its own player. When two players touch, one ghost changes hands: the colours rank white, green, pink, cyan, red, purple, and whoever has the highest-ranked ghost of the two passes it to the other player. The ghosts get faster as the game goes on.',cpu:()=>rand(100,650)/10,play:arena(GHOST)},
- {name:'Slippery Slope',unit:'sec',surv:true,arena:true,max:46,how:'The deck is ice, so you slide and take time to turn. A giant snowball rolls around and sends anyone it hits flying. Stay on the ice the longest.',cpu:()=>rand(60,300)/10,play:arena(SLIP)},
+ {name:'Slippery Slope',unit:'sec',surv:true,arena:true,max:46,how:'The deck is ice, so you slide and take time to turn. A giant snowball rolls straight across the deck from one side to the other, then changes course, and sends anyone it hits flying. Stay on the ice the longest.',cpu:()=>rand(60,300)/10,play:arena(SLIP)},
  {name:'Bell Ringer',unit:'taps',max:10,how:'Hammer the bell as many times as you can in 5 seconds.',cpu:()=>rand(24,40),
   async play(){
     stage.innerHTML=`<div class="big" id="n">3</div><button class="bell" id="bell" disabled>WAIT</button><div class="bar"><i id="bar"></i></div>`;

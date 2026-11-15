@@ -307,6 +307,10 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 
 - Ghost Runner: the ghost colours now have a ranking: white, green, pink, cyan, red, purple. When two players touch, whoever holds the highest-ranked ghost of the two passes that ghost to the other player. One touch moves one ghost.
 
+## Build 49
+
+- Slippery Slope: the snowball now rolls straight across the deck from one side to the other, then sets off on a new random course. It still speeds up as the game goes on.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
