@@ -311,6 +311,13 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 
 - Slippery Slope: the snowball now rolls straight across the deck from one side to the other, then sets off on a new random course. It still speeds up as the game goes on.
 
+## Build 50
+
+- Stomp: 5 jumps each, shown on the Jump button. When every player still in has used all of theirs, everyone gets 5 more.
+- Stomp: a separate Stun button with one use, never topped up. It freezes the nearest player in reach for a moment (yellow halo), and the player who used it cannot jump until it wears off. It cannot be used in the air.
+- Sumo Shove: 5 dashes each, shown on the Dash button, and each dash ends with a small kick backwards.
+- Mini games can now send extra per-player state (jumps, stuns) between phones, and can have a second action button.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
