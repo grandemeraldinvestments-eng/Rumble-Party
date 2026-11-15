@@ -329,6 +329,10 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Coconut Drop: everyone has a stun gun with 3 shots for the game. The Shoot button (bottom right) fires the way you are facing; a hit freezes that player for a moment.
 - Hot Planks: half way through (20 seconds) the 16 big tiles turn into 256 small ones, about the size of the Crumble Deck tiles. Same rules, same timing, same share of the floor each time.
 
+## Build 53
+
+- Coconut Drop: the stun now lasts 1.4 seconds, twice as long as before.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

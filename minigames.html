@@ -1492,7 +1492,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=52; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=53; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1774,7 +1774,7 @@ const HOT={hint:'Yellow is safe until it turns red',surv:true,max:40,ring:2,deck
     ai.dx=0; ai.dz=0;}};
 
 /* Coconut Drop: small coconuts, and plenty of them. Everyone also has a stun gun with 3 shots: a hit freezes a player for a moment */
-const COCO={hint:'Watch the shadows',surv:true,max:30,ring:1.8,deck:{k:'c',R:4.3},btn:'Shoot',SHOTS:3,STUN:.7,
+const COCO={hint:'Watch the shadows',surv:true,max:30,ring:1.8,deck:{k:'c',R:4.3},btn:'Shoot',SHOTS:3,STUN:1.4,
   init(sc,rng,sh){const list=[]; let t=1.2; while(t<29){const q=sh.pt(rng,.96); list.push({t,x:q[0],z:q[1],m:null,s:null,done:false,hot:false}); t+=Math.max(.14,.5-t*.013)/1.3;}   // half the size, 30% more of them
     return{list,R:sh.R,sc,geo:new THREE.SphereGeometry(.21,12,9),sg:new THREE.CircleGeometry(.4,20),shots:[],stars:[],bg:new THREE.SphereGeometry(.13,8,6),bm:new THREE.MeshBasicMaterial({color:0x35d0ff})};},
   fire(st,k,x,z,a){const m=mesh(st.bg,st.bm,x,.8,z,st.sc); m.castShadow=false; st.shots.push({k,x,z,dx:Math.sin(a),dz:Math.cos(a),life:.6,m});},
@@ -2071,7 +2071,7 @@ const GAMES=[
  {name:'Boom Hop',unit:'sec',surv:true,arena:true,max:46,how:'Everyone shares one round deck. Tap Jump to clear the swinging boom. It keeps speeding up, and it flashes yellow just before it swings back the other way.',cpu:()=>rand(50,300)/10,play:arena(BOOM)},
  {name:'Ticket Grab',unit:'tickets',arena:true,max:66,how:'One minute on a big square. Grab tickets before the others do; each one lasts 5 seconds. Pink tickets are worth 3. After 15 seconds the deck shrinks to half its size. In the last 15 seconds half the tickets are red, and each one costs you 1.',cpu:()=>rand(14,40),play:arena(GRAB)},
  {name:'Hot Planks',unit:'sec',surv:true,arena:true,max:46,how:'Sixteen big tiles. Tiles flash yellow, and are safe to walk on, until they turn red. More tiles go, with less warning, as time passes. Half way through, the big tiles turn into lots of small ones; the rules and the pace stay the same.',cpu:()=>rand(60,300)/10,play:arena(HOT)},
- {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:36,how:'Everyone shares one deck. Small coconuts are falling, and plenty of them. Watch for the shadows and keep out from under them. You also have a stun gun with 3 shots: tap Shoot to fire the way you are facing, and a hit freezes that player for a moment.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
+ {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:36,how:'Everyone shares one deck. Small coconuts are falling, and plenty of them. Watch for the shadows and keep out from under them. You also have a stun gun with 3 shots: tap Shoot to fire the way you are facing, and a hit freezes that player for over a second.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
  {name:'Spotlight',unit:'pts',dec:true,arena:true,max:96,how:'Ninety seconds. Stand in the yellow spotlight to score. Every 30 seconds a new yellow light arrives and the old one turns red, which takes points away just as fast. Where red and yellow overlap is neutral.',cpu:()=>rand(100,400)/10,play:arena(SPOT)},
  {name:'Sumo Shove',unit:'sec',surv:true,arena:true,max:51,how:'Player against player. The red closes in around two safe circles, then the circles start to roam. Touch the red and you are out. Shove the others into it, and tap Dash for a charge that hits much harder. You only get 5 dashes, and each one ends with a small kick backwards.',cpu:()=>rand(60,300)/10,play:arena(SUMO)},
  {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You are inside it and cannot see over the hedges. Use the two on-screen sticks: the left one turns your view and the right one moves you. A controller works the same way. The exit is somewhere on the far side, marked in green. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
