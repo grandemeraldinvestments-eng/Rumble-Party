@@ -362,6 +362,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Ready screen: a live preview of the game, played by computer players, runs behind the ready panel. The written rules are behind a Rules button.
 - Every mini game now opens with a big 3, 2, 1, GO! countdown.
 
+## Build 58
+
+- Hedge Maze: the unseen areas are now one soft-edged sheet of darkness that fades in and out smoothly and follows your character's real line of sight, instead of switching whole squares on and off. Your view also fades with distance.
+- Hedge Maze: the exit flag no longer shows above the darkness before you can see the exit.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

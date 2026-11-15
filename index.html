@@ -1532,7 +1532,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=57; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=58; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1968,17 +1968,19 @@ const MAZE={hint:'Find the way out',max:60,alone:true,left:true,noEdge:true,spee
     flatM(mesh(new THREE.PlaneGeometry(S-.2,S-.2),new THREE.MeshBasicMaterial({color:0x4fa8ff}),X(sx+.5),.01,X(N-.5),sc));
     flatM(mesh(new THREE.PlaneGeometry(S*1.6,1.3),new THREE.MeshBasicMaterial({color:0x35c98a}),X(ex+.5),.01,-half-.75,sc));
     const fl=mesh(new THREE.CylinderGeometry(.05,.05,1.8,8),0xffffff,X(ex+.5)+.6,.9,-half-.9,sc); mesh(new THREE.BoxGeometry(.7,.42,.04),0x35c98a,.36,.62,0,fl);
-    // one black cover over every cell, lifted off whichever cells your character can see; and one over the way out
-    const fm=()=>new THREE.MeshBasicMaterial({color:0x05070d,transparent:true,opacity:1}), fog=[]; for(let j=0;j<N;j++)for(let i=0;i<N;i++){const m=flatM(mesh(new THREE.PlaneGeometry(S+.04,S+.04),fm(),X(i+.5),1.16,X(j+.5),sc)); m.receiveShadow=false; m.renderOrder=5; fog.push(m);}
+    // a sheet of darkness over the whole maze, and a cover over the way out
+    const fm=()=>new THREE.MeshBasicMaterial({color:0x05070d,transparent:true,opacity:1}), G=N*4, data=new Uint8Array(G*G*4); for(let c=0;c<G*G;c++){data[c*4]=5; data[c*4+1]=7; data[c*4+2]=13; data[c*4+3]=255;}
+    const fd=new THREE.DataTexture(data,G,G,THREE.RGBAFormat); fd.magFilter=fd.minFilter=THREE.LinearFilter; fd.needsUpdate=true;
+    const sheet=flatM(mesh(new THREE.PlaneGeometry(N*S,N*S),new THREE.MeshBasicMaterial({map:fd,transparent:true,depthWrite:false}),0,1.16,0,sc)); sheet.receiveShadow=false; sheet.renderOrder=5;
     const fogX=flatM(mesh(new THREE.PlaneGeometry(N*S+1.4,3),fm(),0,1.16,-half-1.5,sc)); fogX.receiveShadow=false; fogX.renderOrder=5;
-    for(const [x,z,w,d] of [[-half-.35,0,.7,N*S+1.4],[half+.35,0,.7,N*S+1.4],[0,half+.35,N*S+1.4,.7]]){const m=flatM(mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshBasicMaterial({color:0x05070d}),x,1.17,z,sc)); m.receiveShadow=false;}   // the outer hedge stays hidden too
+    for(const [x,z,w,d] of [[-half-1,0,2,N*S+4],[half+1,0,2,N*S+4],[0,half+1,N*S+4,2]]){const m=flatM(mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshBasicMaterial({color:0x05070d}),x,1.17,z,sc)); m.receiveShadow=false;}   // the outer hedge stays hidden too
     // which way is out from each cell, for the computer player in the preview
     const toE=new Int16Array(N*N).fill(-1), q2=[ex]; toE[ex]=0; for(let hh=0;hh<q2.length;hh++){const c=q2[hh],i=c%N,j=(c-i)/N; for(const d of D)if(open[c]&d[2]){const nc=i+d[0]+N*(j+d[1]); if(toE[nc]<0){toE[nc]=toE[c]+1; q2.push(nc);}}}
-    return{walls,half,open,toE,ex,fog,fogX,vis:new Uint8Array(N*N),exitVis:0,sc,start:[X(sx+.5),X(N-.5)],len:dist[ex]+1};},
+    return{walls,half,open,toE,ex,G,fd,tg:new Float32Array(G*G).fill(1),cur:new Float32Array(G*G).fill(1),fogX,flag:fl,exitVis:0,sc,start:[X(sx+.5),X(N-.5)],len:dist[ex]+1};},
   start(k,n,st){return st.start;},
   blocked(st,x,z,r){for(const w of st.walls)if(Math.abs(x-w[0])<w[2]+r&&Math.abs(z-w[1])<w[3]+r)return true; return false;},
-  // can you see cell (ci,cj) from the point (x,z)? Walk the line between them and stop at the first hedge
-  sees(st,x,z,ci,cj){const N=MAZE.N,S=MAZE.S,h=st.half, tx=-h+(ci+.5)*S, tz=-h+(cj+.5)*S, n=Math.max(1,Math.ceil(Math.hypot(tx-x,tz-z)/.22)), cell=v=>Math.max(0,Math.min(N-1,Math.floor((v+h)/S)));
+  // can you see the point (tx,tz) from the point (x,z)? Walk the line between them and stop at the first hedge
+  sees(st,x,z,tx,tz){const N=MAZE.N,S=MAZE.S,h=st.half, n=Math.max(1,Math.ceil(Math.hypot(tx-x,tz-z)/.22)), cell=v=>Math.max(0,Math.min(N-1,Math.floor((v+h)/S)));
     let i=cell(x), j=cell(z); const ok=(a,b,c,d)=>c===a+1?st.open[a+N*b]&1:c===a-1?st.open[a+N*b]&4:d===b+1?st.open[a+N*b]&2:st.open[a+N*b]&8;
     for(let k=1;k<=n;k++){const ni=cell(x+(tx-x)*k/n), nj=cell(z+(tz-z)*k/n); if(ni===i&&nj===j)continue;
       if(ni!==i&&nj!==j){if(!((ok(i,j,ni,j)&&ok(ni,j,ni,nj))||(ok(i,j,i,nj)&&ok(i,nj,ni,nj))))return false;} else if(!ok(i,j,ni,nj))return false; i=ni; j=nj;} return true;},
@@ -1986,10 +1988,14 @@ const MAZE={hint:'Find the way out',max:60,alone:true,left:true,noEdge:true,spee
   // or behind a hedge is blacked out. A marker in your colour is dropped every step or so, to show where you have been
   view(cam,me,dt,st){const N=MAZE.N,S=MAZE.S,h=st.half, snap=!cam.tp; if(!cam.tp){cam.tp=true; st.mk=[]; st.mg=new THREE.CylinderGeometry(.17,.17,.04,10); st.mm=new THREE.MeshBasicMaterial({color:me.col}); st.vt=0; cam.cx=me.x; cam.cz=me.z;}
     const k=Math.min(1,dt*6), W=window.innerWidth, H=window.innerHeight, Hc=W<H?15:11.5; cam.cx+=(me.x-cam.cx)*k; cam.cz+=(me.z-cam.cz)*k; cam.position.set(cam.cx,Hc,cam.cz+Hc*.12); cam.lookAt(cam.cx,0,cam.cz);
-    st.vt-=dt; if(st.vt<=0){st.vt=.1; const pi=Math.max(0,Math.min(N-1,Math.floor((me.x+h)/S))), pj=Math.max(0,Math.min(N-1,Math.floor((me.z+h)/S)));
-      for(let j=0;j<N;j++)for(let i=0;i<N;i++){const c=i+N*j; st.vis[c]=(i===pi&&j===pj)||(Math.abs(i-pi)<=6&&Math.abs(j-pj)<=6&&MAZE.sees(st,me.x,me.z,i,j))?1:0;}
-      st.exitVis=me.z<-h||(st.vis[st.ex]&&Math.abs(me.x-(-h+(st.ex+.5)*S))<S*.45)?1:0;}
-    const fk=snap?1:Math.min(1,dt*10); st.fog.forEach((m,c)=>{const o=m.material; o.opacity+=((st.vis[c]?0:1)-o.opacity)*fk; m.visible=o.opacity>.02;}); {const o=st.fogX.material; o.opacity+=((st.exitVis?0:1)-o.opacity)*fk; st.fogX.visible=o.opacity>.02;}
+    // the darkness is one soft-edged sheet over the maze: a small grid of points, each lit if your character can see it and it is close enough,
+    // blended between points and faded over time, so the edge of what you can see is a smooth fade
+    const G=st.G, cs=N*S/G, tg=st.tg, cur=st.cur, px=st.fd.image.data;
+    st.vt-=dt; if(st.vt<=0||snap){st.vt=.08; for(let j=0;j<G;j++)for(let i=0;i<G;i++){const x=-h+(i+.5)*cs, z=h-(j+.5)*cs, d=Math.hypot(x-me.x,z-me.z); let v=1;
+        if(d<7.2&&(d<.9||MAZE.sees(st,me.x,me.z,x,z))){const f=Math.max(0,Math.min(1,(d-4.4)/2.8)); v=f*f*(3-2*f);} tg[i+G*j]=v;}
+      st.exitVis=me.z<-h||(Math.abs(me.x-(-h+(st.ex+.5)*S))<S*.45&&MAZE.sees(st,me.x,me.z,-h+(st.ex+.5)*S,-h+S*.5))?1:0;}
+    const fk=snap?1:Math.min(1,dt*7); for(let c=0;c<tg.length;c++){cur[c]+=(tg[c]-cur[c])*fk; px[c*4+3]=cur[c]*255;} st.fd.needsUpdate=true;
+    {const o=st.fogX.material; o.opacity+=((st.exitVis?0:1)-o.opacity)*(snap?1:Math.min(1,dt*5)); st.fogX.visible=o.opacity>.02; st.flag.visible=o.opacity<.6;}
     if(st.mk.length<500&&!st.mk.some(q=>Math.hypot(q[0]-me.x,q[1]-me.z)<.95)){st.mk.push([me.x,me.z]); mesh(st.mg,st.mm,me.x,.03,me.z,st.sc).castShadow=false;}},
   step(){},
   move(av,st){const R=.3, x1=av.x, z1=av.z, x0=av.px==null?x1:av.px, z0=av.pz==null?z1:av.pz, n=Math.max(1,Math.ceil(Math.hypot(x1-x0,z1-z0)/.18)); av.x=x0; av.z=z0;   // small steps, so a slow frame cannot carry you through a hedge
