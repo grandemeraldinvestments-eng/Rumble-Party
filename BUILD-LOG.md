@@ -348,6 +348,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Award ceremony at the end of the game: the characters walk on and line up, the stage goes dark, a spotlight finds each award winner, a pearl comes down, they take it and dance, and finally each player's block rises to match their place.
 - Eight award rules, three drawn in secret at the start of each game: Mini game champ, Podium regular, Globetrotter, Big spender, Gadget fan, Lucky feet, Hard knocks, Chance taker.
 
+## Build 56
+
+- Award ceremony: the spotlight now searches for 2.5 seconds longer before each winner is shown, with a drum roll that builds up to the reveal.
+- Crab Scramble: crabs are 10% slower.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
