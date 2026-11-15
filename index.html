@@ -1492,7 +1492,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=51; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=52; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1750,30 +1750,54 @@ const GRAB={hint:'Grab the tickets',max:60,ring:2,deck:{k:'s',h:6.6},
     for(const c of st.list){if(!c.on||c.red)continue; const d=Math.hypot(c.x-av.x,c.z-av.z); if(d<bd){bd=d; b=c;}}
     if(b&&bd>.2){ai.dx=(b.x-av.x)/bd*.78; ai.dz=(b.z-av.z)/bd*.78;} else{ai.dx=0; ai.dz=0;}}};
 
-/* Hot Planks: a big square of 16 tiles. Tiles flash yellow (still safe), then turn red. More tiles go, with less warning, as time passes */
-const HOT={hint:'Yellow is safe until it turns red',surv:true,max:40,ring:2,deck:{k:'s',h:6.6},
-  init(sc,rng,sh){const W=[],ev=[],T=sh.h/2; for(let i=0;i<16;i++){const m=flatM(mesh(new THREE.PlaneGeometry(T-.12,T-.12),new THREE.MeshLambertMaterial({color:0xd9a066}),-sh.h+T*(i%4+.5),.04,-sh.h+T*(Math.floor(i/4)+.5),sc)); W.push(m);}
-    let t=2; while(t<39.5){const n=Math.min(12,4+Math.floor(t/3.5)),set=[]; while(set.length<n){const w=Math.floor(rng()*16); if(!set.includes(w))set.push(w);} const warn=Math.max(.9,1.9-t*.03); ev.push({t,set,warn}); t+=warn+.8+Math.max(.25,1.1-t*.03);}
-    return{W,ev,T,h:sh.h,state:new Array(16).fill(0),at(x,z){const c=v=>Math.max(0,Math.min(3,Math.floor((v+sh.h)/T))); return c(x)+4*c(z);}};},
-  step(st,t){st.state.fill(0); for(const e of st.ev){if(t<e.t)break; const d=t-e.t; if(d<e.warn)e.set.forEach(w=>{st.state[w]=1;}); else if(d<e.warn+.8)e.set.forEach(w=>{st.state[w]=2;});}
-    st.W.forEach((m,i)=>{const q=st.state[i]; m.material.color.setHex(q===2?0xff4d4d:q===1?(Math.floor(t*8)%2?0xffc531:0xffe9a0):0xd9a066); m.position.y=q===2?.01:.04;});},
+/* Hot Planks: a big square of 16 tiles. Tiles flash yellow (still safe), then turn red. More tiles go, with less warning, as time passes.
+   Half way through the 16 big tiles become 256 small ones (about the size of the Crumble Deck tiles). The rules and the pace stay the same:
+   the same share of the floor goes each time, it is just scattered in small tiles */
+const HOT={hint:'Yellow is safe until it turns red',surv:true,max:40,ring:2,deck:{k:'s',h:6.6},HALF:20,
+  init(sc,rng,sh){const W=[],ev=[],T=sh.h/2, N2=16, T2=sh.h*2/N2; for(let i=0;i<16;i++){const m=flatM(mesh(new THREE.PlaneGeometry(T-.12,T-.12),new THREE.MeshLambertMaterial({color:0xd9a066}),-sh.h+T*(i%4+.5),.04,-sh.h+T*(Math.floor(i/4)+.5),sc)); W.push(m);}
+    let t=2, sw=0, end=0; while(t<39.5){const small=t>=HOT.HALF, tot=small?N2*N2:16, n=Math.min(12,4+Math.floor(t/3.5))*(small?N2*N2/16:1),set=[],used={}; while(set.length<n){const w=Math.floor(rng()*tot); if(!used[w]){used[w]=1; set.push(w);}} const warn=Math.max(.9,1.9-t*.03);
+      if(small&&!sw)sw=Math.max(end,t-.7); ev.push({t,set,warn,small}); end=t+warn+.8; t+=warn+.8+Math.max(.25,1.1-t*.03);}
+    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(T2-.07,.03,T2-.07),new THREE.MeshLambertMaterial({color:0xffffff}),N2*N2), d=new THREE.Object3D(), c=new THREE.Color(0xd9a066);
+    for(let i=0;i<N2*N2;i++){d.position.set(-sh.h+T2*(i%N2+.5),.03,-sh.h+T2*(Math.floor(i/N2)+.5)); d.updateMatrix(); im.setMatrixAt(i,d.matrix); im.setColorAt(i,c);} im.castShadow=false; im.receiveShadow=true; im.visible=false; sc.add(im);
+    const st={W,ev,T,h:sh.h,N:4,N2,sw:sw||99,im,col:c,shown:new Uint8Array(N2*N2),state:new Uint8Array(N2*N2),
+      at(x,z){const n=st.N, s=sh.h*2/n, c=v=>Math.max(0,Math.min(n-1,Math.floor((v+sh.h)/s))); return c(x)+n*c(z);},
+      mid(i){const n=st.N, s=sh.h*2/n; return[-sh.h+s*(i%n+.5),-sh.h+s*(Math.floor(i/n)+.5)];}}; return st;},
+  step(st,t){const small=t>=st.sw; if(small&&st.N===4){st.N=st.N2; st.W.forEach(m=>{m.visible=false;}); st.im.visible=true; splash('Small tiles!',1000);}
+    st.state.fill(0); for(const e of st.ev){if(t<e.t)break; if(e.small!==small)continue; const d=t-e.t; if(d<e.warn)e.set.forEach(w=>{st.state[w]=1;}); else if(d<e.warn+.8)e.set.forEach(w=>{st.state[w]=2;});}
+    const fl=Math.floor(t*8)%2;
+    if(!small)st.W.forEach((m,i)=>{const q=st.state[i]; m.material.color.setHex(q===2?0xff4d4d:q===1?(fl?0xffc531:0xffe9a0):0xd9a066); m.position.y=q===2?.01:.04;});
+    else{let ch=false; for(let i=0;i<st.shown.length;i++){const q=st.state[i], v=q===1?3+fl:q; if(v!==st.shown[i]){st.shown[i]=v; st.im.setColorAt(i,st.col.setHex(q===2?0xff4d4d:q===1?(fl?0xffc531:0xffe9a0):((i%st.N2+Math.floor(i/st.N2))&1?0xd9a066:0xcf9458))); ch=true;}} if(ch)st.im.instanceColor.needsUpdate=true;}},
   check(av,st,t,local){if(!local||av.y>.3)return 0; return st.state[st.at(av.x,av.z)]===2?'hit':0;},
-  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.2; const w=st.at(av.x,av.z);
-    if(st.state[w]&&Math.random()>.06){let best=-1,bd=99; for(let i=0;i<16;i++){if(st.state[i])continue; const x=-st.h+st.T*(i%4+.5),z=-st.h+st.T*(Math.floor(i/4)+.5),d=Math.hypot(x-av.x,z-av.z); if(d<bd){bd=d; best=i;}}
-      if(best>=0){const tx=-st.h+st.T*(best%4+.5),tz=-st.h+st.T*(Math.floor(best/4)+.5),l=Math.hypot(tx-av.x,tz-av.z)||1; ai.dx=(tx-av.x)/l; ai.dz=(tz-av.z)/l; return;}}
+  ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.2; const w=st.at(av.x,av.z), tot=st.N*st.N;
+    if(st.state[w]&&Math.random()>.06){let best=-1,bd=99; for(let i=0;i<tot;i++){if(st.state[i])continue; const q=st.mid(i),d=Math.hypot(q[0]-av.x,q[1]-av.z); if(d<bd){bd=d; best=i;}}
+      if(best>=0){const q=st.mid(best),l=Math.hypot(q[0]-av.x,q[1]-av.z)||1; ai.dx=(q[0]-av.x)/l; ai.dz=(q[1]-av.z)/l; return;}}
     ai.dx=0; ai.dz=0;}};
 
-const COCO={hint:'Watch the shadows',surv:true,max:30,ring:1.8,deck:{k:'c',R:4.3},
-  init(sc,rng,sh){const list=[]; let t=1.2; while(t<29){const q=sh.pt(rng,.96); list.push({t,x:q[0],z:q[1],m:null,s:null,done:false,hot:false}); t+=Math.max(.14,.5-t*.013);}
-    return{list,R:sh.R,geo:new THREE.SphereGeometry(.42,14,10),sg:new THREE.CircleGeometry(.78,24)};},
-  step(st,t,dt,sc){for(const c of st.list){if(t<c.t)break; if(c.done)continue; const e=(t-c.t)/1.3;
+/* Coconut Drop: small coconuts, and plenty of them. Everyone also has a stun gun with 3 shots: a hit freezes a player for a moment */
+const COCO={hint:'Watch the shadows',surv:true,max:30,ring:1.8,deck:{k:'c',R:4.3},btn:'Shoot',SHOTS:3,STUN:.7,
+  init(sc,rng,sh){const list=[]; let t=1.2; while(t<29){const q=sh.pt(rng,.96); list.push({t,x:q[0],z:q[1],m:null,s:null,done:false,hot:false}); t+=Math.max(.14,.5-t*.013)/1.3;}   // half the size, 30% more of them
+    return{list,R:sh.R,sc,geo:new THREE.SphereGeometry(.21,12,9),sg:new THREE.CircleGeometry(.4,20),shots:[],stars:[],bg:new THREE.SphereGeometry(.13,8,6),bm:new THREE.MeshBasicMaterial({color:0x35d0ff})};},
+  fire(st,k,x,z,a){const m=mesh(st.bg,st.bm,x,.8,z,st.sc); m.castShadow=false; st.shots.push({k,x,z,dx:Math.sin(a),dz:Math.cos(a),life:.6,m});},
+  step(st,t,dt,sc){const avs=st.avs, me=avs.find(a=>a.mine); if(!st.set){st.set=true; avs.forEach(a=>{a.sl=COCO.SHOTS; a.sq=a.sq||0; a.frozen=0; a.fz=0;});}
+    for(const c of st.list){if(t<c.t)break; if(c.done)continue; const e=(t-c.t)/1.3;
       if(!c.m){c.m=mesh(st.geo,0x8a5a2b,c.x,9,c.z,sc); c.s=mesh(st.sg,new THREE.MeshBasicMaterial({color:0x17304d,transparent:true,opacity:.1}),c.x,.02,c.z,sc); c.s.rotation.x=-Math.PI/2; c.s.castShadow=false;}
-      if(e<1){c.m.position.y=9*(1-e*e)+.4; c.s.material.opacity=.1+e*.45; c.s.scale.setScalar(.4+e*.6);}
-      else if(e<1.12){c.m.position.y=.4; c.hot=true;}
-      else{sc.remove(c.m); sc.remove(c.s); c.done=true; c.hot=false;}}},
-  check(av,st,t,local){if(!local)return 0; for(const c of st.list){if(c.t>t)break; if(c.hot&&Math.hypot(c.x-av.x,c.z-av.z)<.8)return'hit';} return 0;},
+      if(e<1){c.m.position.y=9*(1-e*e)+.2; c.s.material.opacity=.1+e*.45; c.s.scale.setScalar(.4+e*.6);}
+      else if(e<1.12){c.m.position.y=.2; c.hot=true;}
+      else{sc.remove(c.m); sc.remove(c.s); c.done=true; c.hot=false;}}
+    // stun shots fly straight for a short way and stop at the first player they reach
+    st.shots=st.shots.filter(b=>{b.x+=b.dx*12*dt; b.z+=b.dz*12*dt; b.life-=dt; b.m.position.set(b.x,.8,b.z); let hit=false;
+      for(const o of avs)if(o.k!==b.k&&o.alive&&o.y<1&&Math.hypot(o.x-b.x,o.z-b.z)<.55){hit=true; if(o.mine||o.cpu){o.frozen=COCO.STUN; if(o.mine)SFX.loss();} break;}
+      if(hit||b.life<=0){sc.remove(b.m); return false;} return true;});
+    avs.forEach((a,i)=>{const on=a.alive&&((a.mine||a.cpu)?a.frozen>0:a.fz>0); let m=st.stars[i]; if(!m){if(!on)return; m=st.stars[i]=mesh(new THREE.TorusGeometry(.34,.07,6,14),new THREE.MeshBasicMaterial({color:0xffe14d}),0,0,0,sc); m.rotation.x=Math.PI/2; m.castShadow=false;}
+      m.visible=on; if(on){m.position.set(a.x,1.75+a.y,a.z); m.rotation.z=t*9;}});   // a spinning yellow halo over anyone who is stunned
+    if(me){const j=$('#jumpBtn'), tx='Shoot '+me.sl; if(j.textContent!==tx)j.textContent=tx; j.classList.toggle('off',!(me.sl>0));}},
+  press(av,st,t){if(!(av.sl>0)||t<1.2)return; const a=av.cpu&&av.ai.aim!=null?av.ai.aim:av.face; av.sl--; av.sq++; av.sx=av.x; av.sz=av.z; av.sa=a; COCO.fire(st,av.k,av.x,av.z,a); if(av.mine)SFX.fly();},   // it fires the way you are facing
+  ex(a){return[a.sl|0,a.sq|0,r2(a.sx||0),r2(a.sz||0),r2(a.sa||0),a.frozen>0?1:0];},   // sent with each player's position, so every phone sees the shots
+  sub(av,a,st){av.sl=a[5]; av.fz=a[10]; if(a[6]!==(av.sq||0)){av.sq=a[6]; COCO.fire(st,av.k,a[7],a[8],a[9]);}},
+  check(av,st,t,local){if(!local)return 0; for(const c of st.list){if(c.t>t)break; if(c.hot&&Math.hypot(c.x-av.x,c.z-av.z)<.5)return'hit';} return 0;},
   ai(av,st,t,dt){const ai=av.ai; ai.t-=dt; if(ai.t>0)return; ai.t=.15+Math.random()*.2; let fx=0,fz=0;
-    for(const c of st.list){if(c.t>t)break; if(c.done)continue; const dx=av.x-c.x,dz=av.z-c.z,d=Math.hypot(dx,dz)||.01; if(d<1.5){fx+=dx/d*(1.6-d); fz+=dz/d*(1.6-d);}}
+    for(const c of st.list){if(c.t>t)break; if(c.done)continue; const dx=av.x-c.x,dz=av.z-c.z,d=Math.hypot(dx,dz)||.01; if(d<1.1){fx+=dx/d*(1.2-d); fz+=dz/d*(1.2-d);}}
+    {const n=nearest(av,st); if(n&&av.sl>0&&n.d<4.5&&Math.random()<.04){ai.aim=Math.atan2(n.o.x-av.x,n.o.z-av.z); ai.jump=true;}}   // now and then, a shot at whoever is closest
     const r=Math.hypot(av.x,av.z); if(r>st.R-1.3){fx-=av.x/r*.8; fz-=av.z/r*.8;} const l=Math.hypot(fx,fz); if(l>.1&&Math.random()>.08){ai.dx=fx/l; ai.dz=fz/l;} else{ai.dx=0; ai.dz=0;}}};
 
 /* Spotlight: 90 seconds and three lights. A new yellow light arrives every 30 seconds and the old ones turn red.
@@ -2046,8 +2070,8 @@ const GAMES=[
  {name:'Crab Scramble',unit:'sec',surv:true,arena:true,max:51,how:'Everyone shares one small island. Drag to run and dodge the crabs, which keep getting faster. You have 3 lives. Whoever lasts longest wins.',cpu:()=>rand(100,400)/10,play:arena(CRAB)},
  {name:'Boom Hop',unit:'sec',surv:true,arena:true,max:46,how:'Everyone shares one round deck. Tap Jump to clear the swinging boom. It keeps speeding up, and it flashes yellow just before it swings back the other way.',cpu:()=>rand(50,300)/10,play:arena(BOOM)},
  {name:'Ticket Grab',unit:'tickets',arena:true,max:66,how:'One minute on a big square. Grab tickets before the others do; each one lasts 5 seconds. Pink tickets are worth 3. After 15 seconds the deck shrinks to half its size. In the last 15 seconds half the tickets are red, and each one costs you 1.',cpu:()=>rand(14,40),play:arena(GRAB)},
- {name:'Hot Planks',unit:'sec',surv:true,arena:true,max:46,how:'Sixteen big tiles. Tiles flash yellow, and are safe to walk on, until they turn red. More tiles go, with less warning, as time passes.',cpu:()=>rand(60,300)/10,play:arena(HOT)},
- {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:36,how:'Everyone shares one deck. Coconuts are falling. Watch for the shadows and keep out from under them.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
+ {name:'Hot Planks',unit:'sec',surv:true,arena:true,max:46,how:'Sixteen big tiles. Tiles flash yellow, and are safe to walk on, until they turn red. More tiles go, with less warning, as time passes. Half way through, the big tiles turn into lots of small ones; the rules and the pace stay the same.',cpu:()=>rand(60,300)/10,play:arena(HOT)},
+ {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:36,how:'Everyone shares one deck. Small coconuts are falling, and plenty of them. Watch for the shadows and keep out from under them. You also have a stun gun with 3 shots: tap Shoot to fire the way you are facing, and a hit freezes that player for a moment.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
  {name:'Spotlight',unit:'pts',dec:true,arena:true,max:96,how:'Ninety seconds. Stand in the yellow spotlight to score. Every 30 seconds a new yellow light arrives and the old one turns red, which takes points away just as fast. Where red and yellow overlap is neutral.',cpu:()=>rand(100,400)/10,play:arena(SPOT)},
  {name:'Sumo Shove',unit:'sec',surv:true,arena:true,max:51,how:'Player against player. The red closes in around two safe circles, then the circles start to roam. Touch the red and you are out. Shove the others into it, and tap Dash for a charge that hits much harder. You only get 5 dashes, and each one ends with a small kick backwards.',cpu:()=>rand(60,300)/10,play:arena(SUMO)},
  {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You are inside it and cannot see over the hedges. Use the two on-screen sticks: the left one turns your view and the right one moves you. A controller works the same way. The exit is somewhere on the far side, marked in green. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},

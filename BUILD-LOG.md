@@ -323,6 +323,12 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Paint Fight: a colour bomb lands on a random tile every 10 seconds. Walk over it to pick it up, then tap the new Bomb button to paint a 4 by 4 block of tiles around you.
 - View check of all 14 shared-platform games in portrait and landscape. Landscape platforms now stop short of the timer bar, and the Trap Doors wall fits inside the screen.
 
+## Build 52
+
+- Coconut Drop: coconuts are half the size and about 30% more of them fall.
+- Coconut Drop: everyone has a stun gun with 3 shots for the game. The Shoot button (bottom right) fires the way you are facing; a hit freezes that player for a moment.
+- Hot Planks: half way through (20 seconds) the 16 big tiles turn into 256 small ones, about the size of the Crumble Deck tiles. Same rules, same timing, same share of the floor each time.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
