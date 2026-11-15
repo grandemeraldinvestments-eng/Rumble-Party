@@ -338,6 +338,16 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Hedge Maze: first-person view again. The camera is your character's eyes and your own character is hidden.
 - Hedge Maze: a marker in your colour is dropped on the floor every step or so, so you can backtrack and see which corridors you have already walked.
 
+## Build 55
+
+- Crumble Deck: players can jump.
+- Coconut Drop: platform about 20% bigger.
+- Ghost Runner: once you are out, the view pulls back to the whole platform so you can watch the others.
+- Board popups: any player can close a card once it is revealed, on anyone's turn, by tapping the screen, pressing a key or a controller button.
+- Mini Game Frenzy: the final round ends with three mini games. Whoever wins the most of the three takes a pearl and no tickets; everyone else keeps all the tickets they won across the three.
+- Award ceremony at the end of the game: the characters walk on and line up, the stage goes dark, a spotlight finds each award winner, a pearl comes down, they take it and dance, and finally each player's block rises to match their place.
+- Eight award rules, three drawn in secret at the start of each game: Mini game champ, Podium regular, Globetrotter, Big spender, Gadget fan, Lucky feet, Hard knocks, Chance taker.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

@@ -221,6 +221,9 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 #stage p{margin:0; line-height:1.35; max-width:34ch}
 #mgActs{flex:none; width:100%; max-width:520px; margin:0 auto}
 #mini.gl{background:none; touch-action:none; --sub:var(--ink)}
+#stage .cer{align-self:center; text-align:center; max-width:94%; margin-top:6px; pointer-events:none}
+.cer b{display:block; font:400 1.15rem/1.3 'Press Start 2P',monospace; color:#ffc531; text-shadow:0 3px 0 var(--ink),0 0 2px var(--ink)}
+.cer span{display:inline-block; margin-top:8px; padding:5px 14px; color:var(--ink); background:#fffdf5; border:3px solid var(--ink); font-weight:700; font-size:1.05rem}
 #mini.gl header{background:var(--stage2); border:3px solid var(--ink); padding:8px 14px; align-self:center}
 #mini.gl #stage{justify-content:flex-start; max-width:none; gap:8px; overflow:visible!important; touch-action:none}
 #mini.gl *{touch-action:none}
@@ -967,7 +970,10 @@ let shownGid=0, shownScreen='menu', hudKey='', askShown='', sh={hit:0,sp:0,cheer
 function show(id){shownScreen=id; for(const s of ['menu','join','lobby','guide','game','results','practice'])$('#'+s).hidden=s!==id; if(id!=='game'){mapView=false; $('#mapBtn').textContent='Map'; hideInfo(); $('#settings').hidden=true; $('#chance').hidden=true; introT=0; $('#titleCard').hidden=true; $('#fade').hidden=true;}}
 function showChance(u){const el=$('#chance'), raw=u.chG||'?', it=raw.indexOf('item:')===0?ITEMS[raw.slice(5)]:null, gl=it?'★':raw; el.hidden=false; el.className='spin'; $('#chText').textContent=u.chT; $('#chHead').textContent=u.chH||'Chance';
   $('#chDisc').style.background=u.chC||''; $('#chG').textContent=gl; $('#chG').style.fontSize=gl.length>1?'3.6rem':''; $('#chG').style.color=u.chC&&u.chC!=='#ffc531'?'#fff':''; setTimeout(()=>{el.className=''; if(it){$('#chG').innerHTML=it.svg; $('#chDisc').style.background='#fff';}},1700/SPEED); const id=u.ch; setTimeout(()=>{if(V&&V.ui.ch===id)el.hidden=true;},((u.chD||3300)-200)/SPEED);
-  el.onpointerdown=()=>{if(el.className==='spin'||!V||V.ui.who!==myK())return; el.hidden=true; if(net.host)cardSkip=id; else if(net.nr)net.nr.presence({skip:id}).catch(()=>{});};}
+  chanceSkip=()=>{if(el.hidden||el.className==='spin'||!V||myK()<0||V.ui.ch!==id)return false; el.hidden=true; if(net.host)cardSkip=id; else if(net.nr)net.nr.presence({skip:id}).catch(()=>{}); return true;};}   // any player can close a card once it has been revealed: tap anywhere, press a key or a controller button
+let chanceSkip=null;
+window.addEventListener('pointerdown',()=>{if(chanceSkip)chanceSkip();},true);
+window.addEventListener('keydown',e=>{if(chanceSkip&&(e.key===' '||e.key==='Enter'||e.key==='Escape'))chanceSkip();});
 function hideInfo(){$('#spInfo').hidden=true; if(mark)mark.visible=false;}
 function spaceInfo(i){
   const n=NODES[i], amt=V.round>=V.rounds?6:3, me=V.p[myK()];
@@ -1144,6 +1150,7 @@ function gpPoll(dt){
   if(!gp.on&&any){gp.on=true; gp.x=window.innerWidth/2; gp.y=window.innerHeight*.6;}
   if(gp.on){
     gp.idle=any?0:gp.idle+dt;
+    if(chanceSkip&&[0,1,2,3].some(hit))chanceSkip();   /* any face button closes a card that is showing */
     if(joy.on&&joy.split){cur.hidden=true; const rx=dz(p.axes[2]||0), ry=dz(p.axes[3]||0); joy.gturn=ax; if(joy.id===null&&(rx||ry||dx||dy||gp.steer)){joy.x=rx||dx; joy.y=ry||dy; gp.steer=!!(rx||ry||dx||dy);}}   // right stick moves, left stick turns the view
     else if(joy.on){cur.hidden=true; if(joy.id===null&&(ax||ay||dx||dy||gp.steer)){joy.x=ax||dx; joy.y=ay||dy; gp.steer=!!(ax||ay||dx||dy);} if($('#stunBtn').hidden){if(hit(0)||hit(1)||hit(2)||hit(3))joy.jump=true;} else{if(hit(0)||hit(1))joy.jump=true; if(hit(2)||hit(3))joy.act=true;}}
     else{
@@ -1233,7 +1240,7 @@ function onPeers(ch){
       if(pr.res&&S.mini&&pr.res.mid===S.mini.mid&&typeof pr.res.v==='number')miniRes[k]=pr.res.v;
       if(pr.vote&&S.mini&&pr.vote.mid===S.mini.mid&&pr.vote.i>=0&&pr.vote.i<3)votes[k]={i:pr.vote.i|0,lock:!!pr.vote.lock};
       if(pr.rdy&&S.mini&&pr.rdy===S.mini.mid)ready[k]=1;
-      if(pr.skip&&pr.skip===S.ui.ch&&k===S.ui.who)cardSkip=pr.skip;
+      if(pr.skip&&pr.skip===S.ui.ch)cardSkip=pr.skip;
       if(Array.isArray(pr.a))avIn(k,pr.a);
     }
     for(const p of ch.left){
@@ -1307,7 +1314,7 @@ async function giveItem(p){
   const r=Math.random(), id=r<.5?'twin':r<.85?'magnet':'kite'; await card('Item',itemLine(id),'#35c98a','item:'+id); p.it.push(id); say(`${nm(p)} found a ${ITEMS[id].name}: ${ITEMS[id].desc}`);
 }
 async function useItem(p,idx){
-  const id=p.it.splice(idx,1)[0];
+  const id=p.it.splice(idx,1)[0]; p.iu=(p.iu||0)+1;
   if(id==='twin'){say(`${nm(p)} uses Twin Dice: two dice this turn.`); await sleep(900); return 2;}
   if(id==='magnet'){const v=S.p.filter(o=>o!==p).sort((a,b)=>b.t-a.t)[0], amt=Math.min(5,v.t); gain(v,-amt); gain(p,amt); say(`Magnet pulls ${amt} tickets from ${nm(v)}.`); await sleep(1200); return 1;}
   say(`${nm(p)} flies a Kite to the pearl stall.`); S.ui.dice=-1; await flyTo(p,S.pearlAt); await stall(p); return 1;
@@ -1316,7 +1323,7 @@ async function shop(p){
   const ids=['twin','magnet','kite'].filter(id=>p.t>=ITEMS[id].cost); say('Item shop. Pick an item, or skip.'); S.ui.follow=p.k;
   askX={pick:1,start:-1,info:[...ids.map(id=>`${ITEMS[id].name}, ${ITEMS[id].cost} tickets. ${ITEMS[id].desc}`),null]};
   const c=await ask(p.k,...ids.map(id=>`${ITEMS[id].name}|${ITEMS[id].cost} tickets`),'Skip');
-  if(c<ids.length){p.t-=ITEMS[ids[c]].cost; p.it.push(ids[c]);}
+  if(c<ids.length){p.t-=ITEMS[ids[c]].cost; p.sp=(p.sp||0)+ITEMS[ids[c]].cost; p.it.push(ids[c]);}
 }
 async function shopStop(p){
   if(p.cpu){const b=cpuShop(p); if(b){say(`${nm(p)} buys a ${ITEMS[b].name} at the shop.`); await sleep(1000);} return;}
@@ -1328,7 +1335,7 @@ function cpuShop(p){
   if(p.it.length>=2)return null; let id=null;
   if(p.t>=COST+ITEMS.kite.cost&&!p.it.includes('kite'))id='kite';
   else if(p.t>=COST+ITEMS.twin.cost&&!p.it.includes('twin')&&dist(p.pos,S.pearlAt)>6)id='twin';
-  if(id){p.t-=ITEMS[id].cost; p.it.push(id);} return id;
+  if(id){p.t-=ITEMS[id].cost; p.sp=(p.sp||0)+ITEMS[id].cost; p.it.push(id);} return id;
 }
 function cpuItem(p){
   const has=id=>p.it.indexOf(id);
@@ -1339,7 +1346,7 @@ function cpuItem(p){
 }
 let cardSkip=0;
 async function card(head,text,col,glyph){const u=S.ui, d=String(glyph).indexOf('item:')===0?6800:3300; say(head+'…'); u.ch++; u.chT=text; u.chH=head; u.chC=col; u.chG=glyph; u.chD=d; const id=u.ch, g=gen;
-  await sleep(1900); await waitFor(()=>cardSkip===id||gen!==g,(d-1900)/SPEED); if(cardSkip===id)u.chX=id; say(text);}   // the player whose turn it is can tap to close a card once it has been revealed   // item cards stay up longer so the description can be read
+  await sleep(1900); await waitFor(()=>cardSkip===id||gen!==g,(d-1900)/SPEED); if(cardSkip===id)u.chX=id; say(text);}   // any player can tap to close a card once it has been revealed   // item cards stay up longer so the description can be read
 const spCard=(t,text)=>card(SP[t][0],text||SP[t][1],SP[t][2],SP[t][3]);
 const fx=(t,o)=>{S.ui.fx=Object.assign({n:S.ui.fx.n+1,t},o||{});};
 async function chance(p){
@@ -1399,9 +1406,9 @@ async function land(p,depth){
   const t=NODES[p.pos].t, amt=S.round>=S.rounds?6:3, tr=S.traps[p.pos];
   if(tr!=null&&tr!==p.k&&S.p[tr]){const a=Math.min(5,p.t); gain(p,-a); gain(S.p[tr],a); delete S.traps[p.pos]; say(`${nm(p)} walks into ${nm(S.p[tr])}'s trap: -${a} tickets.`); await sleep(1500);}
   if(burning()&&inBurn(p.pos)){gain(p,-3); say('Scorched ground: -3 tickets.'); return;}
-  if(t==='+'){gain(p,amt); say(`Blue space: +${amt} tickets.`);}
-  else if(t==='-'){gain(p,-amt); if(S.pot!=null)S.pot+=amt; say(`Red space: -${amt} tickets.`);}
-  else if(t==='?')await chance(p);
+  if(t==='+'){p.bl=(p.bl||0)+1; gain(p,amt); say(`Blue space: +${amt} tickets.`);}
+  else if(t==='-'){p.rd=(p.rd||0)+1; gain(p,-amt); if(S.pot!=null)S.pot+=amt; say(`Red space: -${amt} tickets.`);}
+  else if(t==='?'){p.chn=(p.chn||0)+1; await chance(p);}
   else if(t==='I')await giveItem(p);
   else if(SPF[t])await SPF[t](p,depth||0);
   else if(t==='S')say('Back at the gate.');
@@ -1439,29 +1446,45 @@ async function gameLoop(){
       const u=[...S.p].sort((a,b)=>a.pe-b.pe||a.t-b.t)[0]; S.ui.follow=u.k; S.ui.who=u.k; await sleep(700); gain(u,10); say(`Underdog gift: ${nm(u)} gets 10 tickets.`); await sleep(1700);
     }
     for(S.turn=0;S.turn<S.p.length;S.turn++)await takeTurn(S.p[S.turn]);
-    S.turn=0; await runMini(); S.round++;
+    S.turn=0; if(S.round===S.rounds&&S.rounds>1)await frenzy(); else await runMini(); S.round++;
   }
   S.round=S.rounds; const bonus=[];
-  [['mg','Mini game champ','most tickets won in mini games'],['st','Globetrotter','most spaces travelled']].forEach(([key,title,why])=>{
-    const top=Math.max(...S.p.map(p=>p[key])); if(top<=0)return; const w=S.p.filter(p=>p[key]===top); w.forEach(p=>p.pe++); bonus.push([title,w.map(p=>p.k),why]);});
+  // the awards: the three rules drawn at the start, swapping in another if nobody qualifies for one. Ties all get the pearl
+  for(const ci of [...S.crit,...CRIT.map((q,i)=>i).filter(i=>!S.crit.includes(i))]){if(bonus.length>=3)break; const [key,title,why]=CRIT[ci], top=Math.max(...S.p.map(p=>p[key]||0)); if(top<=0)continue;
+    const w=S.p.filter(p=>(p[key]||0)===top); w.forEach(p=>p.pe++); bonus.push([title,w.map(p=>p.k),why]);}
   const r=[...S.p].sort((a,b)=>b.pe-a.pe||b.t-a.t), tie=r[1].pe===r[0].pe&&r[1].t===r[0].t;
-  S.ui.follow=r[0].k; S.ui.who=r[0].k; say(tie?'Counting the pearls…':`${nm(r[0])} takes the crown!`); await sleep(900); S.ui.cheer++; S.ui.cheerK=r[0].k; await sleep(1800);
+  S.ui.who=-1; S.ui.sp++; S.ui.spT='Award ceremony'; say('The fair is over. Time for the awards!'); await sleep(2200);
+  S.mini={mid:++S.mid,g:-1,phase:'fin',fin:{bonus,rank:r.map(p=>p.k),tie}}; S.phase='mini';
+  {const g=gen; await new Promise(r=>setTimeout(r,(CER.IN+CER.AW*bonus.length+CER.END)*1000/MSPEED+500)); if(g!==gen)return;} S.mini=null;   /* real time, so every phone sees the whole show */
   S.res={tie,bonus,rank:r.map(p=>p.k)}; S.phase='results';
   await ask(0,'Back to the lobby'); S.res=null; S.phase='lobby'; lobbyKey='';
 }
-async function runMini(){
+/* the eight award rules. Three are drawn at random when a game starts and decide the bonus pearls at the end */
+const CRIT=[['mg','Mini game champ','most tickets won in mini games'],['mw','Podium regular','most mini games won'],['st','Globetrotter','most spaces travelled'],['sp','Big spender','most tickets spent at the item shop'],
+  ['iu','Gadget fan','most items used'],['bl','Lucky feet','most blue spaces landed on'],['rd','Hard knocks','most red spaces landed on'],['chn','Chance taker','most chance spaces landed on']];
+const CER={IN:3.6,AW:7.5,END:7.5};
+/* Mini Game Frenzy: the last round ends with three mini games. Whoever wins the most of them gets a pearl and no tickets;
+   everyone else keeps all the tickets they won across the three */
+async function frenzy(){
+  S.ui.who=-1; S.ui.follow=-1; S.ui.sp++; S.ui.spT='Mini Game Frenzy'; say('Mini Game Frenzy! Three mini games: win the most to take a pearl. Everyone else keeps their tickets.'); await sleep(3200);
+  const fz={wins:S.p.map(()=>0),tix:S.p.map(()=>0),i:0}; for(fz.i=0;fz.i<3;fz.i++)await runMini(fz);
+  const best=[...S.p].sort((a,b)=>fz.wins[b.k]-fz.wins[a.k]||fz.tix[b.k]-fz.tix[a.k]||Math.random()-.5)[0];
+  S.p.forEach(p=>{if(p!==best){p.t+=fz.tix[p.k]; p.mg+=fz.tix[p.k];}});
+  best.pe++; S.ui.follow=best.k; S.ui.who=best.k; await sleep(600); S.ui.cheer++; S.ui.cheerK=best.k; S.ui.pe=(S.ui.pe||0)+1; say(`${nm(best)} wins the Mini Game Frenzy and takes a pearl! Everyone else keeps their frenzy tickets.`); await sleep(3200);
+}
+async function runMini(fz){
   // one random shared-deck game per round; every game is played once before any comes round again
   if(!S.deck.length){const d=GAMES.map((g,i)=>i).filter(i=>GAMES[i].arena); for(let i=d.length-1;i>0;i--){const j=rand(0,i); [d[i],d[j]]=[d[j],d[i]];} if(d.length>1&&d[d.length-1]===S.lastG)[d[0],d[d.length-1]]=[d[d.length-1],d[0]]; S.deck=d;}
   const gi=S.deck.pop(), g=GAMES[gi]; S.lastG=gi;
   miniRes={}; net.av={}; net.buf={}; votes={};
-  S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null}; S.phase='mini';
+  S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,fz:fz?fz.i+1:0}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
   await waitFor(()=>S.p.every(p=>p.k in miniRes||(p.cpu&&!g.arena)),(g.max+14)*1000);
   S.p.forEach(p=>{if(!(p.k in miniRes))miniRes[p.k]=p.cpu?g.cpu():g.low?999:0;});
   const res=S.p.map(p=>({k:p.k,sc:miniRes[p.k]})).sort((a,b)=>g.low?a.sc-b.sc:b.sc-a.sc);
-  res.forEach((r,i)=>{r.pl=i>0&&res[i-1].sc===r.sc?res[i-1].pl:i; r.aw=(S.p.length>4?AWARD6:AWARD)[r.pl]; S.p[r.k].t+=r.aw; S.p[r.k].mg+=r.aw;});
+  res.forEach((r,i)=>{r.pl=i>0&&res[i-1].sc===r.sc?res[i-1].pl:i; r.aw=(S.p.length>4?AWARD6:AWARD)[r.pl]; if(!r.pl)S.p[r.k].mw=(S.p[r.k].mw||0)+1; if(fz){fz.tix[r.k]+=r.aw; if(!r.pl)fz.wins[r.k]++;} else{S.p[r.k].t+=r.aw; S.p[r.k].mg+=r.aw;}});
   S.mini.rows=res; S.mini.phase='done';
-  await ask(0,'Back to the board'); S.mini=null; S.phase='board';
+  await ask(0,fz&&fz.i<2?'Next game':'Back to the board'); S.mini=null; S.phase='board';
 }
 /* everyone taking part taps Ready before a mini game starts; computers are always ready, and it starts anyway after 30 seconds */
 let ready={};
@@ -1485,14 +1508,15 @@ function startGame(prac=-1){
   if(ps.length<2)return;
   if(curMap!==S.map)buildWorld(S.map);
   const far=NODES.spots;
-  S.p=ps.map((p,k)=>({...p,k,pos:0,t:10,pe:0,it:[],mg:0,st:0,fly:0,on:0}));
+  S.p=ps.map((p,k)=>({...p,k,pos:0,t:10,pe:0,it:[],mg:0,st:0,fly:0,on:0,mw:0,sp:0,iu:0,bl:0,rd:0,chn:0}));
+  {const c=CRIT.map((q,i)=>i); for(let i=c.length-1;i>0;i--){const j=rand(0,i); [c[i],c[j]]=[c[j],c[i]];} S.crit=c.slice(0,3);}   /* three of the eight award rules are drawn in secret at the start */
   Object.assign(S,{gid:rand(1,1e9),round:1,turn:0,pearlAt:far[rand(0,far.length-1)],deck:[],mid:0,res:null,mini:null,phase:'board',traps:{},burn:null,tide:0,pot:MAPS[S.map].sp.includes('J')?5:null,harv:MAPS[S.map].sp.includes('V')?4:null,
     ui:{who:0,msg:'',dice:-1,hit:0,hitK:0,roll:'',num:-1,ask:null,sp:0,spT:'',follow:0,cheer:0,cheerK:0,fork:0,ch:0,chT:'',chH:'',chC:'',chG:'',fx:{n:0,t:''},cam:null}});
   if(prac<0)gameLoop(); else{S.prac=1; S.ui.who=-1; practiceRun(prac);}
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=54; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=55; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1534,8 +1558,9 @@ function miniSync(){
     $('#vlock').onclick=()=>{if(myVote<0)return; myLock=true; $('#vlock').disabled=true; $('#vlock').textContent='Vote locked'; castVote(m.mid,myVote,true);};
     return;
   }
+  if(m.phase==='fin'){ceremony(m); return;}
   $('#mgTitle').textContent=g.name;
-  if(m.phase==='intro'){$('#mgSub').textContent=m.prac?'Practice':m.note?'Duel':'This round\'s game'; stage.innerHTML=`${m.note?`<p><b>${m.note}</b></p>`:''}<p>${g.how}</p>${m.note||m.prac?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2. With five or six players the prizes are 10, 6, 4, 2 and 1.</p>'}${g.arena&&!g.alone?'<p class="sub">Fall off the edge and you are out. Walk into other players to shove them.</p>':''}<div class="rdy" id="rdyRow"></div>${myK()>=0&&(!m.only||m.only.includes(myK()))?'<button class="btn" id="rdyBtn">Ready</button>':''}<p class="sub" id="rdyNote"></p>`;
+  if(m.phase==='intro'){$('#mgSub').textContent=m.prac?'Practice':m.note?'Duel':m.fz?`Mini Game Frenzy: game ${m.fz} of 3`:'This round\'s game'; stage.innerHTML=`${m.note?`<p><b>${m.note}</b></p>`:''}<p>${g.how}</p>${m.fz?'<p class="sub"><b>Mini Game Frenzy.</b> Whoever wins the most of the three games takes a pearl and no tickets. Everyone else keeps all the tickets they win in the three games.</p>':''}${m.note||m.prac?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2. With five or six players the prizes are 10, 6, 4, 2 and 1.</p>'}${g.arena&&!g.alone?'<p class="sub">Fall off the edge and you are out. Walk into other players to shove them.</p>':''}<div class="rdy" id="rdyRow"></div>${myK()>=0&&(!m.only||m.only.includes(myK()))?'<button class="btn" id="rdyBtn">Ready</button>':''}<p class="sub" id="rdyNote"></p>`;
     const rb=$('#rdyBtn'); if(rb)rb.onclick=()=>{rb.disabled=true; rb.textContent='Ready!'; setReady(m.mid);}; rdyKey=''; drawReady(m);}
   else if(m.phase==='play'){
     const k=myK(); if(k<0||(m.only&&!m.only.includes(k))){stage.innerHTML=`<p>${m.only?'The duel is under way':'Mini game in progress'}\u2026</p>`; return;}
@@ -1543,9 +1568,46 @@ function miniSync(){
     g.play({k,i:V.p[k].i,seed:m.seed}).then(async v=>{if(!g.arena)await gameFinished(); miniBusy=false; if(!V||!V.mini||V.mini.mid!==m.mid)return; report(m.mid,k,v);
       stage.innerHTML=`<div class="sub">Your score</div><div class="big">${fmt(g,v)}</div><p class="sub">Waiting for the other players…</p>`;});
   }
-  else if(m.phase==='done'){$('#mgSub').textContent='Results';
+  else if(m.phase==='done'){$('#mgSub').textContent=m.fz?`Frenzy game ${m.fz} of 3: results`:'Results';
     stage.innerHTML=`<div class="rank">${m.rows.map(r=>{const p=V.p[r.k]; return`<div class="row" style="--c:${CAST[p.i].c}"><span class="pos">${r.pl+1}</span>${face(p.i)}
       <b>${CAST[p.i].name}</b><span class="sc">${fmt(g,r.sc)}${r.sc===999?'':' '+g.unit}</span>${m.prac?"":`<span class="aw">${r.aw>=0?"+":""}${r.aw}</span>`}</div>`;}).join('')}</div>`;}
+}
+/* the award ceremony. The host sends who won what and the final order; each phone then plays the same show on its own:
+   everyone walks on and lines up, the lights go down, a spotlight finds each award winner, a pearl comes down, they take it and dance,
+   and at the end each player's block rises to a height that matches where they finished */
+function ceremony(m){
+  const f=m.fin, ps=V.p, n=ps.length, W=window.innerWidth, H=window.innerHeight, sp=n>4?1.45:1.7, X=k=>(k-(n-1)/2)*sp;
+  miniBusy=true; $('#mgTitle').textContent='Awards'; $('#mgSub').textContent='';
+  const ms=miniStage('',[0,3,12],[0,1.9,0]), sc=ms.scene, cam=ms.cam, tv=Math.tan(cam.fov*Math.PI/360), D=Math.max(10.5,((n-1)*sp/2+1.3)/(tv*W/H)); cam.position.set(0,2.8+D*.16,D); cam.lookAt(0,W>H?2.5:2.1,0);
+  stage.innerHTML='<div class="cer"><b id="cerA"></b><span id="cerB" hidden></span></div>';
+  const sky=new THREE.Color(0x29d8ff), night=new THREE.Color(0x04050c); sc.background=sky.clone(); sc.traverse(o=>{if(o.geometry&&o.geometry.type==='CircleGeometry')o.visible=false;});
+  const L=sc.children.filter(o=>o.isLight).map(o=>[o,o.intensity]), ph=c=>new THREE.MeshPhongMaterial({color:c,shininess:8});
+  mesh(new THREE.BoxGeometry(60,.6,44),ph(0x8a5a2b),0,-.3,18,sc).castShadow=false; mesh(new THREE.PlaneGeometry(60,16),ph(0xa3243b),0,7,-3.2,sc).castShadow=false;
+  const HT=[2.2,1.75,1.35,1.05,.8,.6], P=ps.map((p,k)=>{const col=CAST[p.i].hex, pod=mesh(new THREE.BoxGeometry(1.25,3,1.25),ph(col),X(k),-1.49,0,sc), place=f.rank.indexOf(k);
+      const lb=mesh(new THREE.PlaneGeometry(.52,.52),new THREE.MeshBasicMaterial({map:tex((g,s)=>label(g,s,String(place+1),'#ffffff',46)),transparent:true}),0,1.2,.635,pod); lb.castShadow=false;
+      const ch=makeChar(p.i,sc); ch.position.set(X(k)-13-(n-1-k)*.5,0,0); ch.fig.rotation.y=Math.PI/2; ch.run=1; return{k,pod,ch,x:X(k),h:HT[place]||.4,place};});
+  const spots=ps.map(()=>{const l=new THREE.SpotLight(0xfff1c9,0,40,.105,.4,1); l.position.set(0,10,6); sc.add(l); sc.add(l.target); return l;});
+  const pearls=ps.map(()=>{const q=mesh(new THREE.SphereGeometry(.27,18,14),new THREE.MeshPhongMaterial({color:0xffffff,shininess:120,emissive:0x8a86a0}),0,0,0,sc); q.visible=false; q.castShadow=false; return q;});
+  const A=$('#cerA'), B=$('#cerB'), say2=(a,b)=>{if(A.textContent!==a)A.textContent=a; B.hidden=!b; if(b&&B.textContent!==b)B.textContent=b;}, names=ks=>ks.map(nameOf).join(' and ');
+  const total=CER.IN+CER.AW*f.bonus.length+CER.END; let t=0, dark=0, lastA=-1, beat=0, done=false; const T0=performance.now();
+  ms.run(dt=>{t=(performance.now()-T0)/1000*MSPEED; if(t>=total+1.5||!V||!V.mini||V.mini.mid!==m.mid)return 1;
+    // walking on, then turning to face the front
+    P.forEach((q,i)=>{const arrive=1.2+i*.3; if(t<arrive+.01){const x0=q.x-13-(n-1-i)*.5; q.ch.position.x=x0+(q.x-x0)*Math.min(1,t/arrive);} else if(q.ch.run&&t<CER.IN+.5){q.ch.run=0; q.ch.position.x=q.x; q.ch.fig.rotation.y=0;}});
+    const ai=Math.floor((t-CER.IN)/CER.AW), inA=t>=CER.IN&&ai<f.bonus.length, u=inA?t-CER.IN-ai*CER.AW:0, endT=t-CER.IN-CER.AW*f.bonus.length;
+    dark+=((inA&&u<CER.AW-.7?1:0)-dark)*Math.min(1,dt*4); L.forEach(([o,v])=>{o.intensity=v*(1-dark*.93);}); sc.background.copy(sky).lerp(night,dark);
+    if(t<CER.IN)say2('The awards','');
+    spots.forEach(l=>{l.intensity=0;}); pearls.forEach(q=>{q.visible=false;}); P.forEach(q=>{q.ch.cheer=0; q.ch.air=false; q.ch.jy=0;});
+    if(inA){const b=f.bonus[ai], ks=b[1]; if(ai!==lastA){lastA=ai; SFX.item();}
+      if(u<2.8){say2(b[0],'For the '+b[2]+'…'); const l=spots[0], x=Math.sin(u*3.1)*(n-1)*sp/2; l.intensity=u>.7?2.4:0; l.position.set(x,10,6); l.target.position.set(x,1,0); if(u>.7&&u-beat>.22){beat=u; SFX.tick&&SFX.tick();}}   // a searching spotlight
+      else{say2(b[0],names(ks)+(ks.length>1?' each win a pearl!':' wins a pearl!')); if(beat<50){beat=99; SFX.win();}
+        ks.forEach((k,j)=>{const q=P[k], l=spots[j], pr=pearls[j], v=u-2.8, take=v>1.3; l.intensity=u<CER.AW-.7?2.6:0; l.position.set(q.x,10,6); l.target.position.set(q.x,1,0);
+          const hop=take&&u<CER.AW-.9?Math.abs(Math.sin((v-1.3)*8))*.3:0; q.ch.jy=hop; q.ch.cheer=take?1:0; q.ch.air=take; if(take)q.ch.fig.rotation.y=Math.sin((v-1.3)*5)*.7; else q.ch.fig.rotation.y=0;   // the pearl comes down, they take it and dance
+          pr.visible=u<CER.AW-.4; pr.position.set(q.x,take?2.05+hop:4.6-Math.min(1,v/1.2)*2.2+Math.sin(u*5)*.05,0); pr.scale.setScalar(u>CER.AW-.9?Math.max(.01,(CER.AW-.4-u)/.5):1);});}
+      if(u<.1)beat=0;}
+    else if(endT>=0){P.forEach(q=>{q.ch.fig.rotation.y=0;}); const k=Math.max(0,Math.min(1,(endT-1)/2.6)), e=k*k*(3-2*k); say2(endT<3.8?'Final standings':f.tie?'It is a tie at the top!':nameOf(f.rank[0])+' wins the fair!','');
+      P.forEach(q=>{q.pod.position.y=-1.49+q.h*e; q.ch.position.y=q.h*e; if(endT>3.8&&q.place===0){q.ch.cheer=1; q.ch.air=true; q.ch.jy=Math.abs(Math.sin(endT*7))*.25;}});   // each block rises to match where its player finished
+      if(endT>3.8&&!done){done=true; SFX.win();}}
+  }).then(()=>{ms.end(); miniBusy=false; stage.innerHTML='';});
 }
 async function countdown(el){for(const t of ['3','2','1']){el.textContent=t; await sleep(550);}}
 
@@ -1774,7 +1836,7 @@ const HOT={hint:'Yellow is safe until it turns red',surv:true,max:40,ring:2,deck
     ai.dx=0; ai.dz=0;}};
 
 /* Coconut Drop: small coconuts, and plenty of them. Everyone also has a stun gun with 3 shots: a hit freezes a player for a moment */
-const COCO={hint:'Watch the shadows',surv:true,max:30,ring:1.8,deck:{k:'c',R:4.3},btn:'Shoot',SHOTS:3,STUN:1.4,
+const COCO={hint:'Watch the shadows',surv:true,max:30,ring:1.8,deck:{k:'c',R:5.2},btn:'Shoot',SHOTS:3,STUN:1.4,
   init(sc,rng,sh){const list=[]; let t=1.2; while(t<29){const q=sh.pt(rng,.96); list.push({t,x:q[0],z:q[1],m:null,s:null,done:false,hot:false}); t+=Math.max(.14,.5-t*.013)/1.3;}   // half the size, 30% more of them
     return{list,R:sh.R,sc,geo:new THREE.SphereGeometry(.21,12,9),sg:new THREE.CircleGeometry(.4,20),shots:[],stars:[],bg:new THREE.SphereGeometry(.13,8,6),bm:new THREE.MeshBasicMaterial({color:0x35d0ff})};},
   fire(st,k,x,z,a){const m=mesh(st.bg,st.bm,x,.8,z,st.sc); m.castShadow=false; st.shots.push({k,x,z,dx:Math.sin(a),dz:Math.cos(a),life:.6,m});},
@@ -1919,7 +1981,7 @@ const PAINT={hint:'Paint the most tiles',max:30,quiet:true,ring:3.9,deck:{k:'s',
       const d=Math.hypot(tx-av.x,tz-av.z)||1; ai.dx=(tx-av.x)/d*.85; ai.dz=(tz-av.z)/d*.85;} else{ai.dx=0; ai.dz=0;}}};
 
 /* Crumble Deck: a square of tiles. Tiles drop sooner and sooner as the game goes on */
-const CRUMBLE={hint:'The floor crumbles behind you',surv:true,max:30,noDeck:true,speed:.8,ring:1.6,deck:{k:'s',h:4.4},
+const CRUMBLE={hint:'The floor crumbles behind you',surv:true,max:30,jump:true,noDeck:true,speed:.8,ring:1.6,deck:{k:'s',h:4.4},
   init(sc,rng,sh){const S=.8,cells=[],map={},geo=new THREE.BoxGeometry(S-.05,.4,S-.05); for(let gx=-5;gx<=5;gx++)for(let gz=-5;gz<=5;gz++){const x=gx*S,z=gz*S,m=mesh(geo,(gx+gz)&1?0xc98f55:0xd9a066,x,-.2,z,sc); m.castShadow=false; m.receiveShadow=true; const c={x,z,s:0,tm:0,m,mat:m.material}; cells.push(c); map[gx+','+gz]=c;}
     return{S,cells,map,at:(x,z)=>map[Math.round(x/S)+','+Math.round(z/S)],crack:new THREE.MeshLambertMaterial({color:0xe0566b})};},
   step(st,t,dt){for(const c of st.cells){if(c.s===1){c.tm-=dt; c.m.position.y=-.2+Math.sin(t*40)*.025; if(c.tm<=0){c.s=2; c.tm=3+t*.25;}}   // a dropped tile grows back after a few seconds, more slowly as the game goes on
@@ -2021,8 +2083,9 @@ const GHOST={hint:'Run from the ghost',surv:true,max:80,dark:true,tight:true,cam
   start(k){const c=[[-1,-1],[1,-1],[-1,1],[1,1],[0,-1],[0,1]][k%6]; return[c[0]*6.7,c[1]*6.7];},
   draw(sc,sh){deckDraw(sc,sh,new THREE.MeshPhongMaterial({color:0xb08a5e,shininess:0}),new THREE.MeshPhongMaterial({color:0x6b5335,shininess:0}));},   // lit per pixel, so only the torch beams show the floor; the edge is not marked
   // sideways the deck is zoomed to the full width of the screen, and the camera slides up and down the deck with your character
-  view(cam,me,dt,st){const W=window.innerWidth,H=window.innerHeight, b=st.camBase, ox=b.p[0]-b.l[0], oy=b.p[1]-b.l[1], oz=b.p[2]-b.l[2], ol=Math.hypot(ox,oy,oz), tv=Math.tan(cam.fov*Math.PI/360), hh=7.2,
-      D=(hh+.15)*1.15*H/(tv*Math.max(W,H)),   // the same scale both ways round (characters the same size on screen), with you kept in the middle
+  view(cam,me,dt,st){const W=window.innerWidth,H=window.innerHeight, b=st.camBase, ox=b.p[0]-b.l[0], oy=b.p[1]-b.l[1], oz=b.p[2]-b.l[2], ol=Math.hypot(ox,oy,oz), tv=Math.tan(cam.fov*Math.PI/360), hh=7.2;
+    if(!me.alive){cam.cx=cam.cz=null; cam.position.set(b.p[0],b.p[1],b.p[2]); cam.lookAt(b.l[0],b.l[1],b.l[2]); return;}   /* out: pull back to the whole platform to watch the others */
+    const       D=(hh+.15)*1.15*H/(tv*Math.max(W,H)),   // the same scale both ways round (characters the same size on screen), with you kept in the middle
       tz=me.z, tx=me.x, k=Math.min(1,dt*5);
     cam.cz=cam.cz==null?tz:cam.cz+(tz-cam.cz)*k; cam.cx=cam.cx==null?tx:cam.cx+(tx-cam.cx)*k; cam.position.set(cam.cx,oy/ol*D,cam.cz+oz/ol*D); cam.lookAt(cam.cx,0,cam.cz);},
   init(sc,rng,sh,n){const em=new THREE.MeshBasicMaterial({color:0x10131f});   // no glow: you only see a ghost when a torch is on it
@@ -2077,7 +2140,7 @@ const GAMES=[
  {name:'Sumo Shove',unit:'sec',surv:true,arena:true,max:51,how:'Player against player. The red closes in around two safe circles, then the circles start to roam. Touch the red and you are out. Shove the others into it, and tap Dash for a charge that hits much harder. You only get 5 dashes, and each one ends with a small kick backwards.',cpu:()=>rand(60,300)/10,play:arena(SUMO)},
  {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You see it through your own eyes and cannot see over the hedges. Markers in your colour are dropped behind you as you walk, so you can tell where you have already been. Use the two on-screen sticks: the left one turns your view and the right one moves you. A controller works the same way. The exit is somewhere on the far side, marked in green. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
  {name:'Paint Fight',unit:'tiles',arena:true,max:36,how:'Player against player on a big square with a hole in the middle. Every tile you walk over turns your colour, including tiles the others already painted. Every 10 seconds a colour bomb lands somewhere: walk over it to pick it up, then tap Bomb to paint a 4 by 4 block of tiles around you. Most tiles when time runs out wins.',cpu:()=>rand(20,60),play:arena(PAINT)},
- {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
+ {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Tap Jump to hop over a gap. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. You have 5 jumps; when everyone has used theirs, everyone gets 5 more. You also have one Stun: it freezes the nearest player for a moment, but you cannot jump until it wears off, and it is never topped up. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},
  {name:'Trap Doors',unit:'sec',surv:true,arena:true,max:71,how:'Four rounds, or five with 6 players. Each round, walk into a door before the time runs out. Only one player fits in a door, and once you are in you cannot come back out. A door shuts behind whoever walks in. One door is a drop: whoever is behind it falls through the floor. There are 5 doors to start with (6 with 6 players) and one fewer each round, but always at least one per player still in.',cpu:()=>rand(100,650)/10,play:arena(DOORS)},
  {name:'Ghost Runner',unit:'sec',surv:true,arena:true,max:88,how:'It is pitch black. Everyone carries a burning torch that lights a circle around them. You cannot see the ghost or the edge of the deck until they come into the light. A ghost hunts one player at a time. If the hunted player touches someone, the ghost goes after them instead. Anyone who touches a ghost is out. Half way through the ghost splits into one ghost for every player still in, each a different colour and each hunting its own player. When two players touch, one ghost changes hands: the colours rank white, green, pink, cyan, red, purple, and whoever has the highest-ranked ghost of the two passes it to the other player. The ghosts get faster as the game goes on.',cpu:()=>rand(100,650)/10,play:arena(GHOST)},
