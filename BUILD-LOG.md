@@ -372,6 +372,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Conveyor Chaos: the course is three times as long (24 belts instead of 8) and the camera follows you down it. The time limit is now 100 seconds.
 - Conveyor Chaos: belt direction changes are staggered, so they no longer change in bunches early on.
 
+## Build 60
+
+- Conveyor Chaos: the belts in the second half of the course push twice as hard. They are a darker colour and their arrows move faster.
+- Conveyor Chaos: computer players now line up before stepping on to a belt, so they can still finish.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
