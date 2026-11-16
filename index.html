@@ -22,7 +22,7 @@ img{max-width:100%}
 <body>
 <title>Rumble Party</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Press+Start+2P&family=Rubik:wght@400;600;800&display=swap">
 <style>
 /* Layout: a smooth 3D island fills the screen; only the characters are pixel art.
    HUD floats over it as chunky bordered boxes. Menu, lobby and results are cards over
@@ -342,6 +342,99 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
   #stunBtn{bottom:calc(28px + env(safe-area-inset-bottom,0px)); right:calc(max(20px,env(safe-area-inset-right,0px)) + 96px); width:68px; height:68px}
 }
 </style>
+<style id="rp-skin">
+/* ---------- Rumble Party skin ("boardwalk toybox"): chunky rounded shapes, navy outline, a hard drop edge under everything pressable.
+   This block only restyles. It does not change any size the game code measures. ---------- */
+:root{--display:"Lilita One","Rubik","Arial Black",sans-serif; --pix:"Lilita One","Rubik",sans-serif; --r:14px; --r-s:10px; --edge:0 5px 0 var(--ink);
+  --card:#fffaf0; --sun:#ffc531; --sun-hi:#ffe07a; --mint:#bff3dc}
+h1,h2{letter-spacing:.01em; line-height:1.12}
+.btn{border-radius:var(--r); box-shadow:var(--edge); font-family:var(--display); font-weight:400; font-size:1.25rem; letter-spacing:.02em;
+  background:linear-gradient(var(--sun-hi),var(--sun) 55%); text-shadow:0 1px 0 rgba(255,255,255,.55)}
+.btn:active{transform:translateY(4px); box-shadow:0 1px 0 var(--ink)}
+.btn.alt{background:linear-gradient(#fff,#eaf2ff)}
+.btn:disabled{background:var(--soft); box-shadow:0 3px 0 #9fb2c8; border-color:#9fb2c8; text-shadow:none}
+.card{border-radius:22px; box-shadow:0 8px 0 var(--ink),0 18px 30px rgba(23,48,77,.28); background:linear-gradient(#fffdf6,var(--card))}
+.card h1{font-size:clamp(1.9rem,9.5vw,2.6rem); color:var(--p1); text-shadow:0 3px 0 var(--ink)}
+.card h2{font-size:1.45rem; color:var(--p1)}
+.label{font-family:var(--display); font-weight:400; font-size:.92rem; letter-spacing:.08em; color:#3e5f86}
+.slot{border-radius:var(--r-s)} .slot.open{background:transparent}
+.face,.dot{border-radius:8px}
+.seg{gap:6px}
+.seg button{border-radius:var(--r-s); box-shadow:0 3px 0 var(--ink); font-weight:800}
+.seg button[aria-pressed="true"]{background:var(--p6); color:#fff; transform:translateY(2px); box-shadow:0 1px 0 var(--ink)}
+.code,#codeIn{border-radius:var(--r)}
+.sw,.vc{border-radius:8px}
+/* logo */
+.logo{display:flex; flex-direction:column; align-items:center; line-height:.86!important; margin:2px 0 4px!important; transform:rotate(-3deg); font-size:clamp(3rem,17vw,4.4rem)!important; text-shadow:none!important}
+.logo span{display:block; color:#fff; paint-order:stroke fill; -webkit-text-stroke:10px var(--ink); filter:drop-shadow(0 6px 0 var(--ink))}
+.logo span:first-child{color:var(--sun)}
+.logo span:last-child{color:#ff5fa8; margin-left:.9em; font-size:1.08em}
+#menu .card{position:relative; overflow:visible; padding-top:24px}
+#menu .card::before{content:""; position:absolute; left:16px; right:16px; top:-3px; height:22px; pointer-events:none; filter:drop-shadow(0 2px 0 var(--ink));
+  background:conic-gradient(from 150deg at 50% 0,#ff4d4d 60deg,transparent 0) 0 0/90px 22px repeat-x,conic-gradient(from 150deg at 50% 0,#2f8fff 60deg,transparent 0) 30px 0/90px 22px repeat-x,conic-gradient(from 150deg at 50% 0,#35c98a 60deg,transparent 0) 60px 0/90px 22px repeat-x}
+#menu .lede{text-align:center}
+/* HUD */
+.chip{border-radius:12px; box-shadow:0 4px 0 var(--ink)}
+.chip.on{outline:0; background:linear-gradient(#fff7d1,#ffe9a0); box-shadow:0 4px 0 var(--ink),0 0 0 4px var(--sun)}
+.chip .bag span{border-radius:5px}
+.tk{width:13px; height:9px; border-radius:2px; background:linear-gradient(var(--sun-hi),var(--sun)); box-shadow:inset 0 0 0 1.5px var(--sun-d); transform:rotate(-8deg)}
+.pl{width:11px; height:11px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#fff 0 18%,#e5d4ff 30%,#b48cff 75%); box-shadow:0 0 0 1.5px #6f4bc4}
+.pill{border-radius:999px; box-shadow:0 3px 0 var(--ink); padding-inline:12px}
+.pill:active{transform:translateY(2px); box-shadow:0 1px 0 var(--ink)}
+#menuBtn{border-radius:12px}
+.roundtag{border-radius:8px; font-family:var(--display); font-weight:400; font-size:.7rem}
+.info{border-radius:var(--r-s)}
+.panel{border-radius:18px; box-shadow:0 6px 0 var(--ink),0 14px 24px rgba(23,48,77,.25); background:linear-gradient(#fffdf6,var(--card))}
+.panel .who{font-family:var(--display); font-weight:400; font-size:1.2rem}
+.toast{border-radius:999px} #chText,#titleCard p{border-radius:var(--r); box-shadow:var(--edge)}
+.float,.splash{font-family:var(--display); font-weight:400; animation-timing-function:ease-out}
+.splash{font-size:clamp(1.5rem,8vw,2.4rem)}
+#titleCard h1{font-size:clamp(2.4rem,13vw,4rem)}
+/* mini games */
+#mini{background:url(assets/arena/stall.webp) center/cover no-repeat,radial-gradient(120% 80% at 50% 0,#4a8ff0,var(--stage1) 45%,var(--stage2))}   /* a painted fairground stall behind the vote and the own-screen games */
+#mini.gl{background:none}
+#mini:not(.gl) header{align-self:center; background:var(--stage2); border:3px solid var(--ink); border-radius:var(--r); box-shadow:0 4px 0 var(--ink); padding:6px 16px}
+#mini h2{font-size:clamp(1.5rem,7.5vw,2.1rem); text-shadow:0 3px 0 var(--ink)}
+#mini.gl header{border-radius:var(--r); box-shadow:0 4px 0 var(--ink)}
+.vote{border-radius:var(--r); box-shadow:var(--edge)} .vote[aria-pressed="true"]{background:linear-gradient(var(--sun-hi),var(--sun))}
+.rdy span{border-radius:var(--r-s)} .rank .row{border-radius:var(--r-s)}
+#rdyPanel,#rulesPop .box{border-radius:20px}
+#rdyPanel .pvTag{border-radius:8px 8px 0 0; left:14px}
+#rulesPop h3,.cer b{font-family:var(--display)!important; font-size:1.4rem!important}
+.cer span{border-radius:var(--r)}
+.mhud .sub{border-radius:999px} .sboard span{border-radius:6px}
+.bar{border-radius:999px; height:16px} .lane,.field{border-radius:var(--r)}
+.pgrid button{border-radius:var(--r-s); box-shadow:0 4px 0 var(--ink)} .pgrid button:active{transform:translateY(3px); box-shadow:0 1px 0 var(--ink)}
+#count{font-family:var(--display)!important; font-size:8rem!important}
+#gfin{font-family:var(--display)!important; border-radius:20px; letter-spacing:.02em}
+#boo{border-radius:999px}
+#jumpBtn,#stunBtn,.bell,.lamp{font-family:var(--display); font-weight:400}
+/* painted icons (assets/icons) */
+img.ic{display:block; width:22px; height:22px; object-fit:contain}
+.chip .st .it img.ic{width:18px; height:18px} .chip .bag .it img.ic{width:22px; height:22px}
+.acts .btn img.ic{display:inline-block; width:26px; height:26px; vertical-align:-7px; margin-right:5px}
+.sw img.ic{width:26px; height:26px} #chG img.ic{width:118px; height:118px}
+@media (orientation:landscape) and (max-height:560px){#chG img.ic{width:76px; height:76px}}
+.tk{width:17px; height:14px; border-radius:0; box-shadow:none; transform:none; background:url(assets/icons/ticket.webp) center/contain no-repeat; vertical-align:-2px}
+.pl{width:14px; height:14px; border-radius:0; box-shadow:none; background:url(assets/icons/pearl.webp) center/contain no-repeat; vertical-align:-2px}
+/* map picker: a painted badge for each board */
+#mapSeg{display:grid; grid-template-columns:repeat(4,1fr); gap:6px}
+#mapSeg button{display:flex; flex-direction:column; align-items:center; gap:1px; padding:5px 0 4px; font-size:.82rem; min-width:0}
+#mapSeg button::before{content:""; width:min(58px,100%); aspect-ratio:1; background:center/contain no-repeat; transition:transform .15s}
+#mapSeg button[aria-pressed="true"]::before{transform:scale(1.08) rotate(-4deg)}
+#mapSeg #mIsland::before{background-image:url(assets/maps/island.webp)} #mapSeg #mCarnival::before{background-image:url(assets/maps/carnival.webp)}
+#mapSeg #mFarm::before{background-image:url(assets/maps/farm.webp)} #mapSeg #mVolcano::before{background-image:url(assets/maps/volcano.webp)}
+/* mini game icons (assets/games) */
+img.gi{display:block; width:44px; height:44px; object-fit:contain; flex:none}
+.pgrid button{display:flex; flex-direction:column; align-items:center; gap:3px; font-size:.86rem; line-height:1.1}
+.pgrid button img.gi{width:54px; height:54px}
+.vote img.gi{width:48px; height:48px; margin:-6px 0}
+@media (orientation:landscape) and (max-height:560px){
+  .logo{font-size:2.5rem!important; flex-direction:row; justify-content:center; gap:.25em; transform:rotate(-2deg); margin:0 0 6px!important} .logo span{-webkit-text-stroke-width:7px} .logo span:last-child{margin-left:0}
+  #mapSeg button::before{width:40px} .pgrid button img.gi{width:38px; height:38px} .pgrid button{min-height:0} .vote{flex-direction:column; gap:4px; text-align:center} .btn{font-size:1.05rem} .card h2{font-size:1.2rem} #count{font-size:6rem!important}
+  .chip{box-shadow:0 3px 0 var(--ink)} .panel{box-shadow:0 4px 0 var(--ink)}
+}
+</style>
 
 <canvas id="gl"></canvas>
 <div id="fade" hidden></div>
@@ -349,7 +442,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 
 <section class="screen center" id="menu">
   <div class="card">
-    <h1>Rumble Party</h1>
+    <h1 class="logo" aria-label="Rumble Party"><span>Rumble</span><span>Party</span></h1>
     <p class="lede">Come one, come all! Join the party and compete with up to 5 friends to catch the magical pearls that await.</p>
     <p class="lede warn">Caution: this game is known to turn friends into enemies.</p>
     <div class="stack">
@@ -545,6 +638,7 @@ const ITEMS={twin:{name:'Twin Dice',tag:'x2',cost:5,tip:'roll two dice',desc:'Ro
 ITEMS.twin.svg='<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="17" width="24" height="24" rx="5" fill="#fff" stroke="#17304d" stroke-width="3" transform="rotate(-10 16 29)"/><circle cx="11" cy="25" r="2.4" fill="#17304d"/><circle cx="21" cy="34" r="2.4" fill="#17304d"/><rect x="22" y="5" width="22" height="22" rx="5" fill="#ffc531" stroke="#17304d" stroke-width="3" transform="rotate(12 33 16)"/><circle cx="33" cy="16" r="2.3" fill="#17304d"/><circle cx="28" cy="10.5" r="2.1" fill="#17304d"/><circle cx="38" cy="21.5" r="2.1" fill="#17304d"/></svg>';
 ITEMS.magnet.svg='<svg viewBox="0 0 48 48" aria-hidden="true"><g transform="translate(0 1.5)"><path d="M9 6v18a15 15 0 0 0 30 0V6H28v18a4 4 0 0 1-8 0V6z" fill="#ff4d4d" stroke="#17304d" stroke-width="3" stroke-linejoin="round"/><path d="M9 6h11v9H9zM28 6h11v9H28z" fill="#fff" stroke="#17304d" stroke-width="3" stroke-linejoin="round"/></g></svg>';
 ITEMS.kite.svg='<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M27 3 41 18 24 33 12 17z" fill="#2f8fff" stroke="#17304d" stroke-width="3" stroke-linejoin="round"/><path d="M27 3 24 33M12 17l29 1" stroke="#17304d" stroke-width="2.5"/><path d="M24 33q-8 3-4 7t-6 5" fill="none" stroke="#17304d" stroke-width="2.5" stroke-linecap="round"/><path d="M17 37l5 2M13 42l5 1" stroke="#ff4d4d" stroke-width="3.5" stroke-linecap="round"/></svg>';
+for(const k in ITEMS){ITEMS[k].svgOld=ITEMS[k].svg; ITEMS[k].svg=`<img class="ic" src="assets/icons/${k}.webp" alt="">`;}   // painted icons; the drawn ones above are kept as svgOld
 const itemLine=id=>`${ITEMS[id].name}. ${ITEMS[id].desc} Use it at the start of a turn.`;
 
 /* ---------- sound: tiny chip synth, starts on first tap ---------- */
@@ -692,12 +786,20 @@ function loopOutline(off){
     if(P.every(w=>Math.hypot(w[0]-x,w[1]-z)>=Math.abs(off)*.97))out.push([x,z]);});
   return out;
 }
-function coast(shallow,sand,inner){
+function coast(shallow,sand,inner,sandT,innerT,sandTint){const sandC=sand; if(sandT)sand=gmat(sandT,sand,.25,.25,sandTint); if(innerT)inner=gmat(innerT,inner,.25);
   const cyl=new THREE.CylinderGeometry(1,1,1,28);
   const layer=(col,top,h,off)=>{const o=loopOutline(off); if(o.length<8)return; const sh=new THREE.Shape(); o.forEach((q,i)=>{if(i)sh.lineTo(q[0],-q[1]); else sh.moveTo(q[0],-q[1]);});
     const f=mesh(new THREE.ExtrudeGeometry(sh,{depth:h,bevelEnabled:false}),col,0,top-h,0); f.rotation.x=-Math.PI/2; f.castShadow=false; f.receiveShadow=true;};
   layer(shallow,-.52,.2,4.5); layer(sand,0,.8,3.3); layer(inner,.05,.06,-2.4);
-  COAST=(x,z,R)=>{flat(cyl,shallow,x,-.62,z,R+1.2,.2,R+1.2); flat(cyl,sand,x,-.4,z,R,.8,R);};
+  COAST=(x,z,R)=>{flat(cyl,shallow,x,-.62,z,R+1.2,.2,R+1.2); flat(cyl,sandT?gmat(sandT,sandC,Math.max(1,Math.round(R/2)),0,sandTint):sand,x,-.4,z,R,.8,R);};
+  // painted foam where the shallows meet the sea: one ribbon right round the coast, drifting slowly
+  {const o=loopOutline(4.3), L=o.length; if(L>8){let ar=0, tot=0; const D=[0]; o.forEach((q,i)=>{const b=o[(i+1)%L]; ar+=q[0]*b[1]-b[0]*q[1]; tot+=Math.hypot(b[0]-q[0],b[1]-q[1]); D.push(tot);});
+    const sg=ar>0?1:-1, reps=Math.max(1,Math.round(tot/9)), pos=[], uv=[], idx=[];
+    for(let i=0;i<=L;i++){const q=o[i%L],a=o[(i+L-1)%L],b=o[(i+1)%L],tx=b[0]-a[0],tz=b[1]-a[1],l=Math.hypot(tx,tz)||1,nx=sg*tz/l,nz=-sg*tx/l,u=D[i]/tot*reps;
+      pos.push(q[0],-.56,q[1],q[0]+nx*1.25,-.6,q[1]+nz*1.25); uv.push(u,1,u,0); if(i<L){const k=i*2; idx.push(k,k+1,k+2,k+1,k+3,k+2);}}
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx);
+    foamMat();
+    const f=mesh(g,FOAMM,0,0,0); f.castShadow=false; f.renderOrder=2;}}
   // a bridge that leaves the land stands on posts in the water
   NODES.forEach(n=>{if(n.bridge&&!inLoop(n.x,n.z))flat(cyl,0x5a4636,n.x,-.3,n.z,.2,.9,.2);});
 }
@@ -712,6 +814,24 @@ function bake(items,col){
 }
 function grp(x,y,z){const g=new THREE.Group(); g.position.set(x,y,z); world.add(g); return g;}
 function ringOut(n,k,fn){const d=(k-1)*14; for(let i=0;i<n;i++){const j=Math.floor(i*45/n),q=NODES[j],o=outN(j),x=q.x+o[0]*d,z=q.z+o[1]*d; if(clearOf(x,z,.3)&&!inLoop(x,z))fn(x,z,i,z>MAPX.b*.45);}}
+/* painted ground textures (assets/tex). gmat gives a material that shows the plain colour until its picture has loaded; rep is how many times the picture repeats across the shape */
+const GMAT={}, GTEX={};
+function gmat(name,col,rx,ry,tint){ry=ry||rx; const key=name+'|'+rx+'|'+ry+'|'+(tint||0); if(GMAT[key])return GMAT[key]; const m=GMAT[key]=new THREE.MeshLambertMaterial({color:col}); m.keep=true;
+  const use=im=>{const t=new THREE.Texture(im); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry); t.needsUpdate=true; m.map=t; m.color.set(tint||0xffffff); m.needsUpdate=true;};
+  const g=GTEX[name]||(GTEX[name]={im:null,w:[]}); if(g.im)use(g.im); else{g.w.push(use); if(g.w.length===1){const im=new Image(); im.onload=()=>{g.im=im; g.w.forEach(f=>f(im)); g.w=[];}; im.src='assets/tex/'+name+'.webp';}}
+  return m;}
+/* picture scenery (assets/props): a painted cut-out that always faces the camera, standing on the ground at x,z and h tall */
+const SPM={};
+function stand(name,x,z,h,par,y,noShade,tint){const key=name+(tint?'|'+tint:''); let mt=SPM[key]; if(!mt){mt=SPM[key]=new THREE.SpriteMaterial({alphaTest:.5,color:tint||0xffffff}); mt.keep=true; mt.visible=false; mt.ar=1; mt.wait=[];
+    new THREE.TextureLoader().load('assets/props/'+name+'.webp',t=>{mt.map=t; mt.ar=t.image.width/t.image.height; mt.visible=true; mt.needsUpdate=true; mt.wait.forEach(f=>f()); mt.wait=null;});}
+  const sp=new THREE.Sprite(mt), P=par||defParent||scene, size=()=>sp.scale.set(h*mt.ar,h,1); sp.center.set(.5,0); sp.position.set(x,y==null?.05:y,z); if(mt.wait)mt.wait.push(size); else size(); P.add(sp);
+  if(!noShade){const b=mesh(BLOB,BLOBM,x,(y==null?.05:y)+.02,z,P); b.rotation.x=-Math.PI/2; b.scale.set(h*1.1,h*.7,1); b.castShadow=false;}
+  return sp;}
+/* put picture scenery on a board: inside goes wherever there is room within the loop, ring goes around the outside between the 3D scenery. Each entry is [name, height] */
+function scatter(inside,ring){
+  inside.forEach(([n,h])=>{const q=spot([],h*.4+.2); if(q)stand(n,q[0],q[1],h);});
+  (ring||[]).forEach(([n,h],i)=>{for(const d of [0,1,-1,2]){const j=(Math.floor(i*45/ring.length)+2+d+45)%45, q=NODES[j], o=outN(j), x=q.x+o[0]*2.15, z=q.z+o[1]*2.15; if(clearOf(x,z,.45)&&!inLoop(x,z)){USED.push([x,z,.7]); stand(n,x,z,h); break;}}});
+}
 function flat(geo,col,x,y,z,sx,sy,sz){const m=mesh(geo,col,x,y,z); m.scale.set(sx,sy,sz); m.receiveShadow=true; m.castShadow=false; return m;}
 /* ---------- ready-made scenery models. models.json holds free (CC0) models by Kay Lousberg (KayKit), packed as plain vertex data.
    Everything placed with mdl() on one map is baked into a single mesh. If the file is missing, the code-built props below are used instead ---------- */
@@ -747,8 +867,26 @@ function flushModels(){
     mesh(G,MMAT[k],0,0,0);}
   MBATCH={};
 }
+let SEATEX=null, SEAM=null, FOAMM=null, FOAMT=null;
+function seaMat(){if(!SEAM){const t=SEATEX=tex((g,s)=>{g.fillStyle='#1fa3d4'; g.fillRect(0,0,s,s); g.lineCap='round'; const R=rng32(7);   // drawn wave marks that drift, instead of one flat colour
+      for(let i=0;i<22;i++){const x=R()*s,y=R()*s,w=5+R()*9; g.strokeStyle=i%3?'rgba(255,255,255,.34)':'rgba(11,120,170,.5)'; g.lineWidth=i%3?1.5:2;
+        for(const dx of [-s,0,s])for(const dy of [-s,0,s]){g.beginPath(); g.moveTo(x+dx-w,y+dy); g.quadraticCurveTo(x+dx-w/2,y+dy-2.6,x+dx,y+dy); g.quadraticCurveTo(x+dx+w/2,y+dy+2.6,x+dx+w,y+dy); g.stroke();}}},128);
+    t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(26,26); SEAM=new THREE.MeshLambertMaterial({map:t}); SEAM.keep=true;} return SEAM;}
+function foamMat(){if(!FOAMM){FOAMM=new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,visible:false}); FOAMM.keep=true;
+    new THREE.TextureLoader().load('assets/tex/foam.webp',t=>{t.wrapS=THREE.RepeatWrapping; FOAMT=t; FOAMM.map=t; FOAMM.visible=true; FOAMM.needsUpdate=true;});} return FOAMM;}
+/* a ring of the same painted foam round something standing in the water */
+function foamRing(par,R,y,w){const N=72, reps=Math.max(2,Math.round(R*6.283/9)), pos=[], uv=[], idx=[];
+  for(let i=0;i<=N;i++){const a=i/N*6.283, sx=Math.sin(a), cz=Math.cos(a), u=i/N*reps; pos.push(sx*R,y,cz*R,sx*(R+w),y-.03,cz*(R+w)); uv.push(u,1,u,0); if(i<N){const k=i*2; idx.push(k,k+1,k+2,k+1,k+3,k+2);}}
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx);
+  const f=mesh(g,foamMat(),0,0,0,par); f.castShadow=false; f.renderOrder=2; return f;}
+/* painted mini game art (assets/arena): platform tops and surroundings, both drawn as seen from straight above. The material is plain (or hidden) until its picture has loaded */
+const AMAT={};
+function amat(name,col,fade){if(AMAT[name])return AMAT[name]; const m=AMAT[name]=fade?new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,visible:false}):new THREE.MeshLambertMaterial({color:col}); m.keep=true;   // surroundings are shown exactly as painted; tops take the scene's light
+  new THREE.TextureLoader().load('assets/arena/'+name+'.webp',t=>{m.map=t; m.color.set(0xffffff); m.visible=true; m.needsUpdate=true; (m.wait||[]).forEach(f=>f()); m.wait=null;}); return m;}
+/* one painted tile (assets/arena/tile-<name>.webp), shared by every tile of a floor; the tile's own colour tints it */
+const TTEX={}; function ttex(name){return TTEX[name]||(TTEX[name]=new THREE.TextureLoader().load('assets/arena/tile-'+name+'.webp'));}
 const PROP={
-  sea(){const sea=mesh(new THREE.CircleGeometry(170,48),0x1fa3d4,0,-.7,0); sea.rotation.x=-Math.PI/2; sea.castShadow=false;},
+  sea(){const sea=mesh(new THREE.CircleGeometry(170,48),seaMat(),0,-.7,0); sea.rotation.x=-Math.PI/2; sea.castShadow=false;},
   ferris(x,z,sc){const fw=grp(x,0,z); fw.scale.setScalar(sc); const wheel=new THREE.Group(); wheel.position.y=2.7; fw.add(wheel); const se={o:wheel,ax:'z',v:.25}; spin.push(se); FXP.wheel={x,z,y:2.7*sc,s:sc,sp:se};
     mesh(new THREE.TorusGeometry(2,.07,8,48),0xff5fa8,0,0,0,wheel); mesh(new THREE.TorusGeometry(1.1,.05,8,36),0xffffff,0,0,0,wheel);
     const spoke=new THREE.CylinderGeometry(.035,.035,4,8); for(let i=0;i<4;i++)mesh(spoke,0xffffff,0,0,0,wheel).rotation.z=i*Math.PI/4;
@@ -769,7 +907,8 @@ const PROP={
     [[-.6,7,-1.5],[.4,8.2,-1.8],[1.2,6.5,-1.4],[-1.3,7.4,-1.9]].forEach(([fx,y,fz])=>{const c=grp(fx*m.a,y+3,fz*m.b-6); clouds.push(c); if(mdl(clouds.length%2?'cloud_big':'cloud_small',0,-1,0,1.5,clouds.length,0,c))return;
       [[0,0,0,1.5],[1.4,.1,.2,1.1],[-1.4,-.05,.1,1],[.4,.6,-.1,.95]].forEach(([a,b,d,r])=>{mesh(new THREE.SphereGeometry(r,14,10),0xffffff,a,b,d,c).castShadow=false;});});
     if(sea)[[-1.5,.9,0xff4d4d],[1.2,1.7,0x8b5cf6],[1.6,-1.5,0xffc531]].forEach(([fx,fz,c],i)=>{const b=grp(fx*m.a,-.55,fz*m.b); b.rotation.y=i*1.9; boats.push(b);
-      mesh(new THREE.BoxGeometry(1.5,.35,.6),c,0,0,0,b); mesh(new THREE.ConeGeometry(.55,1.3,3),0xffffff,0,.95,0,b).scale.z=.12; mesh(new THREE.CylinderGeometry(.03,.03,1.5,4),0x7c8ea3,0,.75,0,b);});},
+      mesh(new THREE.BoxGeometry(1.5,.35,.6),c,0,0,0,b); mesh(new THREE.ConeGeometry(.55,1.3,3),0xffffff,0,.95,0,b).scale.z=.12; mesh(new THREE.CylinderGeometry(.03,.03,1.5,4),0x7c8ea3,0,.75,0,b);});
+    if(sea)[['buoy',-1.55,1.65,1.6],['dolphin',.35,1.9,1.5],['seagull',1.9,1.0,1.5],['searock',-.9,-1.9,1.6],['rowboat',2.0,-.6,1.5],['islet',-2.2,.2,3.2],['sailboat',.9,-2.2,2.8],['lifering',-.4,1.7,.9]].forEach(([n,fx,fz,h])=>boats.push(stand(n,fx*m.a,fz*m.b,h,null,-.62,true)));},
   carousel(x,z){const g=grp(x,0,z); mesh(new THREE.CylinderGeometry(2,2.1,.3,28),0xffc531,0,.15,0,g); mesh(new THREE.CylinderGeometry(.14,.14,2.6,10),0xffffff,0,1.5,0,g);
     const top=new THREE.MeshLambertMaterial({map:tex((c,s)=>{for(let i=0;i<12;i++){c.fillStyle=i%2?'#fff':'#2f8fff'; c.fillRect(i*s/12,0,s/12+1,s);}},96)}); mesh(new THREE.ConeGeometry(2.3,1,28),top,0,3.2,0,g);
     const ring=new THREE.Group(); g.add(ring); spin.push({o:ring,ax:'y',v:.6});
@@ -787,7 +926,7 @@ const PROP={
 };
 const THEME={
   island(m){
-    const cyl=new THREE.CylinderGeometry(1,1,1,64); PROP.sea(); coast(0xc6f4f4,0xf6dc9a,0x86d86f);
+    const cyl=new THREE.CylinderGeometry(1,1,1,64); PROP.sea(); coast(0xc6f4f4,0xf6dc9a,0x86d86f,'sand','grass');
     if(MODELS){let q;   // a small beach village; the rides and striped tents belong to the Carnival map
       q=spot([[-m.a*.45,-m.b*.05],[-m.a*.3,m.b*.35],[m.a*.1,-m.b*.5]],2.3); if(q){mdl('home_B_blue',q[0],q[1],3,.5); mdl('barrel',q[0]+2,q[1]+1.3,3.3,0); mdl('crate_A_big',q[0]+2.2,q[1]+.4,3.2,.4); mdl('flag_blue',q[0]-2,q[1]+1.2,7,.5);}
       q=spot([[m.a*.45,m.b*.25],[m.a*.25,m.b*.45],[m.a*.5,-m.b*.1]],1.9); if(q){mdl('home_A_blue',q[0],q[1],3,-.5); mdl('sack',q[0]-1.7,q[1]+1.2,3.3,1); mdl('crate_B_small',q[0]+1.7,q[1]+1,3.2,.2);}
@@ -798,19 +937,21 @@ const THEME={
       [[-1.6,-1.25],[1.8,.45],[-.45,2.15],[.35,-2.3],[-1.9,.9]].forEach(([fx,fz],i)=>mdl(['mountain_A','mountain_C','mountain_B'][i%3],fx*m.a,fz*m.b,2.4+(i%3)*.5,i*1.7,-.8));
     }
     ringOut(12,1.18,(x,z,i,front)=>front?((i%2&&mdl('rock_single_'+'BCE'[i%3],x,z,3.2,i))||PROP.bush(x,z)):PROP.palm(x,z,i)); PROP.lighthouse(m.a*1.5,-m.b*1.7); PROP.skyAndBoats(m,true);
+    scatter([['hut',2.6],['chest',1.1],['signpost',1.6],['umbrella',1.9],['sandcastle',1.2]],[['palm',3.2],['surfboards',1.8],['sandcastle',1.1],['beachball',.9],['umbrella',1.9],['lifebuoy',1.4],['palm',2.8],['beachball',.9],['surfboards',1.7]]);
   },
   carnival(m){
-    PROP.sea(); const box=new THREE.BoxGeometry(1,1,1); flat(box,0xb9814f,0,-.4,0,m.a*2.7,.8,m.b*2.8); flat(box,0x8f6038,0,-.45,0,m.a*2.78,.8,m.b*2.88); flat(box,0x7b4fc9,0,.02,0,m.a*1.35,.06,m.b*1.25);
+    PROP.sea(); const box=new THREE.BoxGeometry(1,1,1); flat(box,gmat('planks',0xb9814f,Math.round(m.a*2.7/8),Math.round(m.b*2.8/4)),0,-.4,0,m.a*2.7,.8,m.b*2.8); flat(box,0x8f6038,0,-.45,0,m.a*2.78,.8,m.b*2.88); flat(box,gmat('carpet',0x7b4fc9,Math.round(m.a*1.35/6),Math.round(m.b*1.25/6)),0,.02,0,m.a*1.35,.06,m.b*1.25);
     let q=spot([[-m.a*.42,-m.b*.3],[-m.a*.45,m.b*.25],[m.a*.4,-m.b*.35],[0,-m.b*.45]],3.2); if(q)PROP.ferris(q[0],q[1],1.5);
     q=spot([[m.a*.42,m.b*.3],[m.a*.4,-m.b*.3],[-m.a*.4,m.b*.35],[0,m.b*.4]],2.3); if(q)PROP.carousel(q[0],q[1]);
     [[-m.a*1.13,-m.b*1.13,'#ff4d4d','red'],[m.a*1.13,-m.b*1.13,'#2f8fff','blue'],[0,-m.b*1.2,'#35c98a','green']].forEach(([x,z,c,f],i)=>{PROP.tent(x,z,c,1.25); mdl('target',x+2.3,z+1.5,4.6,.3-i*.3); mdl('crate_long_'+'AB'[i%2],x-2.3,z+1.4,3,.5); mdl('barrel',x-2.7,z+.3,3.3,0); mdl('flag_'+f,x+2.2,z-.6,7,i);});
     [[m.a*.1,m.b*.1,0xff5fa8],[-m.a*.15,-m.b*.1,0x2f8fff],[m.a*.2,-m.b*.5,0x35c98a],[-m.a*.2,m.b*.5,0xffc531]].forEach(([x,z,c],i)=>{if(clearOf(x,z,1.5)){USED.push([x,z,1.5]); mdl(['market_red','market_yellow','market_blue','market_red'][i],x,z,1.6,i*1.57+.4)||PROP.stand(x,z,c);}});
     if(MODELS)for(let i=0;i<3;i++){const h=spot([],2); if(h){mdl(['market_red','market_yellow','market_blue'][i],h[0],h[1],2,i*2.1+.4); mdl('barrel',h[0]+2.1,h[1]+.9,3.3,0);}}
     ringOut(16,1.14,(x,z,i,front)=>front?PROP.bush(x,z,0xff8fc8):PROP.post(x,z,i)); PROP.balloons(-m.a*1.2,m.b*.2); PROP.balloons(m.a*1.2,m.b*.1); PROP.skyAndBoats(m,true);
+    scatter([['booth',2.3],['striker',2.5],['candyfloss',2.1],['popcorn',1.8],['ducks',2.1],['horse',1.7],['teddy',1.4]],[['balloons',1.9],['bunting',1.7],['teddy',1.3],['popcorn',1.8],['balloons',1.9],['bunting',1.7],['horse',1.7],['candyfloss',2]]);
   },
   farm(m){
-    const g=mesh(new THREE.CircleGeometry(170,48),0x7ccf6a,0,-.02,0); g.rotation.x=-Math.PI/2; g.castShadow=false; g.receiveShadow=true;
-    const box=new THREE.BoxGeometry(1,1,1); [[-1.9,-1.9,0xe8c95a],[1.9,-2,0x5fb85a],[0,-2.6,0xd9b24a],[-2.3,.2,0x5fb85a],[2.3,.3,0xe8c95a]].forEach(([fx,fz,c])=>flat(box,c,fx*m.a,.005,fz*m.b,m.a*1.1,.02,m.b*1.2));
+    const g=mesh(new THREE.CircleGeometry(170,48),gmat('grass',0x7ccf6a,85),0,-.02,0); g.rotation.x=-Math.PI/2; g.castShadow=false; g.receiveShadow=true;
+    const box=new THREE.BoxGeometry(1,1,1); [[-1.9,-1.9,0xe8c95a],[1.9,-2,0x5fb85a],[0,-2.6,0xd9b24a],[-2.3,.2,0x5fb85a],[2.3,.3,0xe8c95a]].forEach(([fx,fz,c])=>flat(box,c===0xe8c95a?gmat('soil',0xb8693a,Math.round(m.a*1.1/6),Math.round(m.b*1.2/6)):c,fx*m.a,.005,fz*m.b,m.a*1.1,.02,m.b*1.2));
     if(MODELS){for(let r=0;r<3;r++)for(let k=0;k<6;k++)mdl('building_grain',-m.a*.45+k*2.45+(r%2)*1.2,-m.b*1.72-r*2.1,1.15,0,-.3);
       [[-1.75,-2.5,'hills_A_trees'],[1.7,-2.8,'mountain_A_grass_trees'],[-2.7,-.9,'mountain_B_grass_trees'],[2.8,-.5,'hills_C_trees'],[.1,-3.5,'mountain_B_grass_trees'],[-2.6,1.4,'hills_C_trees'],[2.7,1.6,'hills_A_trees']].forEach(([fx,fz,n],i)=>mdl(n,fx*m.a,fz*m.b,4.2,i*1.1,-.15));}
     else for(let r=0;r<7;r++)for(let k=0;k<9;k++)mesh(new THREE.SphereGeometry(.28,8,6),0x2e9e4f,-m.a*.55+k*1.3+m.a*.1,.2,-m.b*1.75-r*1.1).castShadow=false;
@@ -820,11 +961,12 @@ const THEME={
     q=spot([[-m.a*.15,m.b*.05],[m.a*.25,m.b*.05],[0,m.b*.45]],1.2); if(q){if(mdl('wheelbarrow',q[0],q[1],3,.6)){mdl('crate_long_B',q[0]+1,q[1]+.7,3,.3); mdl('sack',q[0]-.9,q[1]+.6,3.3,1.2); mdl('crate_open',q[0]+.2,q[1]-.9,3,.2);} else PROP.tractor(q[0],q[1]);}
     ringOut(18,1.17,(x,z,i,front)=>front?(i%2?PROP.hay(x,z,i):PROP.bush(x,z,0x3fae5a)):(i%3===2?PROP.hay(x,z,i):(mdl(i%2?'tree_single_A':'tree_single_B',x,z,3,i)||PROP.tree(x,z,i))));
     for(let k=-5;k<=5;k++)mdl('fence_wood_straight',k*2.05,-m.b*1.5,1.78,Math.PI/2)||PROP.fence(k*2.05,-m.b*1.5,0); PROP.skyAndBoats(m,false);
+    scatter([['coop',1.8],['cow',1.3],['scarecrow',1.9],['tractor',1.7],['pumpkins',1],['churns',1.1]],[['appletree',2.7],['sunflowers',1.6],['cow',1.3],['pumpkins',1],['appletree',2.5],['scarecrow',1.9],['sunflowers',1.6],['churns',1.1]]);
   }
 };
 THEME.volcano=function(m){
   PROP.sea(); const cyl=new THREE.CylinderGeometry(1,1,1,64);
-  coast(0x9fd8e8,0x4a4046,0x5e5057); const vc=NODES.core||[0,0]; COAST(vc[0],vc[1],6.2);
+  coast(0x9fd8e8,0x4a4046,0x5e5057,'rock','rock',0xc9bfc9); const vc=NODES.core||[0,0]; COAST(vc[0],vc[1],6.2);
   const q=spot([vc,[-m.a*.38,-m.b*.2],[m.a*.38,m.b*.2],[-m.a*.42,m.b*.2],[m.a*.36,-m.b*.3],[0,-m.b*.42],[0,0]],3)||[0,0], g=grp(q[0],0,q[1]);
   const prof=[[3.3,0],[2.7,1],[2,2.2],[1.4,3.1],[1.1,3.5],[.85,3.3],[.5,3.05],[0,3]].map(a=>new THREE.Vector2(a[0],a[1]));
   mesh(new THREE.LatheGeometry(prof,22),new THREE.MeshLambertMaterial({color:0x6e463a,flatShading:true}),0,0,0,g);
@@ -847,6 +989,7 @@ THEME.volcano=function(m){
   ringOut(16,1.17,(x,z,i,front)=>{if(mdl(front||i%2?'rock_single_'+'BCDE'[i%4]:['tree_dead_medium','tree_dead_small','tree_dead_large'][i%3],x,z,front||i%2?3+(i%3)*.8:.7,i*1.9))return; if(front||i%2){const rk=mesh(new THREE.DodecahedronGeometry(.5+(i%3)*.2),new THREE.MeshLambertMaterial({color:0x3a3238,flatShading:true}),x,.3,z); rk.rotation.set(i,i*2,0);}
     else{const tg=grp(x,0,z); mesh(new THREE.CylinderGeometry(.07,.13,1.9,6),0x2e2528,0,.95,0,tg); [[.35,1.5,.5],[-.3,1.2,-.6]].forEach(([bx,by,rz])=>{mesh(new THREE.CylinderGeometry(.04,.06,.8,5),0x2e2528,bx,by,0,tg).rotation.z=-rz*1.6;});}});
   PROP.skyAndBoats(m,true);
+  scatter([['statue',1.9],['geyser',1.9],['minecart',1.3],['skull',1.3],['crystals',1.4]],[['boulder',1.3],['burnttree',2.3],['crystals',1.3],['firesign',1.4],['torchbridge',1.6],['boulder',1.2],['burnttree',2.1],['skull',1.2]]);
 };
 function colOf(t){return{S:0xffffff,'+':0x2f8fff,'-':0xff4d4d,'?':0xffc531,I:0x35c98a,H:0x9b6bff,T:0xffffff,F:0xffffff,V:0xffffff,E:0xffffff}[t]||CATCOL[CAT[t]]||0xffffff;}
 /* smooth curves and flat ribbons, used for lava flows */
@@ -860,7 +1003,7 @@ function buildWorld(id){
   const m=MAPS[id]||MAPS.island; curMap=id; MAPX=m;
   if(world){scene.remove(world); world.traverse(o=>{if(o.geometry)o.geometry.dispose(); if(o.material)[].concat(o.material).forEach(x=>{if(!x.keep)x.dispose();});});}
   world=new THREE.Group(); scene.add(world); defParent=world; spin=[]; upright=[]; clouds=[]; boats=[]; FXP={tong:[],boost:0,erupt:0}; shownBurn=-2; COAST=null; USED=[]; MBATCH={};
-  NODES=buildGraph(m); $('#gl').style.background=`linear-gradient(${m.sky[0]},${m.sky[1]} 60%)`;
+  NODES=buildGraph(m); $('#gl').style.background=`url(assets/sky/${id in THEME?id:'island'}.webp) center top/cover no-repeat, linear-gradient(${m.sky[0]},${m.sky[1]} 60%)`;   // painted sky, with the plain gradient behind it until it loads
   if(!ICONS){const mk=d=>{const mt=new THREE.MeshBasicMaterial({map:tex(d),transparent:true}); mt.keep=true; return mt;};
     ICONS={S:mk((g,s)=>label(g,s,'GO','#17304d',26)),
       '+':mk(g=>{g.fillStyle='#fff'; g.fillRect(27,14,10,36); g.fillRect(14,27,36,10);}), '-':mk(g=>{g.fillStyle='#fff'; g.fillRect(14,27,36,10);}),
@@ -870,7 +1013,10 @@ function buildWorld(id){
       pvp:mk((g,s)=>label(g,s,'VS','#fff',25)), risk:mk((g,s)=>label(g,s,'$','#fff',40)), evt:mk((g,s)=>label(g,s,'!','#fff',42)),
       mov:mk(g=>{g.fillStyle='#fff'; [14,30].forEach(x=>{g.beginPath(); g.moveTo(x,16); g.lineTo(x+18,32); g.lineTo(x,48); g.lineTo(x+7,32); g.closePath(); g.fill();});})};
     const burst=col=>mk(g=>{g.fillStyle=col; g.beginPath(); for(let i=0;i<16;i++){const a=i*Math.PI/8,r=i%2?13:26; g.lineTo(32+Math.cos(a)*r,32+Math.sin(a)*r);} g.closePath(); g.fill(); g.fillStyle='#fff'; g.beginPath(); g.arc(32,32,7,0,7); g.fill();});
-    ICONS.T=burst('#0e8fa8'); ICONS.F=burst('#ff5fa8'); ICONS.V=burst('#d98a00'); ICONS.E=burst('#e0401a');}
+    ICONS.T=burst('#0e8fa8'); ICONS.F=burst('#ff5fa8'); ICONS.V=burst('#d98a00'); ICONS.E=burst('#e0401a');
+    // painted icons for the special spaces (assets/spaces), each on a white plate so it reads on any disc colour. The drawn icon stays if the picture cannot load
+    Object.keys(SP).concat('S').forEach(k=>{const old=ICONS[k]||ICONS[CAT[k]], im=new Image(); im.onload=()=>{const t=tex((g,s)=>{g.fillStyle='#fff'; g.beginPath(); g.arc(s/2,s/2,s*.46,0,7); g.fill(); g.drawImage(im,s*.1,s*.1,s*.8,s*.8);}), mt=new THREE.MeshBasicMaterial({map:t,transparent:true}); mt.keep=true; ICONS[k]=mt;
+      NODES.forEach(n=>{if(n.t===k&&n.ic)n.ic.material=mt;});}; im.src='assets/spaces/'+k+'.webp';});}
   {const o=outN(0), n0=NODES[0], a=NODES[44], b=NODES[1], tl=Math.hypot(b.x-a.x,b.z-a.z)||1; PLAT={x:n0.x+o[0]*3.1,z:n0.z+o[1]*3.1,tx:(b.x-a.x)/tl,tz:(b.z-a.z)/tl,ox:o[0],oz:o[1]}; USED.push([PLAT.x,PLAT.z,2.4]);}
   THEME[id in THEME?id:'island'](m); flushModels();
   {const P=PLAT, n0=NODES[0], bx=new THREE.BoxGeometry(1,1,1), g=grp(P.x,0,P.z), turn=Math.atan2(-P.tz,P.tx); g.rotation.y=turn; if(COAST)COAST(P.x,P.z,2.8);
@@ -985,7 +1131,7 @@ const OFFS=[[-.42,-.3],[.42,-.3],[-.42,.36],[.42,.36],[0,-.62],[0,.66]];
 let shownGid=0, shownScreen='menu', hudKey='', askShown='', sh={hit:0,sp:0,cheer:0}, lobbyKey='', resKey='';
 function show(id){shownScreen=id; for(const s of ['menu','join','lobby','guide','game','results','practice'])$('#'+s).hidden=s!==id; if(id!=='game'){mapView=false; $('#mapBtn').textContent='Map'; hideInfo(); $('#settings').hidden=true; $('#chance').hidden=true; introT=0; $('#titleCard').hidden=true; $('#fade').hidden=true;}}
 function showChance(u){const el=$('#chance'), raw=u.chG||'?', it=raw.indexOf('item:')===0?ITEMS[raw.slice(5)]:null, gl=it?'★':raw; el.hidden=false; el.className='spin'; $('#chText').textContent=u.chT; $('#chHead').textContent=u.chH||'Chance';
-  $('#chDisc').style.background=u.chC||''; $('#chG').textContent=gl; $('#chG').style.fontSize=gl.length>1?'3.6rem':''; $('#chG').style.color=u.chC&&u.chC!=='#ffc531'?'#fff':''; setTimeout(()=>{el.className=''; if(it){$('#chG').innerHTML=it.svg; $('#chDisc').style.background='#fff';}},1700/SPEED); const id=u.ch; setTimeout(()=>{if(V&&V.ui.ch===id)el.hidden=true;},((u.chD||3300)-200)/SPEED);
+  $('#chDisc').style.background=u.chC||''; $('#chG').textContent=gl; $('#chG').style.fontSize=gl.length>1?'3.6rem':''; $('#chG').style.color=u.chC&&u.chC!=='#ffc531'?'#fff':''; setTimeout(()=>{el.className=''; if(it){$('#chG').innerHTML=it.svg; $('#chDisc').style.background='#fff';} else{const k=Object.keys(SP).find(k=>SP[k][0]===u.chH); if(k){$('#chG').innerHTML=`<img class="ic" src="assets/spaces/${k}.webp" alt="">`; $('#chDisc').style.background='#fff';}}},1700/SPEED); const id=u.ch; setTimeout(()=>{if(V&&V.ui.ch===id)el.hidden=true;},((u.chD||3300)-200)/SPEED);
   chanceSkip=()=>{if(el.hidden||el.className==='spin'||!V||myK()<0||V.ui.ch!==id)return false; el.hidden=true; if(net.host)cardSkip=id; else if(net.nr)net.nr.presence({skip:id}).catch(()=>{}); return true;};}   // any player can close a card once it has been revealed: tap anywhere, press a key or a controller button
 let chanceSkip=null;
 window.addEventListener('pointerdown',()=>{if(chanceSkip)chanceSkip();},true);
@@ -1213,6 +1359,7 @@ function frame(now){
   pearl.position.x+=(pearl.tx-pearl.position.x)*Math.min(1,dt*2.2); pearl.position.z+=(pearl.tz-pearl.position.z)*Math.min(1,dt*2.2);
   pearl.position.y=.06; pearl.halo.rotation.z+=dt*2; pearl.lid.rotation.x=-1.15-Math.sin(T*2)*.1; pearl.orb.position.y=.66+Math.sin(T*2)*.04;
   clouds.forEach(c=>{c.position.x+=dt*.35; if(c.position.x>46)c.position.x=-46;});
+  if(SEATEX){SEATEX.offset.x=T*.011; SEATEX.offset.y=Math.sin(T*.35)*.02;} if(FOAMT)FOAMT.offset.x=T*.012;
   boats.forEach((b,i)=>{b.position.y=-.55+Math.sin(T*1.3+i*2)*.06; b.rotation.z=Math.sin(T*1.1+i)*.05;});
   chars.forEach(c=>animChar(c,dt));
   if(conf.life>0){conf.life-=dt; const P=conf.geometry.attributes.position.array,Vv=conf.v;
@@ -1543,7 +1690,7 @@ async function practiceRun(gi){const g=GAMES[gi];
   S.mini.rows=res; S.mini.phase='done'; pracDone.add(gi);
   await ask(0,'Back to the list'); leave();
 }
-function openPractice(){const mk=(arena)=>GAMES.map((g,i)=>[g,i]).filter(q=>!!q[0].arena===arena).map(([g,i])=>`<button data-g="${i}" class="${pracDone.has(i)?'done':''}">${g.name}</button>`).join('');
+function openPractice(){const mk=(arena)=>GAMES.map((g,i)=>[g,i]).filter(q=>!!q[0].arena===arena).map(([g,i])=>`<button data-g="${i}" class="${pracDone.has(i)?'done':''}"><img class="gi" src="assets/games/g${i}.webp" alt="">${g.name}</button>`).join('');
   $('#pracA').innerHTML=mk(true); $('#pracS').innerHTML=mk(false); $('#pracBack').hidden=PRAC_ONLY; $('#pracTitle').textContent=PRAC_ONLY?'Rumble Mini Games':'Practice';
   $('#pracCpu').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.n===pracN)); show('practice');}
 function startPractice(gi){audioOn(); newLobby(''); S.ncpu=pracN; startGame(gi);}
@@ -1572,7 +1719,7 @@ function miniSync(){
   miniPh=m.phase; const g=GAMES[m.g];
   if(m.phase==='vote'){
     myVote=-1; myLock=false; const can=myK()>=0; $('#mgTitle').textContent='Pick a mini game'; $('#mgSub').textContent=can?'Tap a game to read about it and vote':'The players are voting';
-    stage.innerHTML=`<div class="big" id="vleft">${m.left}</div><div class="votes">${m.opts.map((gi,i)=>`<button class="vote" id="v${i}" data-i="${i}" aria-pressed="false"><b>${GAMES[gi].name}</b><span class="vc" id="vc${i}">0</span></button>`).join('')}</div>
+    stage.innerHTML=`<div class="big" id="vleft">${m.left}</div><div class="votes">${m.opts.map((gi,i)=>`<button class="vote" id="v${i}" data-i="${i}" aria-pressed="false"><img class="gi" src="assets/games/g${gi}.webp" alt=""><b>${GAMES[gi].name}</b><span class="vc" id="vc${i}">0</span></button>`).join('')}</div>
       <p class="vsum" id="vsum">Each game shows its votes on the right. Most votes wins; ties are picked at random.</p><button class="btn" id="vlock" disabled>Lock in my vote</button>`;
     stage.querySelectorAll('.vote').forEach(b=>{b.onclick=()=>{const i=+b.dataset.i; $('#vsum').textContent=GAMES[m.opts[i]].how; if(myLock||!can)return;
       myVote=i; stage.querySelectorAll('.vote').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); $('#vlock').disabled=false; castVote(m.mid,i,false);};});
@@ -1647,7 +1794,7 @@ function deck(sc,r){const d=mesh(new THREE.CylinderGeometry(r,r,.5,48),0xc98f55,
 function miniStage(hint,pos,look){
   const sc=new THREE.Scene(), W=window.innerWidth, H=window.innerHeight; lights(sc);
   const c=new THREE.PerspectiveCamera(W<H?60:45,W/H,.5,160); c.position.set(pos[0],pos[1],pos[2]); c.lookAt(look[0],look[1],look[2]);
-  const sea=mesh(new THREE.CircleGeometry(130,48),0x1fa3d4,0,-1.4,0,sc); sea.rotation.x=-Math.PI/2; sea.castShadow=false;
+  const sea=mesh(new THREE.CircleGeometry(130,48),seaMat(),0,-1.4,0,sc); sea.rotation.x=-Math.PI/2; sea.castShadow=false;
   $('#mini').classList.add('gl');
   const keep=stage.querySelector('#rdyPanel');
   stage.innerHTML=`<div class="mhud"><div class="big" id="n"></div><div class="sub" id="hint">${hint}</div></div><div class="grow"></div><div class="bar"><i id="bar"></i></div>`; if(keep)stage.appendChild(keep);
@@ -1695,7 +1842,22 @@ function mkDeck(spec){
     sh.pt=(rng,f)=>{const h=h0; for(;;){const x=(rng()*2-1)*h*(f||.92),z=(rng()*2-1)*h*(f||.92); if(!o||Math.abs(x)>o+.4||Math.abs(z)>o+.4)return[x,z];}};}
   return sh;
 }
-function deckDraw(sc,sh,col,rim){col=col==null?0xc98f55:col; rim=rim==null?0xffffff:rim;
+const DECKTEX={0xc98f55:'planks',0xf2dfa0:'sand',0x8fd3f7:'ice'}, FLOORCOL={sand:0xf2dfa0,stage:0x24397a,carpet:0x7b4fc9,grass:0x86d86f,rock:0x5e5057,soil:0xb8693a};
+let DECKG=null;   // the game whose platform is being drawn
+const SIDECOL={factory:0x5b6b7d,crater:0x3a3238,sea:0x8a5a2b,theatre:0x7a1f2b,night:0x4d4f66,snow:0xa8d8f0,fair:0xd8456a}, TOPCOL={ship:0xc98f55,beach:0xf2dfa0,stage:0x24397a,circus:0xe5484d,rink:0x8fd3f7,court:0x4d4f66,dojo:0xd9a066,arcade:0xfff3dc};
+function deckDraw(sc,sh,col,rim){
+  const G=DECKG||{};
+  if(G.top&&!sh.hole){   // a painted top on a solid body that stands on the ground or the sea bed, with a trim band under the lip
+    const set=G.set||'sea', side=new THREE.MeshLambertMaterial({color:SIDECOL[set]||0x8a5a2b}), top=amat('top-'+G.top,TOPCOL[G.top]||0xc98f55), trim=new THREE.MeshLambertMaterial({color:set==='theatre'||set==='fair'?0xffc531:0xfff3dc}), D=1.45;
+    const fl=m=>{m.receiveShadow=true; m.castShadow=false; return m;};
+    if(sh.k==='c'){fl(mesh(new THREE.CylinderGeometry(sh.R,sh.R*.94,D,72),[side,top,side],0,-D/2,0,sc)); fl(mesh(new THREE.CylinderGeometry(sh.R+.13,sh.R+.13,.2,72),trim,0,-.32,0,sc));
+      if(G.under){const um=amat('under-'+G.under,0,true), L=sh.R*(G.underL||5.2), pl=mesh(new THREE.PlaneGeometry(1,1),um,0,-1.2,0,sc), fit=()=>pl.scale.set(L*um.map.image.width/um.map.image.height,L,1);   // the platform stands on this, e.g. a ship seen from above
+        pl.rotation.x=-Math.PI/2; pl.castShadow=false; pl.renderOrder=3; if(um.map)fit(); else (um.wait=um.wait||[]).push(fit);}
+      else if(set==='sea'||set==='night')foamRing(sc,sh.R*.95,-1.36,1.1);}
+    else{const w=sh.h*2; fl(mesh(new THREE.BoxGeometry(w,D,w),[side,side,top,side,side,side],0,-D/2,0,sc)); fl(mesh(new THREE.BoxGeometry(w+.26,.2,w+.26),trim,0,-.32,0,sc));}
+    return;}
+  if(typeof col==='string'){const n=col; col=FLOORCOL[n]||0xc98f55; DECKTEX[col]=n;} col=col==null?0xc98f55:col; rim=rim==null?0xffffff:rim;
+  if(typeof col==='number'&&DECKTEX[col]){const n=DECKTEX[col], w=(sh.k==='c'?sh.R:sh.h)*2, pl=n==='planks'||n==='stage'; col=gmat(n,col,Math.max(1,Math.round(w/(pl?8:4))),Math.max(1,Math.round(w/4)));}   // painted deck surface
   const flat=m=>{m.receiveShadow=true; m.castShadow=false; return m;};
   if(sh.k==='c'){flat(mesh(new THREE.CylinderGeometry(sh.R,sh.R,.5,72),col,0,-.25,0,sc)); flat(mesh(new THREE.CylinderGeometry(sh.R+.2,sh.R+.2,.3,72),rim,0,-.42,0,sc));}
   else if(!sh.hole){flat(mesh(new THREE.BoxGeometry(sh.h*2,.5,sh.h*2),col,0,-.25,0,sc)); flat(mesh(new THREE.BoxGeometry(sh.h*2+.4,.3,sh.h*2+.4),rim,0,-.42,0,sc));}
@@ -1703,6 +1865,16 @@ function deckDraw(sc,sh,col,rim){col=col==null?0xc98f55:col; rim=rim==null?0xfff
     flat(mesh(new THREE.BoxGeometry(o*2-.4,.34,o*2-.4),0x1fa3d4,0,-.42,0,sc));}
 }
 async function gameFinished(){const el=$('#gfin'); el.hidden=false; await sleep(1500); el.hidden=true;}
+/* where a mini game takes place, so the surroundings fit the game. Each setting has a floor that runs to the horizon and, laid over it round the platform, one big painting of the place seen from above.
+   sea: a sunny lagoon (the default). theatre: a dark auditorium. night: a harbour after dark. snow: a frozen lake. fair: the fairground plaza. crater: inside the volcano. factory: a toy factory floor.
+   A long course lists where along it the painting repeats (zs) */
+const SETS={sea:{ground:'lagoon'},theatre:{ground:'theatre',bg:0x090c22,dim:.34,noBase:true},night:{ground:'harbour',bg:0x0b1536,dim:.8,base:['nightsea',0x16306e,26]},crater:{ground:'crater',bg:0x2a1420,base:['lava',0xff7a10,30]},factory:{ground:'factory',bg:0x39424f,base:['plate',0x8a96a8,110]},snow:{ground:'snowlake',base:['snow',0xdfeaf5,40,0xd4deea]},fair:{ground:'plaza',base:['cobble',0xd9a878,36]}};
+function arenaSet(G,sc,sh){
+  const set=SETS[G.set]?G.set:'sea', Q=SETS[set], e=(G.fit||sh.ext||5), sea=sc.children.find(o=>o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1);
+  if(Q.bg!=null)sc.background=new THREE.Color(Q.bg); if(Q.dim)sc.traverse(o=>{if(o.isLight)o.intensity*=Q.dim;});
+  if(sea){if(Q.noBase)sea.visible=false; else if(Q.base)sea.material=gmat(Q.base[0],Q.base[1],Q.base[2],Q.base[2],Q.base[3]);}
+  const S=Math.max(26,e*5); (G.zs||[0]).forEach((z,i)=>{const pl=mesh(new THREE.PlaneGeometry(S,S),amat('ground-'+Q.ground,0,true),0,-1.38-i*.004,z,sc); pl.rotation.x=-Math.PI/2; pl.rotation.z=i%2?Math.PI:0; pl.castShadow=false; pl.renderOrder=1;});
+}
 let arenaRefit=null;
 function arena(G){return async function(ctx){
   const demo=ctx.demo;   /* a preview on the ready screen: every player is run by the computer, nothing is sent or scored, and it stops when told to */
@@ -1712,7 +1884,8 @@ function arena(G){return async function(ctx){
     const fits=k=>{const cy=cp[0]*k,cz=cp[1]*k,lz=cp[2]*k, fl=Math.hypot(cy,cz-lz), fy=-cy/fl, fz=(lz-cz)/fl;   // camera forward; right is +x; up = right x forward
       for(const [x,z] of sq?[[e,e],[e,-e],[e,0]]:[[e,0],[0,e],[0,-e],[e*.7,e*.7]]){const dy=-cy,dz=z-cz, dep=dy*fy+dz*fz, ux=0,uy=-fz,uz=fy, v=(dy*uy+dz*uz)/dep, h=(x+(G.tight?.05:.5))/dep; if(dep<1||Math.abs(h)>th*(G.tight?1:.97)||v>tv*(G.tight?.96:W>H?.8:.5)||v<-tv*(G.tight?.96:W>H?.76:.72))return false;} return true;};
     if(G.tight)kz=.3; while(kz<4&&!fits(kz))kz+=.02;}; fit();
-  const m=miniStage(G.hint,[0,cp[0]*kz,cp[1]*kz],[0,0,cp[2]*kz]), sc=m.scene, rng=rng32(ctx.seed); if(G.draw)G.draw(sc,sh); else if(!G.noDeck)deckDraw(sc,sh);
+  const m=miniStage(G.hint,[0,cp[0]*kz,cp[1]*kz],[0,0,cp[2]*kz]), sc=m.scene, rng=rng32(ctx.seed); DECKG=G; if(G.draw)G.draw(sc,sh); else if(!G.noDeck)deckDraw(sc,sh,G.floor); DECKG=null;
+  if(!G.dark&&!G.alone)arenaSet(G,sc,sh);
   if(G.dark){sc.background=new THREE.Color(0x03040a); sc.traverse(o=>{if(o.isLight)o.intensity*=.02; else if(o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1)o.visible=false;});}
   const n=V.p.length, st=G.init(sc,rng,sh,n); st.zoom=f=>{m.cam.position.set(0,cp[0]*kz*f,cp[1]*kz*f); m.cam.lookAt(0,0,cp[2]*kz*f);}; st.cam=m.cam; st.camBase={p:[0,cp[0]*kz,cp[1]*kz],l:[0,0,cp[2]*kz]};
   // the phone was turned, or went full screen, after the game was set up: fit the platform to the new screen shape
@@ -1801,8 +1974,8 @@ const nearest=(av,st)=>{let b=null,bd=99; for(const o of st.avs){if(o===av||!o.a
 const flatM=(m)=>{m.rotation.x=-Math.PI/2; m.castShadow=false; m.receiveShadow=true; return m;};
 
 /* Crab Scramble: a small island twice the old size, three lives, crabs that keep getting faster and thicker */
-const CRAB={hint:'Dodge the crabs',surv:true,max:45,lives:3,post:.6,ring:2.2,deck:{k:'c',R:6.6},
-  draw(sc,sh){deckDraw(sc,sh,0xf2dfa0,0xfff6d6); flatM(mesh(new THREE.CircleGeometry(sh.R*.62,48),new THREE.MeshLambertMaterial({color:0x8fd96b}),0,.015,0,sc));
+const CRAB={top:'beach',hint:'Dodge the crabs',surv:true,max:45,lives:3,post:.6,ring:2.2,deck:{k:'c',R:6.6},
+  draw(sc,sh){deckDraw(sc,sh,0xf2dfa0,0xfff6d6); flatM(mesh(new THREE.CircleGeometry(sh.R*.62,48),gmat('grass',0x8fd96b,2),0,.015,0,sc));
     const tr=mesh(new THREE.CylinderGeometry(.16,.26,3,10),0xa9773f,0,1.5,0,sc); tr.rotation.z=-.08;
     for(let i=0;i<7;i++){const a=i/7*6.283, lf=mesh(new THREE.BoxGeometry(.5,.07,1.9),0x35c98a,.12+Math.sin(a)*.85,2.95,Math.cos(a)*.85,sc); lf.rotation.y=a; lf.rotation.x=.42;}
     for(let i=0;i<3;i++){const a=i*2.1; mesh(new THREE.SphereGeometry(.17,10,8),0x8a5a2b,.12+Math.sin(a)*.24,2.82,Math.cos(a)*.24,sc);}
@@ -1821,7 +1994,7 @@ const CRAB={hint:'Dodge the crabs',surv:true,max:45,lives:3,post:.6,ring:2.2,dec
     else{const r=Math.hypot(av.x,av.z); if(r>st.R*.6){ai.dx=-av.x/r*.6; ai.dz=-av.z/r*.6;} else{ai.dx=0; ai.dz=0;}}}};
 
 /* Boom Hop: a round deck exactly as wide as the boom. The boom speeds up and keeps reversing; it flashes yellow just before it turns back */
-const BOOM={hint:'Jump the boom',surv:true,max:40,jump:true,post:.9,ring:2.6,deck:{k:'c',R:4.7},
+const BOOM={top:'ship',under:'ship',hint:'Jump the boom',surv:true,max:40,jump:true,post:.9,ring:2.6,deck:{k:'c',R:4.7},
   init(sc,rng){mesh(new THREE.CylinderGeometry(.24,.3,1.2,16),0x7c8ea3,0,.6,0,sc); mesh(new THREE.SphereGeometry(.3,14,10),0xffc531,0,1.32,0,sc);
     const arm=new THREE.Group(); arm.position.y=.3; sc.add(arm); const bar=mesh(new THREE.BoxGeometry(.2,.2,4.7),new THREE.MeshLambertMaterial({color:0xff4d4d}),0,0,2.35,arm);
     const flips=[]; let t=6+rng()*3; while(t<40){flips.push(t); t+=Math.max(2.2,6-t*.09)+rng()*2;}
@@ -1836,7 +2009,7 @@ const BOOM={hint:'Jump the boom',surv:true,max:40,jump:true,post:.9,ring:2.6,dec
 
 /* Ticket Grab: a big square, one minute. Tickets last 5 seconds. From 15 to 45 seconds the deck shrinks to half its size.
    In the last 15 seconds half the tickets are red and cost a ticket */
-const GRAB={hint:'Grab the tickets',max:60,ring:2,deck:{k:'s',h:6.6},
+const GRAB={top:'arcade',set:'fair',hint:'Grab the tickets',max:60,ring:2,deck:{k:'s',h:6.6},
   size:t=>1-.5*Math.min(1,Math.max(0,(t-15)/30)),
   draw(sc,sh){sh.g=new THREE.Group(); sc.add(sh.g); deckDraw(sh.g,sh);},
   init(sc,rng,sh){const list=[]; for(let t=.6;t<59.4;t+=.3){const q=sh.pt(rng,.94), a=rng(), b=rng(), k=GRAB.size(t+5); list.push({t,x:q[0]*k,z:q[1]*k,red:t>=45&&a<.5,gold:b<.12,got:false,on:false,m:null});}   // each ticket lands where the deck will still be when it expires
@@ -1853,11 +2026,11 @@ const GRAB={hint:'Grab the tickets',max:60,ring:2,deck:{k:'s',h:6.6},
 /* Hot Planks: a big square of 16 tiles. Tiles flash yellow (still safe), then turn red. More tiles go, with less warning, as time passes.
    Half way through the 16 big tiles become 256 small ones (about the size of the Crumble Deck tiles). The rules and the pace stay the same:
    the same share of the floor goes each time, it is just scattered in small tiles */
-const HOT={hint:'Yellow is safe until it turns red',surv:true,max:40,ring:2,deck:{k:'s',h:6.6},HALF:20,
-  init(sc,rng,sh){const W=[],ev=[],T=sh.h/2, N2=16, T2=sh.h*2/N2; for(let i=0;i<16;i++){const m=flatM(mesh(new THREE.PlaneGeometry(T-.12,T-.12),new THREE.MeshLambertMaterial({color:0xd9a066}),-sh.h+T*(i%4+.5),.04,-sh.h+T*(Math.floor(i/4)+.5),sc)); W.push(m);}
+const HOT={set:'crater',floor:'rock',hint:'Yellow is safe until it turns red',surv:true,max:40,ring:2,deck:{k:'s',h:6.6},HALF:20,
+  init(sc,rng,sh){const W=[],ev=[],T=sh.h/2, N2=16, T2=sh.h*2/N2; for(let i=0;i<16;i++){const m=flatM(mesh(new THREE.PlaneGeometry(T-.12,T-.12),new THREE.MeshLambertMaterial({color:0xd9a066,map:ttex('stone')}),-sh.h+T*(i%4+.5),.04,-sh.h+T*(Math.floor(i/4)+.5),sc)); W.push(m);}
     let t=2, sw=0, end=0; while(t<39.5){const small=t>=HOT.HALF, tot=small?N2*N2:16, n=Math.min(12,4+Math.floor(t/3.5))*(small?N2*N2/16:1),set=[],used={}; while(set.length<n){const w=Math.floor(rng()*tot); if(!used[w]){used[w]=1; set.push(w);}} const warn=Math.max(.9,1.9-t*.03);
       if(small&&!sw)sw=Math.max(end,t-.7); ev.push({t,set,warn,small}); end=t+warn+.8; t+=warn+.8+Math.max(.25,1.1-t*.03);}
-    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(T2-.07,.03,T2-.07),new THREE.MeshLambertMaterial({color:0xffffff}),N2*N2), d=new THREE.Object3D(), c=new THREE.Color(0xd9a066);
+    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(T2-.07,.03,T2-.07),new THREE.MeshLambertMaterial({color:0xffffff,map:ttex('stone')}),N2*N2), d=new THREE.Object3D(), c=new THREE.Color(0xd9a066);
     for(let i=0;i<N2*N2;i++){d.position.set(-sh.h+T2*(i%N2+.5),.03,-sh.h+T2*(Math.floor(i/N2)+.5)); d.updateMatrix(); im.setMatrixAt(i,d.matrix); im.setColorAt(i,c);} im.castShadow=false; im.receiveShadow=true; im.visible=false; sc.add(im);
     const st={W,ev,T,h:sh.h,N:4,N2,sw:sw||99,im,col:c,shown:new Uint8Array(N2*N2),state:new Uint8Array(N2*N2),
       at(x,z){const n=st.N, s=sh.h*2/n, c=v=>Math.max(0,Math.min(n-1,Math.floor((v+sh.h)/s))); return c(x)+n*c(z);},
@@ -1874,7 +2047,7 @@ const HOT={hint:'Yellow is safe until it turns red',surv:true,max:40,ring:2,deck
     ai.dx=0; ai.dz=0;}};
 
 /* Coconut Drop: small coconuts, and plenty of them. Everyone also has a stun gun with 3 shots: a hit freezes a player for a moment */
-const COCO={hint:'Watch the shadows',surv:true,max:30,ring:1.8,deck:{k:'c',R:5.2},btn:'Shoot',SHOTS:3,STUN:1.4,
+const COCO={top:'beach',floor:'sand',hint:'Watch the shadows',surv:true,max:30,ring:1.8,deck:{k:'c',R:5.2},btn:'Shoot',SHOTS:3,STUN:1.4,
   init(sc,rng,sh){const list=[]; let t=1.2; while(t<29){const q=sh.pt(rng,.96); list.push({t,x:q[0],z:q[1],m:null,s:null,done:false,hot:false}); t+=Math.max(.14,.5-t*.013)/1.3;}   // half the size, 30% more of them
     return{list,R:sh.R,sc,geo:new THREE.SphereGeometry(.21,12,9),sg:new THREE.CircleGeometry(.4,20),shots:[],stars:[],bg:new THREE.SphereGeometry(.13,8,6),bm:new THREE.MeshBasicMaterial({color:0x35d0ff})};},
   fire(st,k,x,z,a){const m=mesh(st.bg,st.bm,x,.8,z,st.sc); m.castShadow=false; st.shots.push({k,x,z,dx:Math.sin(a),dz:Math.cos(a),life:.6,m});},
@@ -1902,15 +2075,16 @@ const COCO={hint:'Watch the shadows',surv:true,max:30,ring:1.8,deck:{k:'c',R:5.2
 
 /* Spotlight: 90 seconds and three lights. A new yellow light arrives every 30 seconds and the old ones turn red.
    Yellow adds points, red takes them away at the same rate, and where a red and the yellow overlap is neutral (grey) */
-const SPOT={hint:'Yellow adds points, red takes them',max:90,dec:true,quiet:true,board:true,ring:1.8,deck:{k:'c',R:4.3},
+const SPOT={top:'stage',set:'theatre',floor:'stage',hint:'Yellow adds points, red takes them',max:90,dec:true,quiet:true,board:true,ring:1.8,deck:{k:'c',R:4.3},
   init(sc,rng,sh){const L=[]; for(let i=0;i<3;i++){const d=mesh(new THREE.CylinderGeometry(1,1,.04,40),new THREE.MeshBasicMaterial({color:0xfff2a8,transparent:true,opacity:.85}),0,.03+i*.004,0,sc); d.castShadow=false; d.visible=false;
-      L.push({d,t0:i*30,p:[rng()*6.283,rng()*6.283,rng()*6.283,rng()*6.283],w:[.55+rng()*.35,.45+rng()*.35],x:0,z:0,r:1.35,on:false});}
+      const pl=new THREE.PointLight(0xfff2a8,0,6.5,1.4); pl.position.set(0,2.6,0); sc.add(pl);
+      L.push({d,pl,t0:i*30,p:[rng()*6.283,rng()*6.283,rng()*6.283,rng()*6.283],w:[.55+rng()*.35,.45+rng()*.35],x:0,z:0,r:1.35,on:false});}
     const lens=[0,1].map(()=>{const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(46*9),3)); const q=mesh(g,new THREE.MeshBasicMaterial({color:0xb9c2cc,side:THREE.DoubleSide}),0,.05,0,sc); q.castShadow=false; q.frustumCulled=false; q.visible=false; return q;});
     return{L,lens,R:sh.R,cur:0};},
   step(st,t){st.cur=Math.min(2,Math.floor(t/30)); const A=st.R*.6,B=st.R*.2;
     st.L.forEach((l,i)=>{l.on=t>=l.t0; l.d.visible=l.on; if(!l.on)return; l.x=A*Math.sin(l.w[0]*t+l.p[0])+B*Math.sin(2.1*t+l.p[2]); l.z=A*Math.cos(l.w[1]*t+l.p[1])+B*Math.cos(1.7*t+l.p[3]);
       const rr=Math.hypot(l.x,l.z)||.01, lim=st.R-l.r*.9; if(rr>lim){l.x*=lim/rr; l.z*=lim/rr;} const grow=Math.min(1,(t-l.t0)*2+.05); l.d.position.set(l.x,l.d.position.y,l.z); l.d.scale.set(l.r*grow,1,l.r*grow);
-      l.d.material.color.setHex(i===st.cur?0xfff2a8:0xff5a5a);});
+      l.d.material.color.setHex(i===st.cur?0xfff2a8:0xff5a5a); l.pl.position.set(l.x,2.6,l.z); l.pl.color.setHex(i===st.cur?0xfff2c0:0xff5a5a); l.pl.intensity=(i===st.cur?2.4:1.5)*grow;});
     // the neutral patch where a red light and the yellow one overlap
     const y=st.L[st.cur]; let li=0;
     for(let i=0;i<st.cur;i++){const r=st.L[i], q=st.lens[li++], d=Math.hypot(r.x-y.x,r.z-y.z); if(d>=r.r+y.r){q.visible=false; continue;}
@@ -1926,7 +2100,7 @@ const SPOT={hint:'Yellow adds points, red takes them',max:90,dec:true,quiet:true
 
 /* ---- player-versus-player deck games ---- */
 /* Sumo Shove: a square deck. The red closes in around two safe circles, then the circles roam, faster and faster. Red is instant death */
-const SUMO={hint:'Stay out of the red',surv:true,max:45,dash:true,dashes:5,recoil:3.6,shove:1.2,ring:2,deck:{k:'s',h:5},
+const SUMO={top:'dojo',floor:'sand',hint:'Stay out of the red',surv:true,max:45,dash:true,dashes:5,recoil:3.6,shove:1.2,ring:2,deck:{k:'s',h:5},
   init(sc,rng,sh){const h=sh.h, c0=[[-(1.6+rng()*1.4),-(1.2+rng()*1.6)],[1.6+rng()*1.4,1.2+rng()*1.6]]; if(rng()<.5){c0[0][1]*=-1; c0[1][1]*=-1;}
     const u={c1:{value:new THREE.Vector2()},c2:{value:new THREE.Vector2()},r:{value:20}};
     const red=flatM(mesh(new THREE.PlaneGeometry(h*2,h*2),new THREE.ShaderMaterial({uniforms:u,vertexShader:'varying vec2 p; void main(){p=position.xy; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
@@ -2011,12 +2185,12 @@ const MAZE={hint:'Find the way out',max:60,alone:true,left:true,noEdge:true,spee
   cpuScore(st){const T=st.len*MAZE.S/(4.6*MAZE.speed*(.3+Math.random()*.3)); return T<60?Math.round((60-T)*10)/10:0;}};
 
 /* Paint Fight: a big square with a square hole in the middle */
-const PAINT={hint:'Paint the most tiles',max:30,quiet:true,ring:3.9,deck:{k:'s',h:6.6,hole:2.2},btn:'Bomb',EVERY:10,
+const PAINT={set:'fair',hint:'Paint the most tiles',max:30,quiet:true,ring:3.9,deck:{k:'s',h:6.6,hole:2.2},btn:'Bomb',EVERY:10,
   init(sc,rng,sh){const S=.88,cells=[],map={}; for(let gx=-7;gx<=7;gx++)for(let gz=-7;gz<=7;gz++){if(Math.abs(gx)<=2&&Math.abs(gz)<=2)continue; const c={x:gx*S,z:gz*S,o:-1,m:null}; cells.push(c); map[gx+','+gz]=c;}
     // a colour bomb lands on a random tile every 10 seconds. The places come from the shared seed, so every phone gets the same ones
     const bombs=[]; for(let T=PAINT.EVERY;T<PAINT.max-1;T+=PAINT.EVERY){const c=cells[Math.floor(rng()*cells.length)]; bombs.push({t:T,x:c.x,z:c.z,m:null});}
     return{S,cells,map,sc,hole:sh.hole,geo:new THREE.BoxGeometry(.82,.05,.82),bombs,taken:0,held:[]};},
-  tint(st,c,av){if(c.o===av.k)return; c.o=av.k; if(!c.m){c.m=mesh(st.geo,new THREE.MeshLambertMaterial({color:av.col}),c.x,.03,c.z,st.sc); c.m.castShadow=false;} else c.m.material.color.setHex(av.col);},
+  tint(st,c,av){if(c.o===av.k)return; c.o=av.k; if(!c.m){c.m=mesh(st.geo,new THREE.MeshLambertMaterial({color:av.col,map:ttex('glaze')}),c.x,.03,c.z,st.sc); c.m.castShadow=false;} else c.m.material.color.setHex(av.col);},
   boom(st,av,gx,gz){for(let i=0;i<4;i++)for(let j=0;j<4;j++){const c=st.map[(gx+i)+','+(gz+j)]; if(c)PAINT.tint(st,c,av);} st.flash={x:(gx+1.5)*st.S,z:(gz+1.5)*st.S,t:.35,col:av.col}; SFX.gain();},   // a 4 by 4 block of tiles around the player
   step(st,t,dt){const avs=st.avs, me=avs.find(a=>a.mine);
     st.bombs.forEach((b,i)=>{const on=t>=b.t&&!(st.taken>>i&1); if(on&&!b.m){b.m=mesh(new THREE.SphereGeometry(.34,14,10),new THREE.MeshLambertMaterial({color:0xff4fd0}),b.x,.5,b.z,st.sc); mesh(new THREE.CylinderGeometry(.07,.07,.2,6),0x17304d,0,.38,0,b.m); if(me)splash('Colour bomb!',900);}
@@ -2038,9 +2212,9 @@ const PAINT={hint:'Paint the most tiles',max:30,quiet:true,ring:3.9,deck:{k:'s',
       const d=Math.hypot(tx-av.x,tz-av.z)||1; ai.dx=(tx-av.x)/d*.85; ai.dz=(tz-av.z)/d*.85;} else{ai.dx=0; ai.dz=0;}}};
 
 /* Crumble Deck: a square of tiles. Tiles drop sooner and sooner as the game goes on */
-const CRUMBLE={hint:'The floor crumbles behind you',surv:true,max:30,jump:true,noDeck:true,speed:.8,ring:1.6,deck:{k:'s',h:4.4},
-  init(sc,rng,sh){const S=.8,cells=[],map={},geo=new THREE.BoxGeometry(S-.05,.4,S-.05); for(let gx=-5;gx<=5;gx++)for(let gz=-5;gz<=5;gz++){const x=gx*S,z=gz*S,m=mesh(geo,(gx+gz)&1?0xc98f55:0xd9a066,x,-.2,z,sc); m.castShadow=false; m.receiveShadow=true; const c={x,z,s:0,tm:0,m,mat:m.material}; cells.push(c); map[gx+','+gz]=c;}
-    return{S,cells,map,at:(x,z)=>map[Math.round(x/S)+','+Math.round(z/S)],crack:new THREE.MeshLambertMaterial({color:0xe0566b})};},
+const CRUMBLE={set:'crater',hint:'The floor crumbles behind you',surv:true,max:30,jump:true,noDeck:true,speed:.8,ring:1.6,deck:{k:'s',h:4.4},
+  init(sc,rng,sh){const S=.8,cells=[],map={},geo=new THREE.BoxGeometry(S-.05,.4,S-.05); for(let gx=-5;gx<=5;gx++)for(let gz=-5;gz<=5;gz++){const x=gx*S,z=gz*S,m=mesh(geo,new THREE.MeshLambertMaterial({color:(gx+gz)&1?0xc9b49a:0xe6d6c2,map:ttex('stone')}),x,-.2,z,sc); m.castShadow=false; m.receiveShadow=true; const c={x,z,s:0,tm:0,m,mat:m.material}; cells.push(c); map[gx+','+gz]=c;}
+    return{S,cells,map,at:(x,z)=>map[Math.round(x/S)+','+Math.round(z/S)],crack:new THREE.MeshLambertMaterial({color:0xff7a4d,map:ttex('stone')})};},
   step(st,t,dt){for(const c of st.cells){if(c.s===1){c.tm-=dt; c.m.position.y=-.2+Math.sin(t*40)*.025; if(c.tm<=0){c.s=2; c.tm=3+t*.25;}}   // a dropped tile grows back after a few seconds, more slowly as the game goes on
       else if(c.s===2){c.tm-=dt; c.m.position.y-=dt*8; if(c.m.position.y<-7)c.m.visible=false; if(c.tm<=0){c.s=0; c.m.material=c.mat; c.m.visible=true; c.m.position.y=-.2;}}}},
   check(av,st,t,local){if(av.y>.05)return 0; const c=st.at(av.x,av.z); if(c&&c.s===0&&t>1.6){c.s=1; c.tm=Math.max(.38,1.2-t*.03); c.m.material=st.crack;} return local&&(!c||c.s===2)?'fall':0;},
@@ -2053,7 +2227,7 @@ const CRUMBLE={hint:'The floor crumbles behind you',surv:true,max:30,jump:true,n
     ai.dx=bx*.8; ai.dz=bz*.8;}};
 /* Stomp: 5 jumps each. When every player still in has used all of theirs, everyone gets 5 more. One stun each, never topped up:
    it freezes the nearest player for a moment, and for that moment the player who used it cannot jump */
-const STOMP={hint:'Jump on their heads',surv:true,max:30,jump:true,ring:1.8,deck:{k:'c',R:4},JUMPS:5,STUN:.7,REACH:3.2,
+const STOMP={top:'circus',set:'fair',floor:'carpet',hint:'Jump on their heads',surv:true,max:30,jump:true,ring:1.8,deck:{k:'c',R:4},JUMPS:5,STUN:.7,REACH:3.2,
   init(sc){return{sc,stars:[]};},
   step(st,t,dt){const avs=st.avs, me=avs.find(a=>a.mine); if(!st.set){st.set=true; avs.forEach(a=>{a.jl=STOMP.JUMPS; a.gen=0; a.stn=1; a.sq=a.sq||0; a.stk=-1; a.frozen=0; a.nj=0; a.fz=0;}); if(!DEMO)$('#stunBtn').hidden=false;}
     const alive=avs.filter(a=>a.alive), top=Math.max(...avs.map(a=>a.gen)), all=alive.length>1&&alive.every(a=>a.jl<=0&&a.gen===top);   // everyone is out of jumps: a fresh 5 each
@@ -2077,7 +2251,7 @@ const STOMP={hint:'Jump on their heads',surv:true,max:30,jump:true,ring:1.8,deck
     if(av.stn>0&&av.y===0&&n.o.y===0&&n.d<1.6&&Math.random()<.05)ai.act=true;}};
 
 /* Slippery Slope: an ice rink. You slide, and a giant snowball rolls around knocking players flying */
-const SLIP={hint:'Keep clear of the snowball',surv:true,max:40,ice:1.5,edgeAI:2.2,ring:3.4,deck:{k:'c',R:5},
+const SLIP={top:'rink',set:'snow',hint:'Keep clear of the snowball',surv:true,max:40,ice:1.5,edgeAI:2.2,ring:3.4,deck:{k:'c',R:5},
   draw(sc,sh){deckDraw(sc,sh,0x8fd3f7,0xffffff); for(let i=0;i<9;i++){const a=i*.7+.3,r=1+((i*37)%30)/10, s=flatM(mesh(new THREE.PlaneGeometry(1.3,.05),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.7}),Math.sin(a)*r,.012,Math.cos(a)*r,sc)); s.rotation.z=a*1.7;}},
   init(sc,rng,sh){const b=mesh(new THREE.IcosahedronGeometry(1.25,1),new THREE.MeshLambertMaterial({color:0xdfe9f5,flatShading:true}),0,1.25,0,sc);
     const sh2=flatM(mesh(new THREE.CircleGeometry(1.2,28),new THREE.MeshBasicMaterial({color:0x17304d,transparent:true,opacity:.22}),0,.015,0,sc));
@@ -2100,12 +2274,12 @@ const SLIP={hint:'Keep clear of the snowball',surv:true,max:40,ice:1.5,edgeAI:2.
 /* Trap Doors: four rounds. One player per door, and no coming back out. One door each round is a drop.
    5 doors, then one fewer each round (5, 4, 3, 2) - or one per player still in, if that is more. At the reveal the camera goes round the back,
    where you can see under the doors, and whoever chose wrong drops through the floor */
-const DOORS={hint:'Pick a door',surv:true,max:65,fit:5.5,ring:2,speed:.9,allFall:true,deck:{k:'s',h:5},
+const DOORS={set:'fair',floor:'carpet',hint:'Pick a door',surv:true,max:65,fit:5.5,ring:2,speed:.9,allFall:true,deck:{k:'s',h:5},
   BASE:[5,3,2,2], PICK:8.5, LEN:13,
   sp:n=>n<=2?3.6:n===3?2.9:n===4?2.3:n===5?1.9:1.6, hw:n=>Math.min(.72,DOORS.sp(n)/2-.18),
   doorX(n,i){return (i-(n-1)/2)*DOORS.sp(n);},
   start(k,n){return[(k-(n-1)/2)*1.3,2.6];},
-  draw(sc){const fl=m=>{m.castShadow=false; m.receiveShadow=true;}; fl(mesh(new THREE.BoxGeometry(10,.5,9.1),0xc98f55,0,-.25,.45,sc)); fl(mesh(new THREE.BoxGeometry(10.4,.3,9.5),0xffffff,0,-.42,.45,sc));},   // the floor stops at the wall; each door has its own pad behind it
+  draw(sc){const fl=m=>{m.castShadow=false; m.receiveShadow=true;}; {const side=new THREE.MeshLambertMaterial({color:SIDECOL.fair}), top=gmat('carpet',0x7b4fc9,2,2); fl(mesh(new THREE.BoxGeometry(10,1.45,9.1),[side,side,top,side,side,side],0,-.725,.45,sc)); fl(mesh(new THREE.BoxGeometry(10.3,.2,9.4),0xffc531,0,-.32,.45,sc));}},   // the floor stops at the wall; each door has its own pad behind it
   init(sc,rng,sh,n){const n0=Math.max(5,Math.min(6,n)); return{u:[rng(),rng(),rng(),rng(),rng()],bad:-1,n:n0,n0,max:(n0-1)*DOORS.LEN,sc,r:-1,g:null,panels:[],pads:[],shown:0};},   // 5 doors and 4 rounds; with 6 players, 6 doors and 5 rounds
   build(st,r){if(st.g)st.sc.remove(st.g); const g=new THREE.Group(); st.sc.add(g); st.g=g; st.panels=[]; st.pads=[]; st.leafs=[]; const n=st.n, Z=-4.35, hw=DOORS.hw(n);
     let x0=-5.2; for(let i=0;i<=n;i++){const x1=i<n?DOORS.doorX(n,i)-hw-.08:5.2; if(x1>x0+.05)mesh(new THREE.BoxGeometry(x1-x0,2.4,.5),0x7a5a3a,(x0+x1)/2,1.2,Z,g).castShadow=false; if(i<n)x0=DOORS.doorX(n,i)+hw+.08;}
@@ -2189,12 +2363,13 @@ const GHOST={hint:'Run from the ghost',surv:true,max:80,dark:true,tight:true,cam
 /* Conveyor Chaos: a race across a deck of moving belts. Each belt runs left, right, back towards the start or on towards the finish,
    and changes direction every few seconds (it flashes white just before). Get carried off the side and you start again.
    The belts and their changes come from the shared seed, so every phone has the same course */
-const BELT={hint:'Race to the far side',max:100,left:true,ring:2,speed:.62,noEdge:true,fit:7,deck:{k:'s',h:60},W:7,NB:24,BD:1.3,V:{L:[-3.4,0],R:[3.4,0],B:[0,2.9],F:[0,-3]},
+const BELTIM=new Image(); BELTIM.src='assets/arena/tile-belt.webp';   // painted belt surface, loaded up front so it is ready when the belts are drawn
+const BELT={set:'factory',zs:[5,-30],hint:'Race to the far side',max:100,left:true,ring:2,speed:.62,noEdge:true,fit:7,deck:{k:'s',h:60},W:7,NB:24,BD:1.3,V:{L:[-3.4,0],R:[3.4,0],B:[0,2.9],F:[0,-3]},
   start(k,n,st){return[(k-(n-1)/2)*1.5,st.h-.9];},
   draw(sc){const W=BELT.W, len=2+BELT.NB*BELT.BD+1.6; mesh(new THREE.BoxGeometry(W*2+.5,.5,len+.5),0xffffff,0,-.3,W-len/2,sc).castShadow=false; const top=mesh(new THREE.BoxGeometry(W*2,.5,len),0x5b6b7d,0,-.25,W-len/2,sc); top.castShadow=false; top.receiveShadow=true;},   // a long course: three screens deep, with the camera following you
   view(cam,me,dt,st){const b=st.camBase, off=Math.max(st.z1-1.6+BELT.W,Math.min(0,me.z-3)); cam.oz=cam.oz==null?off:cam.oz+(off-cam.oz)*Math.min(1,dt*5); cam.position.set(b.p[0],b.p[1],b.p[2]+cam.oz); cam.lookAt(b.l[0],b.l[1],b.l[2]+cam.oz);},
   init(sc,rng,sh){const h=BELT.W, z0=h-2, d=BELT.BD, z1=z0-d*BELT.NB, belts=[], pick=()=>{const r=rng(); return r<.31?'L':r<.62?'R':r<.92?'B':'F';};
-    const at=tex((g,s)=>{g.fillStyle='#eef2f7'; g.fillRect(0,0,s,s); g.fillStyle='#17304d'; g.beginPath(); g.moveTo(s*.5,s*.16); g.lineTo(s*.8,s*.56); g.lineTo(s*.6,s*.56); g.lineTo(s*.6,s*.84); g.lineTo(s*.4,s*.84); g.lineTo(s*.4,s*.56); g.lineTo(s*.2,s*.56); g.closePath(); g.fill();});   // one arrow, pointing up the texture
+    const at=tex((g,s)=>{g.fillStyle='#eef2f7'; g.fillRect(0,0,s,s); if(BELTIM.complete&&BELTIM.naturalWidth)g.drawImage(BELTIM,0,0,s,s); g.fillStyle='#17304d'; g.beginPath(); g.moveTo(s*.5,s*.16); g.lineTo(s*.8,s*.56); g.lineTo(s*.6,s*.56); g.lineTo(s*.6,s*.84); g.lineTo(s*.4,s*.84); g.lineTo(s*.4,s*.56); g.lineTo(s*.2,s*.56); g.closePath(); g.fill();});   // one arrow, pointing up the texture
     for(let i=0;i<BELT.NB;i++){const zc=z0-d*(i+.5), sw=[]; let t=-rng()*3.6, dir=pick(); while(t<BELT.max+2){   /* staggered, so the belts do not all change together */ sw.push({t,d:dir}); t+=2.2+rng()*1.8; let nd=pick(); if(nd===dir)nd=dir==='L'?'R':'L'; dir=nd;}
       const tx=at.clone(); tx.needsUpdate=true; tx.wrapS=tx.wrapT=THREE.RepeatWrapping; tx.repeat.set(1,1);
       const m=flatM(mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshLambertMaterial({map:tx}),0,.03,zc,sc)); belts.push({zc,za:zc-d/2+.06,zb:zc+d/2-.06,d:d-.12,sw,m,tx,cur:'',k:i>=BELT.NB/2?2:1});}   // the second half of the course pushes twice as hard
@@ -2218,7 +2393,7 @@ const BELT={hint:'Race to the far side',max:100,left:true,ring:2,speed:.62,noEdg
 
 /* Lantern Match: six coloured lanterns light up in a sequence, then everyone has to walk over them in that order.
    Each round adds one more to the same sequence. Step on the wrong one, or run out of time, and you are out */
-const LANT={hint:'Watch the lanterns',surv:true,max:90,ring:1.2,deck:{k:'c',R:5.6},COL:[0xff4d4d,0x4fa8ff,0x35c98a,0xffc531,0xb07cff,0xff8a3d],F:[262,330,392,494,587,698],
+const LANT={top:'court',set:'night',floor:'stage',hint:'Watch the lanterns',surv:true,max:90,ring:1.2,deck:{k:'c',R:5.6},COL:[0xff4d4d,0x4fa8ff,0x35c98a,0xffc531,0xb07cff,0xff8a3d],F:[262,330,392,494,587,698],
   init(sc,rng,sh){const pads=[], seq=[]; for(let i=0;i<6;i++){const a=i/6*6.283, x=Math.sin(a)*3.7, z=Math.cos(a)*3.7, c=LANT.COL[i];
       const pad=flatM(mesh(new THREE.CircleGeometry(.78,24),new THREE.MeshLambertMaterial({color:c}),x,.03,z,sc)), px=Math.sin(a)*4.75, pz=Math.cos(a)*4.75;
       mesh(new THREE.CylinderGeometry(.06,.06,1.5,8),0x17304d,px,.75,pz,sc); const lamp=mesh(new THREE.BoxGeometry(.42,.5,.42),new THREE.MeshBasicMaterial({color:c}),px,1.7,pz,sc); lamp.castShadow=false; pads.push({x,z,c,pad,lamp,lit:0});}
