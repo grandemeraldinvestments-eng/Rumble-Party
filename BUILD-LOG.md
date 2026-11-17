@@ -388,6 +388,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Computer players in mini games: their steering is eased, they turn smoothly instead of snapping round, and they no longer flick between running and standing.
 - Hedge Maze: the darkness is drawn on a finer grid and blurred, so the edge between seen and unseen is a soft gradient.
 
+## Build 63
+
+- Hedge Maze: the maze is twice the size (16 by 16 tiles, up from 11 by 11), and the time limit is 100 seconds.
+- Hedge Maze: there are now ten fixed mazes and one is picked at random each game. The game shows which one you are in. Their shortest routes run from 46 to 74 tiles, with the exit in a different place in each.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

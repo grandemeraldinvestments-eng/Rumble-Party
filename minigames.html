@@ -1682,7 +1682,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=62; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=63; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -2124,10 +2124,10 @@ const SUMO={top:'dojo',floor:'sand',hint:'Stay out of the red',surv:true,max:45,
 
 /* Hedge Maze: everyone gets the same random maze but runs it alone. First out of the far side wins; one minute.
    Seen from above, but only the part your character can see is shown */
-const MAZE={hint:'Find the way out',max:60,alone:true,left:true,noEdge:true,speed:1.2,cam:[15.5,4.2,.25],fit:7.2,deck:{k:'s',h:13},
-  N:11,S:1.725,
+const MAZE={hint:'Find the way out',max:100,alone:true,left:true,noEdge:true,speed:1.2,cam:[15.5,4.2,.25],fit:7.2,deck:{k:'s',h:22},
+  N:16,S:1.725,SEEDS:[1,46,2,253,93,64,28,85,74,323],   /* ten fixed mazes; one is picked at random each game */
   draw(){},
-  init(sc,rng){const N=MAZE.N,S=MAZE.S,half=N*S/2, open=new Uint8Array(N*N), seen=new Uint8Array(N*N), D=[[1,0,1,4],[0,1,2,8],[-1,0,4,1],[0,-1,8,2]];
+  init(sc,rng){const vi=Math.floor(rng()*MAZE.SEEDS.length); rng=rng32(MAZE.SEEDS[vi]); const N=MAZE.N,S=MAZE.S,half=N*S/2, open=new Uint8Array(N*N), seen=new Uint8Array(N*N), D=[[1,0,1,4],[0,1,2,8],[-1,0,4,1],[0,-1,8,2]];
     const sx=N>>1, ex=Math.floor(rng()*N), stack=[sx+N*(N-1)]; seen[stack[0]]=1;
     while(stack.length){const c=stack[stack.length-1],i=c%N,j=(c-i)/N,opts=[]; for(const d of D){const a=i+d[0],b=j+d[1]; if(a>=0&&b>=0&&a<N&&b<N&&!seen[a+N*b])opts.push(d);}
       if(!opts.length){stack.pop(); continue;} const d=opts[Math.floor(rng()*opts.length)],nc=i+d[0]+N*(j+d[1]); open[c]|=d[2]; open[nc]|=d[3]; seen[nc]=1; stack.push(nc);}
@@ -2153,7 +2153,7 @@ const MAZE={hint:'Find the way out',max:60,alone:true,left:true,noEdge:true,spee
     for(const [x,z,w,d] of [[-half-1,0,2,N*S+4],[half+1,0,2,N*S+4],[0,half+1,N*S+4,2]]){const m=flatM(mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshBasicMaterial({color:0x05070d}),x,1.17,z,sc)); m.receiveShadow=false;}   // the outer hedge stays hidden too
     // which way is out from each cell, for the computer player in the preview
     const toE=new Int16Array(N*N).fill(-1), q2=[ex]; toE[ex]=0; for(let hh=0;hh<q2.length;hh++){const c=q2[hh],i=c%N,j=(c-i)/N; for(const d of D)if(open[c]&d[2]){const nc=i+d[0]+N*(j+d[1]); if(toE[nc]<0){toE[nc]=toE[c]+1; q2.push(nc);}}}
-    return{walls,half,open,toE,ex,G,fd,raw:new Float32Array(G*G).fill(1),tmp:new Float32Array(G*G).fill(1),tg:new Float32Array(G*G).fill(1),cur:new Float32Array(G*G).fill(1),fogX,flag:fl,exitVis:0,sc,start:[X(sx+.5),X(N-.5)],len:dist[ex]+1};},
+    return{vi,walls,half,open,toE,ex,G,fd,raw:new Float32Array(G*G).fill(1),tmp:new Float32Array(G*G).fill(1),tg:new Float32Array(G*G).fill(1),cur:new Float32Array(G*G).fill(1),fogX,flag:fl,exitVis:0,sc,start:[X(sx+.5),X(N-.5)],len:dist[ex]+1};},
   start(k,n,st){return st.start;},
   blocked(st,x,z,r){for(const w of st.walls)if(Math.abs(x-w[0])<w[2]+r&&Math.abs(z-w[1])<w[3]+r)return true; return false;},
   // can you see the point (tx,tz) from the point (x,z)? Walk the line between them and stop at the first hedge
@@ -2163,7 +2163,7 @@ const MAZE={hint:'Find the way out',max:60,alone:true,left:true,noEdge:true,spee
       if(ni!==i&&nj!==j){if(!((ok(i,j,ni,j)&&ok(ni,j,ni,nj))||(ok(i,j,i,nj)&&ok(i,nj,ni,nj))))return false;} else if(!ok(i,j,ni,nj))return false; i=ni; j=nj;} return true;},
   // seen from above, following your character. You only see what your character could see from where it stands: anything round a corner
   // or behind a hedge is blacked out. A marker in your colour is dropped every step or so, to show where you have been
-  view(cam,me,dt,st){const N=MAZE.N,S=MAZE.S,h=st.half, snap=!cam.tp; if(!cam.tp){cam.tp=true; st.mk=[]; st.mg=new THREE.CylinderGeometry(.17,.17,.04,10); st.mm=new THREE.MeshBasicMaterial({color:me.col}); st.vt=0; cam.cx=me.x; cam.cz=me.z;}
+  view(cam,me,dt,st){const N=MAZE.N,S=MAZE.S,h=st.half, snap=!cam.tp; if(!cam.tp){cam.tp=true; st.mk=[]; st.mg=new THREE.CylinderGeometry(.17,.17,.04,10); st.mm=new THREE.MeshBasicMaterial({color:me.col}); st.vt=0; cam.cx=me.x; cam.cz=me.z; {const q=$('#hint'); if(q&&!DEMO)q.textContent=`Maze ${st.vi+1} of ${MAZE.SEEDS.length}: find the way out`;}}
     const k=Math.min(1,dt*6), W=window.innerWidth, H=window.innerHeight, Hc=W<H?15:11.5; cam.cx+=(me.x-cam.cx)*k; cam.cz+=(me.z-cam.cz)*k; cam.position.set(cam.cx,Hc,cam.cz+Hc*.12); cam.lookAt(cam.cx,0,cam.cz);
     // the darkness is one soft-edged sheet over the maze: a small grid of points, each lit if your character can see it and it is close enough,
     // blended between points and faded over time, so the edge of what you can see is a smooth fade
@@ -2183,12 +2183,12 @@ const MAZE={hint:'Find the way out',max:60,alone:true,left:true,noEdge:true,spee
   push(av,st,R){for(let p=0;p<2;p++)for(const w of st.walls){const dx=av.x-w[0],dz=av.z-w[1]; if(Math.abs(dx)>w[2]+R||Math.abs(dz)>w[3]+R)continue;
       const cx=Math.max(-w[2],Math.min(w[2],dx)),cz=Math.max(-w[3],Math.min(w[3],dz)),ex=dx-cx,ez=dz-cz,d=Math.hypot(ex,ez);
       if(d>=R)continue; if(d>.0001){av.x+=ex/d*(R-d); av.z+=ez/d*(R-d);} else if(w[2]<w[3])av.x=w[0]+(dx>=0?1:-1)*(w[2]+R); else av.z=w[1]+(dz>=0?1:-1)*(w[3]+R);}},
-  check(av,st,t,local){if(local&&av.z<-st.half-.45){av.score=Math.max(.1,Math.round((60-t)*10)/10); return'win';} return 0;},
+  check(av,st,t,local){if(local&&av.z<-st.half-.45){av.score=Math.max(.1,Math.round((MAZE.max-t)*10)/10); return'win';} return 0;},
   ai(av,st){const N=MAZE.N,S=MAZE.S,h=st.half, cl=v=>Math.max(0,Math.min(N-1,Math.floor((v+h)/S))), i=cl(av.x), j=cl(av.z), c=i+N*j; let tx=-h+(i+.5)*S, tz=-h+(j+.5)*S;   // follows the shortest way out
     if(c===st.ex||av.z<-h)tz=-h-3; else for(const d of [[1,0,1],[0,1,2],[-1,0,4],[0,-1,8]])if(st.open[c]&d[2]){const nc=i+d[0]+N*(j+d[1]); if(st.toE[nc]<st.toE[c]){ // head for the middle of the next cell, squaring up in the corridor first
           const ox=Math.abs(av.x-tx), oz=Math.abs(av.z-tz); if((d[0]&&oz<.25)||(d[1]&&ox<.25)){tx+=d[0]*S; tz+=d[1]*S;} break;}}
     const l=Math.hypot(tx-av.x,tz-av.z)||1; av.ai.dx=(tx-av.x)/l*.75; av.ai.dz=(tz-av.z)/l*.75;},
-  cpuScore(st){const T=st.len*MAZE.S/(4.6*MAZE.speed*(.3+Math.random()*.3)); return T<60?Math.round((60-T)*10)/10:0;}};
+  cpuScore(st){const T=st.len*MAZE.S/(4.6*MAZE.speed*(.3+Math.random()*.3)); return T<MAZE.max?Math.round((MAZE.max-T)*10)/10:0;}};
 
 /* Paint Fight: a big square with a square hole in the middle */
 const PAINT={set:'fair',hint:'Paint the most tiles',max:30,quiet:true,ring:3.9,deck:{k:'s',h:6.6,hole:2.2},btn:'Bomb',EVERY:10,
@@ -2432,7 +2432,7 @@ const GAMES=[
  {name:'Coconut Drop',unit:'sec',surv:true,arena:true,max:36,how:'Everyone shares one deck. Small coconuts are falling, and plenty of them. Watch for the shadows and keep out from under them. You also have a stun gun with 3 shots: tap Shoot to fire the way you are facing, and a hit freezes that player for over a second.',cpu:()=>rand(60,230)/10,play:arena(COCO)},
  {name:'Spotlight',unit:'pts',dec:true,arena:true,max:96,how:'Ninety seconds. Stand in the yellow spotlight to score. Every 30 seconds a new yellow light arrives and the old one turns red, which takes points away just as fast. Where red and yellow overlap is neutral.',cpu:()=>rand(100,400)/10,play:arena(SPOT)},
  {name:'Sumo Shove',unit:'sec',surv:true,arena:true,max:51,how:'Player against player. The red closes in around two safe circles, then the circles start to roam. Touch the red and you are out. Shove the others into it, and tap Dash for a charge that hits much harder. You only get 5 dashes, and each one ends with a small kick backwards.',cpu:()=>rand(60,300)/10,play:arena(SUMO)},
- {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:66,how:'Everyone gets the same maze but runs it alone. You look down on it from above, but you only see what your character can see: anything round a corner or behind a hedge stays black. Markers in your colour are dropped behind you as you walk, so you can tell where you have already been. The exit is somewhere on the far side, marked in green. The fastest out wins. You have one minute.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
+ {name:'Hedge Maze',unit:'sec left',arena:true,alone:true,max:106,how:'There are ten different mazes and one is picked at random. Everyone gets the same maze but runs it alone. You look down on it from above, but you only see what your character can see: anything round a corner or behind a hedge stays black. Markers in your colour are dropped behind you as you walk, so you can tell where you have already been. The exit is somewhere on the far side, marked in green. The fastest out wins. You have 100 seconds.',cpu:()=>rand(0,300)/10,play:arena(MAZE)},
  {name:'Paint Fight',unit:'tiles',arena:true,max:36,how:'Player against player on a big square with a hole in the middle. Every tile you walk over turns your colour, including tiles the others already painted. Every 10 seconds a colour bomb lands somewhere: walk over it to pick it up, then tap Bomb to paint a 4 by 4 block of tiles around you. Most tiles when time runs out wins.',cpu:()=>rand(20,60),play:arena(PAINT)},
  {name:'Crumble Deck',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Every tile anyone steps on shakes and drops away, sooner and sooner as the game goes on, then grows back a few seconds later. Tap Jump to hop over a gap. Keep moving and do not fall through.',cpu:()=>rand(60,230)/10,play:arena(CRUMBLE)},
  {name:'Stomp',unit:'sec',surv:true,arena:true,max:36,how:'Player against player. Tap Jump and land on another player to knock them out. You have 5 jumps; when everyone has used theirs, everyone gets 5 more. You also have one Stun: it freezes the nearest player for a moment, but you cannot jump until it wears off, and it is never topped up. Keep moving so nobody lands on you.',cpu:()=>rand(60,230)/10,play:arena(STOMP)},
