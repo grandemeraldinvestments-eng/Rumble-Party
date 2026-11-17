@@ -382,6 +382,12 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Lobby music: the page now tries to start it the moment it opens, and has the track loaded and waiting. Where the browser holds sound until the first touch, it starts on that touch.
 - Special spaces: the painted icons are redrawn at twice the size and sharpened, fill more of each disc, have a thin dark outline, and stay sharp when the board is seen at a slant.
 
+## Build 62
+
+- Item shop: land exactly on the shop and you are given a random item for free. Passing the shop still lets you buy one.
+- Computer players in mini games: their steering is eased, they turn smoothly instead of snapping round, and they no longer flick between running and standing.
+- Hedge Maze: the darkness is drawn on a finer grid and blurred, so the edge between seen and unseen is a soft gradient.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

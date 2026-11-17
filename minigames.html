@@ -1142,7 +1142,7 @@ window.addEventListener('keydown',e=>{if(chanceSkip&&(e.key===' '||e.key==='Ente
 function hideInfo(){$('#spInfo').hidden=true; if(mark)mark.visible=false;}
 function spaceInfo(i){
   const n=NODES[i], amt=V.round>=V.rounds?6:3, me=V.p[myK()];
-  let t={H:'Item shop: buy an item when you pass or land here.',S:'Gate: win 10 tickets every time you pass.','+':`Blue space: win ${amt} tickets.`,'-':`Red space: lose ${amt} tickets.`,'?':'Chance space: a random event.',I:'Item space: a free item for your bag.'}[n.t];
+  let t={H:'Item shop: buy an item when you pass. Land here and you get one free.',S:'Gate: win 10 tickets every time you pass.','+':`Blue space: win ${amt} tickets.`,'-':`Red space: lose ${amt} tickets.`,'?':'Chance space: a random event.',I:'Item space: a free item for your bag.'}[n.t];
   if(!t&&SP[n.t]){t=`${SP[n.t][0]}: ${SP[n.t][1]}`; if(n.t==='J'&&V.pot!=null)t+=` The pot holds ${V.pot}.`; if(n.t==='V'&&V.harv!=null)t+=` Worth ${V.harv} tickets now.`;}
   if(n.hot)t='Scorched by lava for now: lose 3 tickets. '+(t||'');
   if(n.bridge)t+=' On the bridge shortcut.'; if(n.next.length>1)t+=' The path forks here.';
@@ -1460,7 +1460,7 @@ async function moveP(p,n){
   while(n>0){
     S.ui.num=n; const nx=NODES[p.pos].next; await stepTo(p,nx.length>1?await branch(p,nx,n):nx[0]); n--;
     if(p.pos===0){gain(p,10); say('Lap bonus: +10 tickets.');}
-    if(NODES[p.pos].t==='H'){S.ui.num=-1; await shopStop(p);}
+    if(NODES[p.pos].t==='H'){S.ui.num=-1; if(n===0){say(`${nm(p)} landed on the item shop: a free item!`); await sleep(700); await giveItem(p);} else await shopStop(p);}   /* pass the shop and you can buy; land on it and you are given one */
     if(p.pos===S.pearlAt){S.ui.num=-1; await stall(p);}
   }
   await sleep(240); S.ui.num=-1;   // let the pawn finish its last stride before the space resolves
@@ -1682,7 +1682,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=61; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=62; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1916,7 +1916,7 @@ function arena(G){return async function(ctx){
           let ix=0,iz=0,j=false;
           let act=false; if(av.mine){act=joy.act; joy.act=false;} else{act=av.ai.act; av.ai.act=false;}
           if(av.mine){ix=joy.x; iz=joy.y; j=joy.jump; joy.jump=false; if(G.steer){const q=G.steer(av,ix,iz,dt); ix=q[0]; iz=q[1];}}
-          else{G.ai(av,st,t,dt); ix=av.ai.dx; iz=av.ai.dz; j=av.ai.jump; av.ai.jump=false;
+          else{G.ai(av,st,t,dt); {const k=Math.min(1,dt*9); av.sx=(av.sx||0)+((av.ai.dx||0)-(av.sx||0))*k; av.sz=(av.sz||0)+((av.ai.dz||0)-(av.sz||0))*k;} ix=av.sx; iz=av.sz; j=av.ai.jump; av.ai.jump=false;   /* eased, so a computer player does not twitch each time it changes its mind */
             const e=sh.edge(av.x,av.z), lim=G.edgeAI||.8; if(!G.noEdge&&e[0]<lim){const pw=1.6*(1+(lim-e[0])/lim); ix+=e[1]*pw; iz+=e[2]*pw;}}
           if(av.frozen>0){av.frozen-=dt; ix=iz=0; j=false; act=false;}   /* stunned: no moving, jumping or stunning back */
           if(act&&G.act)G.act(av,st,t);
@@ -1951,7 +1951,7 @@ function arena(G){return async function(ctx){
       }
       av.spd+=(Math.hypot(av.x-ox,av.z-oz)/Math.max(dt,.001)-av.spd)*Math.min(1,dt*10); if(av.y!==av.ly){av.dy=av.y-av.ly; av.ly=av.y;}
       const ch=av.ch;
-      if(av.alive){ch.position.set(av.x,av.y,av.z); ch.run=av.moving?1:0; ch.air=av.y>0; ch.fig.rotation.y=av.face; ch.visible=!(av.inv>0&&Math.floor(t*12)%2);}
+      if(av.alive){ch.position.set(av.x,av.y,av.z); av.mvT=av.moving?.2:(av.mvT||0)-dt; ch.run=av.mvT>0?1:0; ch.air=av.y>0; {const d=av.face-ch.fig.rotation.y; ch.fig.rotation.y+=Math.atan2(Math.sin(d),Math.cos(d))*Math.min(1,dt*(av.mine?22:13));} ch.visible=!(av.inv>0&&Math.floor(t*12)%2);}
       else if(ch.visible){av.gone-=dt; ch.run=0; ch.air=true; if(av.fell){ch.position.y-=dt*9; ch.fig.rotation.x+=dt*6;} else{ch.scale.setScalar(Math.max(.01,1.15*av.gone/.6)); ch.fig.rotation.y+=dt*14;} if(av.gone<=0)ch.visible=false;}
     }
     if(G.view)G.view(m.cam,me,dt,st);
@@ -2146,14 +2146,14 @@ const MAZE={hint:'Find the way out',max:60,alone:true,left:true,noEdge:true,spee
     flatM(mesh(new THREE.PlaneGeometry(S*1.6,1.3),new THREE.MeshBasicMaterial({color:0x35c98a}),X(ex+.5),.01,-half-.75,sc));
     const fl=mesh(new THREE.CylinderGeometry(.05,.05,1.8,8),0xffffff,X(ex+.5)+.6,.9,-half-.9,sc); mesh(new THREE.BoxGeometry(.7,.42,.04),0x35c98a,.36,.62,0,fl);
     // a sheet of darkness over the whole maze, and a cover over the way out
-    const fm=()=>new THREE.MeshBasicMaterial({color:0x05070d,transparent:true,opacity:1}), G=N*4, data=new Uint8Array(G*G*4); for(let c=0;c<G*G;c++){data[c*4]=5; data[c*4+1]=7; data[c*4+2]=13; data[c*4+3]=255;}
+    const fm=()=>new THREE.MeshBasicMaterial({color:0x05070d,transparent:true,opacity:1}), G=N*6, data=new Uint8Array(G*G*4); for(let c=0;c<G*G;c++){data[c*4]=5; data[c*4+1]=7; data[c*4+2]=13; data[c*4+3]=255;}
     const fd=new THREE.DataTexture(data,G,G,THREE.RGBAFormat); fd.magFilter=fd.minFilter=THREE.LinearFilter; fd.needsUpdate=true;
     const sheet=flatM(mesh(new THREE.PlaneGeometry(N*S,N*S),new THREE.MeshBasicMaterial({map:fd,transparent:true,depthWrite:false}),0,1.16,0,sc)); sheet.receiveShadow=false; sheet.renderOrder=5;
     const fogX=flatM(mesh(new THREE.PlaneGeometry(N*S+1.4,3),fm(),0,1.16,-half-1.5,sc)); fogX.receiveShadow=false; fogX.renderOrder=5;
     for(const [x,z,w,d] of [[-half-1,0,2,N*S+4],[half+1,0,2,N*S+4],[0,half+1,N*S+4,2]]){const m=flatM(mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshBasicMaterial({color:0x05070d}),x,1.17,z,sc)); m.receiveShadow=false;}   // the outer hedge stays hidden too
     // which way is out from each cell, for the computer player in the preview
     const toE=new Int16Array(N*N).fill(-1), q2=[ex]; toE[ex]=0; for(let hh=0;hh<q2.length;hh++){const c=q2[hh],i=c%N,j=(c-i)/N; for(const d of D)if(open[c]&d[2]){const nc=i+d[0]+N*(j+d[1]); if(toE[nc]<0){toE[nc]=toE[c]+1; q2.push(nc);}}}
-    return{walls,half,open,toE,ex,G,fd,tg:new Float32Array(G*G).fill(1),cur:new Float32Array(G*G).fill(1),fogX,flag:fl,exitVis:0,sc,start:[X(sx+.5),X(N-.5)],len:dist[ex]+1};},
+    return{walls,half,open,toE,ex,G,fd,raw:new Float32Array(G*G).fill(1),tmp:new Float32Array(G*G).fill(1),tg:new Float32Array(G*G).fill(1),cur:new Float32Array(G*G).fill(1),fogX,flag:fl,exitVis:0,sc,start:[X(sx+.5),X(N-.5)],len:dist[ex]+1};},
   start(k,n,st){return st.start;},
   blocked(st,x,z,r){for(const w of st.walls)if(Math.abs(x-w[0])<w[2]+r&&Math.abs(z-w[1])<w[3]+r)return true; return false;},
   // can you see the point (tx,tz) from the point (x,z)? Walk the line between them and stop at the first hedge
@@ -2167,9 +2167,12 @@ const MAZE={hint:'Find the way out',max:60,alone:true,left:true,noEdge:true,spee
     const k=Math.min(1,dt*6), W=window.innerWidth, H=window.innerHeight, Hc=W<H?15:11.5; cam.cx+=(me.x-cam.cx)*k; cam.cz+=(me.z-cam.cz)*k; cam.position.set(cam.cx,Hc,cam.cz+Hc*.12); cam.lookAt(cam.cx,0,cam.cz);
     // the darkness is one soft-edged sheet over the maze: a small grid of points, each lit if your character can see it and it is close enough,
     // blended between points and faded over time, so the edge of what you can see is a smooth fade
-    const G=st.G, cs=N*S/G, tg=st.tg, cur=st.cur, px=st.fd.image.data;
-    st.vt-=dt; if(st.vt<=0||snap){st.vt=.08; for(let j=0;j<G;j++)for(let i=0;i<G;i++){const x=-h+(i+.5)*cs, z=h-(j+.5)*cs, d=Math.hypot(x-me.x,z-me.z); let v=1;
-        if(d<7.2&&(d<.9||MAZE.sees(st,me.x,me.z,x,z))){const f=Math.max(0,Math.min(1,(d-4.4)/2.8)); v=f*f*(3-2*f);} tg[i+G*j]=v;}
+    const G=st.G, cs=N*S/G, tg=st.tg, cur=st.cur, raw=st.raw, tmp=st.tmp, px=st.fd.image.data;
+    st.vt-=dt; if(st.vt<=0||snap){st.vt=.09; for(let j=0;j<G;j++)for(let i=0;i<G;i++){const x=-h+(i+.5)*cs, z=h-(j+.5)*cs, d=Math.hypot(x-me.x,z-me.z); let v=1;
+        if(d<7.2&&(d<.9||MAZE.sees(st,me.x,me.z,x,z))){const f=Math.max(0,Math.min(1,(d-4.4)/2.8)); v=f*f*(3-2*f);} raw[i+G*j]=v;}
+      // blur the result twice, so the edge between seen and unseen is a soft gradient with no visible squares
+      for(let pass=0;pass<2;pass++){for(let j=0;j<G;j++)for(let i=0;i<G;i++){const c=i+G*j; tmp[c]=(raw[c]*2+raw[i?c-1:c]+raw[i<G-1?c+1:c])/4;} for(let j=0;j<G;j++)for(let i=0;i<G;i++){const c=i+G*j; raw[c]=(tmp[c]*2+tmp[j?c-G:c]+tmp[j<G-1?c+G:c])/4;}}
+      for(let c=0;c<tg.length;c++){const v=Math.max(0,Math.min(1,(raw[c]-.12)/.76)); tg[c]=v*v*(3-2*v);}
       st.exitVis=me.z<-h||(Math.abs(me.x-(-h+(st.ex+.5)*S))<S*.45&&MAZE.sees(st,me.x,me.z,-h+(st.ex+.5)*S,-h+S*.5))?1:0;}
     const fk=snap?1:Math.min(1,dt*7); for(let c=0;c<tg.length;c++){cur[c]+=(tg[c]-cur[c])*fk; px[c*4+3]=cur[c]*255;} st.fd.needsUpdate=true;
     {const o=st.fogX.material; o.opacity+=((st.exitVis?0:1)-o.opacity)*(snap?1:Math.min(1,dt*5)); st.fogX.visible=o.opacity>.02; st.flag.visible=o.opacity<.6;}
@@ -2601,14 +2604,14 @@ const GUIDE=[
    <li>${sw('#ff4d4d','')}<span><b>Red</b>Lose 3 tickets.</span></li>
    <li>${sw('#ffc531','?',1)}<span><b>Chance</b>Spin for a random event: win or lose tickets, swap places, bonus steps.</span></li>
    <li>${sw('#35c98a','*')}<span><b>Item</b>A free item for your bag.</span></li>
-   <li>${sw('#9b6bff','$')}<span><b>Shop</b>Buy an item when you pass or land here.</span></li>
+   <li>${sw('#9b6bff','$')}<span><b>Shop</b>Buy an item when you pass. Land on it and you get one free.</span></li>
    <li>${sw('#ffffff','GO',1)}<span><b>Gate</b>Win 10 tickets every time you pass it.</span></li></ul>
    <p class="lede">Every map also has its own special spaces. Tap any space on the board to see what it does. In the final round, blue and red spaces count double.</p>`],
  ['Items',`<ul class="legend">
    <li><span class="sw" style="background:#fff">${ITEMS.twin.svg}</span><span><b>Twin Dice, 5 tickets</b>Roll two dice this turn.</span></li>
    <li><span class="sw" style="background:#fff">${ITEMS.magnet.svg}</span><span><b>Magnet, 8 tickets</b>Take 5 tickets from the richest rival.</span></li>
    <li><span class="sw" style="background:#fff">${ITEMS.kite.svg}</span><span><b>Kite, 15 tickets</b>Fly straight to the pearl stall.</span></li></ul>
-   <p class="lede">Buy items at a purple shop space. Your bag holds 2.</p>`],
+   <p class="lede">Buy items when you pass a purple shop space, or land on it for a free one. Your bag holds 2.</p>`],
  ['Mini games and the finish',`<ul class="legend">
    <li><span><b>Game controller.</b>In walk-around games the left stick or d-pad runs and A jumps or dashes. Everywhere else the left stick or d-pad moves a box between the buttons and A presses the boxed one. B opens the map, Start opens the menu, and the right stick scrolls or pans the board.</span></li>
    <li><span><b>Shared-deck games.</b>Walk into other players to shove them, do not fall off the edge, and the last one standing ends the game.</span></li>
