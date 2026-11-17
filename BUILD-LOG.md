@@ -377,6 +377,11 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Conveyor Chaos: the belts in the second half of the course push twice as hard. They are a darker colour and their arrows move faster.
 - Conveyor Chaos: computer players now line up before stepping on to a belt, so they can still finish.
 
+## Build 61
+
+- Lobby music: the page now tries to start it the moment it opens, and has the track loaded and waiting. Where the browser holds sound until the first touch, it starts on that touch.
+- Special spaces: the painted icons are redrawn at twice the size and sharpened, fill more of each disc, have a thin dark outline, and stay sharp when the board is seen at a slant.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

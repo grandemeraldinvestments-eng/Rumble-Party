@@ -590,6 +590,9 @@ function musicTick(){
   if(!AC||SPEED>1)return; if(!mMaster){mMaster=AC.createGain(); mMaster.connect(AC.destination);} mMaster.gain.value=musicOff?0:1;
   const want=!V||V.phase==='lobby'||V.phase==='results'?'lobby':V.phase==='mini'?'mini'+(V.mini&&GAMES[V.mini.g]?GAMES[V.mini.g].trk:1):'board'; if(want!==mWant)setMusic(want);
 }
+// Start the lobby music the moment the page opens. Where the browser allows sound straight away (an installed app, or a site you use often)
+// it plays at once. Otherwise the browser holds it until the first touch, and the track is already loaded so it starts on that touch
+window.addEventListener('load',()=>{try{audioOn(); if(AC){AC.onstatechange=()=>{if(AC.state==='running')musicTick();}; loadTrack('lobby'); musicTick();}}catch(e){}});
 // browsers only allow sound after a tap, so start the audio on the very first touch anywhere
 ['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{audioOn(); musicTick();},{capture:true,passive:true}));
 document.addEventListener('visibilitychange',()=>{if(!AC)return; try{if(document.hidden)AC.suspend(); else AC.resume();}catch(e){}});
@@ -1004,7 +1007,7 @@ function buildWorld(id){
   if(world){scene.remove(world); world.traverse(o=>{if(o.geometry)o.geometry.dispose(); if(o.material)[].concat(o.material).forEach(x=>{if(!x.keep)x.dispose();});});}
   world=new THREE.Group(); scene.add(world); defParent=world; spin=[]; upright=[]; clouds=[]; boats=[]; FXP={tong:[],boost:0,erupt:0}; shownBurn=-2; COAST=null; USED=[]; MBATCH={};
   NODES=buildGraph(m); $('#gl').style.background=`url(assets/sky/${id in THEME?id:'island'}.webp) center top/cover no-repeat, linear-gradient(${m.sky[0]},${m.sky[1]} 60%)`;   // painted sky, with the plain gradient behind it until it loads
-  if(!ICONS){const mk=d=>{const mt=new THREE.MeshBasicMaterial({map:tex(d),transparent:true}); mt.keep=true; return mt;};
+  if(!ICONS){const mk=d=>{const tx=tex(d), mt=new THREE.MeshBasicMaterial({map:tx,transparent:true}); tx.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy()); mt.keep=true; return mt;};
     ICONS={S:mk((g,s)=>label(g,s,'GO','#17304d',26)),
       '+':mk(g=>{g.fillStyle='#fff'; g.fillRect(27,14,10,36); g.fillRect(14,27,36,10);}), '-':mk(g=>{g.fillStyle='#fff'; g.fillRect(14,27,36,10);}),
       '?':mk((g,s)=>label(g,s,'?','#17304d',40)),
@@ -1015,8 +1018,8 @@ function buildWorld(id){
     const burst=col=>mk(g=>{g.fillStyle=col; g.beginPath(); for(let i=0;i<16;i++){const a=i*Math.PI/8,r=i%2?13:26; g.lineTo(32+Math.cos(a)*r,32+Math.sin(a)*r);} g.closePath(); g.fill(); g.fillStyle='#fff'; g.beginPath(); g.arc(32,32,7,0,7); g.fill();});
     ICONS.T=burst('#0e8fa8'); ICONS.F=burst('#ff5fa8'); ICONS.V=burst('#d98a00'); ICONS.E=burst('#e0401a');
     // painted icons for the special spaces (assets/spaces), each on a white plate so it reads on any disc colour. The drawn icon stays if the picture cannot load
-    Object.keys(SP).concat('S').forEach(k=>{const old=ICONS[k]||ICONS[CAT[k]], im=new Image(); im.onload=()=>{const t=tex((g,s)=>{g.fillStyle='#fff'; g.beginPath(); g.arc(s/2,s/2,s*.46,0,7); g.fill(); g.drawImage(im,s*.1,s*.1,s*.8,s*.8);}), mt=new THREE.MeshBasicMaterial({map:t,transparent:true}); mt.keep=true; ICONS[k]=mt;
-      NODES.forEach(n=>{if(n.t===k&&n.ic)n.ic.material=mt;});}; im.src='assets/spaces/'+k+'.webp';});}
+    Object.keys(SP).concat('S').forEach(k=>{const old=ICONS[k]||ICONS[CAT[k]], im=new Image(); im.onload=()=>{const t=tex((g,s)=>{g.imageSmoothingQuality='high'; g.fillStyle='#fff'; g.beginPath(); g.arc(s/2,s/2,s*.46,0,7); g.fill(); g.strokeStyle='#17304d'; g.lineWidth=s*.022; g.stroke(); g.drawImage(im,s*.09,s*.09,s*.82,s*.82);},128), mt=new THREE.MeshBasicMaterial({map:t,transparent:true}); t.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy()); /* drawn large and kept sharp when seen at a slant */ mt.keep=true; mt.big=true; ICONS[k]=mt;
+      NODES.forEach(n=>{if(n.t===k&&n.ic){n.ic.material=mt; n.ic.scale.setScalar(1.24);}});}; im.src='assets/spaces/'+k+'.webp';});}
   {const o=outN(0), n0=NODES[0], a=NODES[44], b=NODES[1], tl=Math.hypot(b.x-a.x,b.z-a.z)||1; PLAT={x:n0.x+o[0]*3.1,z:n0.z+o[1]*3.1,tx:(b.x-a.x)/tl,tz:(b.z-a.z)/tl,ox:o[0],oz:o[1]}; USED.push([PLAT.x,PLAT.z,2.4]);}
   THEME[id in THEME?id:'island'](m); flushModels();
   {const P=PLAT, n0=NODES[0], bx=new THREE.BoxGeometry(1,1,1), g=grp(P.x,0,P.z), turn=Math.atan2(-P.tz,P.tx); g.rotation.y=turn; if(COAST)COAST(P.x,P.z,2.8);
@@ -1055,7 +1058,7 @@ function buildWorld(id){
   const disc=new THREE.CylinderGeometry(.68,.68,.16,32), rim=new THREE.CylinderGeometry(.84,.84,.1,32), pln=new THREE.PlaneGeometry(1.05,1.05);
   {const rk={}; NODES.forEach((n,ni)=>{const c=NODES.spots.includes(ni)?0xa978ff:0xffffff; (rk[c]=rk[c]||[]).push([rim,n.x,.15,n.z]);}); for(const c in rk)bake(rk[c],+c).receiveShadow=false;}
   NODES.forEach((n,ni)=>{n.col=colOf(n.t); n.disc=mesh(disc,n.col,n.x,.2,n.z); n.disc.castShadow=false; n.disc.receiveShadow=true;
-    if(n.t!=='+'&&n.t!=='-'){const i=mesh(pln,ICONS[n.t]||ICONS[CAT[n.t]],n.x,.295,n.z); n.ic=i; i.rotation.x=-Math.PI/2; i.castShadow=false;}});
+    if(n.t!=='+'&&n.t!=='-'){const i=mesh(pln,ICONS[n.t]||ICONS[CAT[n.t]],n.x,.295,n.z); n.ic=i; i.rotation.x=-Math.PI/2; i.castShadow=false; if(i.material.big)i.scale.setScalar(1.24);}   /* painted icons fill the disc */});
   while(arrows.children.length)arrows.remove(arrows.children[0]);
   const a=NODES[m.fork]; a.next.forEach(j=>{const b=NODES[j],g=new THREE.Group(),l=Math.hypot(b.x-a.x,b.z-a.z);
     g.position.set(a.x+(b.x-a.x)/l*1.15,.9,a.z+(b.z-a.z)/l*1.15); g.rotation.y=Math.atan2(b.x-a.x,b.z-a.z); arrows.add(g);
@@ -1679,7 +1682,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=60; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=61; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
