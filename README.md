@@ -12,6 +12,7 @@ A 3D party board game for 2 to 4 players that runs in a web browser. Players run
 ## Files
 
 - `index.html` - the whole game: markup, styles and code in one file
+- `server.js`, `package.json` - the room server for online play, which also serves the game's files
 - `music-board.mp3`, `music-mini1.mp3` to `music-mini3.mp3`, `music-lobby.wav` - looping background tracks
 
 The only outside dependency is three.js r128, loaded from cdnjs, plus two Google Fonts.
@@ -26,7 +27,18 @@ then visit http://localhost:8000. Opening `index.html` directly from disk also w
 
 ## Online play
 
-Playing on separate phones with a join code depends on the realtime room service of the Claude artifact the game was built in. That service is not available to a copy served from this repository, so here the game runs in solo mode against computer players. The Host and Join buttons stay disabled.
+One person taps **Host a game** and shares the 4-letter code; everyone else opens the same page, taps **Join a game** and types it. Up to six players, with computer players filling any empty seats.
+
+Online play needs the room server in this repository (`server.js`). It serves the game's files and runs the join-code rooms over a web socket:
+
+    npm install
+    npm start
+
+then visit http://localhost:8080. Any host that runs Node works (Railway, Render, Fly and so on): it only needs `npm start` and the `PORT` it is given.
+
+A copy of the page served without that server, such as GitHub Pages, plays solo only unless `RUMBLE_SERVER` near the top of the online code in `index.html` is set to a room server's address (for example `wss://your-app.up.railway.app/ws`).
+
+How it works: the host's phone runs the rules and posts the game state to the room; the other phones post their answers and positions. The server only passes these posts along and keeps nothing. If the host leaves, the game ends for everyone; if another player leaves, a computer player takes their seat.
 
 ## Credits
 

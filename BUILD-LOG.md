@@ -393,6 +393,10 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Hedge Maze: the maze is twice the size (16 by 16 tiles, up from 11 by 11), and the time limit is 100 seconds.
 - Hedge Maze: there are now ten fixed mazes and one is picked at random each game. The game shows which one you are in. Their shortest routes run from 46 to 74 tiles, with the exit in a different place in each.
 
+## Build 64
+- **Online play has its own server.** `server.js` is a small Node server that serves the game and runs the join-code rooms over a web socket, so Host and Join work on any host that runs Node, not only inside the Claude artifact. The page uses the artifact's room service when it has one and the room server otherwise.
+- Tested with three browsers in one room: two full rounds including two mini games, with identical game state on all three; a player leaving hands their seat to the computer; the host leaving ends the game for the others.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

@@ -1425,6 +1425,27 @@ setInterval(()=>{
   if(net.host&&net.nr&&S){const j=JSON.stringify(S); if(j!==lastPub){lastPub=j; net.nr.presence({host:1,s:JSON.parse(j)}).catch(()=>{});}}
   if(!net.host&&net.nr&&net.lostAt&&Date.now()-net.lostAt>5000){toast('The host left the game.'); leave();}
 },90);
+/* ---------- the room server (server.js): the same join-code rooms as the Claude artifact's room service, over a web socket, so the game can be hosted anywhere ----------
+   RUMBLE_SERVER is the address of a room server for copies of the page that are not served by one (GitHub Pages). Left empty, the page asks its own host. */
+const RUMBLE_SERVER='';
+function wsUrl(){if(RUMBLE_SERVER)return RUMBLE_SERVER; if(!/^https?:$/.test(location.protocol))return null; return (location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws';}
+function wsOpen(url,ms){return new Promise((ok,no)=>{let ws; try{ws=new WebSocket(url);}catch(e){return no(e);} const t=setTimeout(()=>{ws.onopen=ws.onerror=null; try{ws.close();}catch(e){} no(new Error('timeout'));},ms||5000);
+  ws.onopen=()=>{clearTimeout(t); ok(ws);}; ws.onerror=()=>{clearTimeout(t); no(new Error('no server'));};});}
+const wsRoom=url=>({async join(name){
+  const ws=await wsOpen(url), peers={}, gone=[]; let me='', cb=null, mine={}, open=true;
+  const tell=()=>{if(!cb)return; const left=gone.splice(0).map(peer=>({peer})); cb({peers:Object.keys(peers).map(id=>({peer:id,sameTab:id===me,kind:'viewer',presence:peers[id]})),left});};
+  const ready=new Promise((ok,no)=>{const t=setTimeout(()=>no(new Error('timeout')),5000);
+    ws.onmessage=e=>{let m; try{m=JSON.parse(e.data);}catch(x){return;}
+      if(m.t==='in'){clearTimeout(t); me=m.me; for(const id in m.peers)peers[id]=m.peers[id]||{}; peers[me]=mine; ok(); tell();}
+      else if(m.t==='p'){peers[m.id]=Object.assign(peers[m.id]||{},m.d); tell();}
+      else if(m.t==='l'){delete peers[m.id]; gone.push(m.id); tell();}
+      else if(m.t==='err'){clearTimeout(t); no(new Error(m.m));}};
+    ws.onclose=()=>{clearTimeout(t); no(new Error('closed')); if(!open)return; open=false; for(const id in peers)if(id!==me){delete peers[id]; gone.push(id);} tell();};});   // connection lost: everyone else is gone, as far as this phone can tell
+  ws.send(JSON.stringify({t:'join',room:name})); await ready;
+  return{presence(d){if(!open||ws.readyState!==1)return Promise.reject(new Error('closed')); Object.assign(mine,d); ws.send(JSON.stringify({t:'p',d})); return Promise.resolve();},
+    onPeers(f){cb=f; tell();},
+    leave(){open=false; try{ws.send(JSON.stringify({t:'leave'})); ws.close();}catch(e){} return Promise.resolve();}};
+}});
 const CODE_CH='ABCDEFGHJKLMNPQRSTUVWXYZ';
 async function openRoom(code){net.nr=await net.room.join('pier-'+code.toLowerCase()); net.av={}; net.buf={}; net.hadHost=false; net.lostAt=0; net.nr.onPeers(onPeers);}
 function newLobby(code){net.host=true; S={phase:'lobby',code,gid:0,seats:['host',null,null,null,null,null],ncpu:code?1:2,rounds:10,map:'island',p:[],ui:{},mini:null,res:null}; V=S; lobbyKey='';}
@@ -1682,7 +1703,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=63; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=64; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -2717,8 +2738,9 @@ $('#quitBtn').onclick=()=>{
   try{init3D();}
   catch(e){$('#netNote').textContent='This device could not start 3D graphics, so the game cannot run here.'; $('#soloBtn').disabled=true; return;}
   let room=null; try{room=window.claude&&window.claude.use?await window.claude.use('room'):null;}catch(e){}
+  if(!room){const u=wsUrl(); if(u)try{(await wsOpen(u,4000)).close(); room=wsRoom(u);}catch(e){}}   // no artifact room service: use the room server, if this page has one
   net.room=room;
-  if(room){$('#hostBtn').disabled=false; $('#joinBtn').disabled=false; $('#netNote').textContent='Online play: one person hosts and shares the 4-letter code. Everyone needs access to this page.';}
+  if(room){$('#hostBtn').disabled=false; $('#joinBtn').disabled=false; $('#netNote').textContent='Online play: one person hosts and shares the 4-letter code. Everyone opens this same page.';}
   else $('#netNote').textContent='Online play is not available in this view. You can still play solo.';
 })();
 </script>

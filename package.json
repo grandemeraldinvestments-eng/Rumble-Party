@@ -1,0 +1,10 @@
+{
+  "name": "rumble-party",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rumble Party: the game's files plus the join-code room server for online play",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "ws": "^8.18.0" }
+}
