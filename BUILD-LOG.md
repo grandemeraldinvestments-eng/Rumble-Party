@@ -487,6 +487,16 @@ Also in this build
 - Tested: each of the thirteen to the results screen with computer players, in landscape and portrait. The own-screen games with a scripted player that used the real touch controls. The four shared games with 2, 4 and 6 players. Every Twist and Route board from 2,000 seeds checked for a solution. Online with three browsers: Twist and Route and Limelight Shuffle started with the same puzzle on every phone and were played through; the run was too slow here to collect the final tables for them. Not tested: real phones, sound, controllers.
 - Known limits: own-screen races do not show the other players while you play. Snapshot Showdown does not use "fewer times photographed" to break ties. Sky Shapes and Limelight Shuffle have keyboard controls; the other new own-screen games are touch and mouse only.
 
+## Build 71
+Music and sound after leaving the browser and coming back.
+
+- Before: leaving the page paused the sound and coming back asked for it once. If the phone was not ready at that instant, nothing asked again, and the only touches listened for were the start of a touch, which a phone does not count as permission to make sound. The music could stay off for the rest of the game.
+- Now, while the page is showing, the game checks a few times a second that the sound clock is really moving. If the sound is suspended it asks again, about once a second. If that fails three times, or the sound says it is running while its clock stands still, the sound system is thrown away, a new one is built and the music starts again.
+- The end of a touch, a click and a key press are listened for as well as the start of a touch, so where the browser insists on a touch, the first one after coming back is enough.
+- Coming back is noticed three ways (the page becoming visible, the page being shown again, the window getting focus), because not every browser sends all three.
+- Drum Beater and Limelight Shuffle keep time by the sound clock. If that clock stops in the middle of a song they carry on by the ordinary clock, so the game still ends.
+- Tested in a desktop browser with the faults made on purpose: leave and return (music back at once), six quick leave-and-returns, a sound system that refuses to resume (music back in 3 seconds), a stuck clock (back in 5 seconds, or at the next touch), and the sound system replaced in the middle of Drum Beater (the game finished). Not tested: a real iPhone or Android phone, where this fault actually happens.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
