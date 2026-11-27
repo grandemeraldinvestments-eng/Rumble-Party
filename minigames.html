@@ -295,6 +295,21 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 #stunBtn{position:fixed; z-index:23; right:calc(max(20px,env(safe-area-inset-right,0px)) + 108px); bottom:calc(64px + env(safe-area-inset-bottom,0px)); width:76px; height:76px; border-radius:50%;
   border:4px solid var(--ink); background:#c7a3ff; font-weight:700; font-size:.95rem; box-shadow:0 6px 0 var(--ink); touch-action:none}
 #jumpBtn.off,#stunBtn.off{opacity:.45}
+.mhud .sub.hot{background:var(--coral); color:#fff; font-size:1.2rem; padding:4px 16px; animation:hotP .5s ease-in-out infinite alternate}
+@keyframes hotP{to{transform:scale(1.07)}}
+#flash{position:fixed; inset:0; z-index:39; background:#fff; opacity:0; pointer-events:none}
+#flash.go{animation:flashA .55s ease-out}
+@keyframes flashA{0%{opacity:.9}100%{opacity:0}}
+.drum{display:grid; grid-template-columns:repeat(4,1fr); width:min(100%,560px); align-self:center; pointer-events:auto}
+.drum canvas{grid-column:1/5; grid-row:1; width:100%; height:min(36vh,400px); border:3px solid var(--ink); border-bottom:0; border-radius:14px 14px 0 0; display:block; box-sizing:border-box}
+.drum button{grid-row:2; height:clamp(84px,19vh,132px); margin:0 2px; padding:0; border:3px solid var(--ink); border-radius:0 0 18px 18px; background:var(--c); color:var(--ink); font:400 1.5rem var(--display); box-shadow:inset 0 -9px 0 rgba(0,0,0,.2); -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; cursor:pointer}
+.drum button.dn{box-shadow:inset 0 -2px 0 rgba(0,0,0,.2); filter:brightness(1.25); transform:translateY(4px)}
+@media (orientation:landscape) and (max-height:560px){
+  .drum{grid-template-columns:1fr 1fr minmax(220px,40vw) 1fr 1fr; width:100%; align-items:end; column-gap:6px}
+  .drum canvas{grid-column:3; height:min(60vh,300px); border-bottom:3px solid var(--ink); border-radius:14px}
+  .drum button{grid-row:1; height:min(54vh,230px); margin:0; border-radius:18px}
+  .drum button:nth-of-type(1){grid-column:1} .drum button:nth-of-type(2){grid-column:2} .drum button:nth-of-type(3){grid-column:4} .drum button:nth-of-type(4){grid-column:5}
+}
 #results .card{text-align:center}
 #results h1{font-size:clamp(1rem,5.4vw,1.4rem)}
 @media (prefers-reduced-motion:reduce){.float,.splash{animation-duration:.01s}}
@@ -577,7 +592,7 @@ const CAST=[{name:'Otto',c:'var(--p1)',hex:0xf07a10},{name:'Pip',c:'var(--p2)',h
 const COST=20, AWARD=[10,5,2,0], AWARD6=[10,6,4,2,1,0];
 /* ---------- background music: three looping tracks, switched by what is on screen ---------- */
 const TRACKS={board:'music-board.mp3',mini1:'music-mini1.mp3',mini2:'music-mini2.mp3',mini3:'music-mini3.mp3',lobby:'music-lobby.wav'}, mBuf={};
-let mSrc=null, mMaster=null, mWant='', mT=0, musicOff=false; try{musicOff=localStorage.getItem('pier-music')==='0';}catch(e){}
+let mDuck=false, mSrc=null, mMaster=null, mWant='', mT=0, musicOff=false; try{musicOff=localStorage.getItem('pier-music')==='0';}catch(e){}
 function loadTrack(k){return mBuf[k]||(mBuf[k]=fetch(TRACKS[k]).then(r=>{if(!r.ok)throw 0; return r.arrayBuffer();}).then(a=>new Promise((ok,no)=>{const pr=AC.decodeAudioData(a,ok,no); if(pr&&pr.catch)pr.catch(()=>{});})).catch(()=>null));}
 async function setMusic(k){
   mWant=k; if(!AC)return; const b=k?await loadTrack(k):null; if(mWant!==k)return;
@@ -587,7 +602,7 @@ async function setMusic(k){
   src.connect(g); g.connect(mMaster); src.start(); src.g=g; mSrc=src;
 }
 function musicTick(){
-  if(!AC||SPEED>1)return; if(!mMaster){mMaster=AC.createGain(); mMaster.connect(AC.destination);} mMaster.gain.value=musicOff?0:1;
+  if(!AC||SPEED>1)return; if(!mMaster){mMaster=AC.createGain(); mMaster.connect(AC.destination);} if(mDuck&&!MS)mDuck=false; mMaster.gain.value=musicOff||mDuck?0:1;
   const want=!V||V.phase==='lobby'||V.phase==='results'?'lobby':V.phase==='mini'?'mini'+(V.mini&&GAMES[V.mini.g]?GAMES[V.mini.g].trk:1):'board'; if(want!==mWant)setMusic(want);
 }
 // Start the lobby music the moment the page opens. Where the browser allows sound straight away (an installed app, or a site you use often)
@@ -1316,7 +1331,8 @@ function gpPoll(dt){
   if(gp.on){
     gp.idle=any?0:gp.idle+dt;
     if(chanceSkip&&[0,1,2,3].some(hit))chanceSkip();   /* any face button closes a card that is showing */
-    if(joy.on&&joy.split){cur.hidden=true; const rx=dz(p.axes[2]||0), ry=dz(p.axes[3]||0); joy.gturn=ax; if(joy.id===null&&(rx||ry||dx||dy||gp.steer)){joy.x=rx||dx; joy.y=ry||dy; gp.steer=!!(rx||ry||dx||dy);}}   // right stick moves, left stick turns the view
+    if(gpLanes){cur.hidden=true; [[14,4,6],[15,12,13],[2,3],[1,0,5,7]].forEach((bs,l)=>{if(bs.some(hit))gpLanes(l);});}   // Drum Beater: d-pad left and right are lanes 1 and 2, X and B are lanes 3 and 4 (the shoulder buttons, up, down, Y and A work too)
+    else if(joy.on&&joy.split){cur.hidden=true; const rx=dz(p.axes[2]||0), ry=dz(p.axes[3]||0); joy.gturn=ax; if(joy.id===null&&(rx||ry||dx||dy||gp.steer)){joy.x=rx||dx; joy.y=ry||dy; gp.steer=!!(rx||ry||dx||dy);}}   // right stick moves, left stick turns the view
     else if(joy.on){cur.hidden=true; if(joy.id===null&&(ax||ay||dx||dy||gp.steer)){joy.x=ax||dx; joy.y=ay||dy; gp.steer=!!(ax||ay||dx||dy);} if($('#stunBtn').hidden){if(hit(0)||hit(1)||hit(2)||hit(3))joy.jump=true;} else{if(hit(0)||hit(1))joy.jump=true; if(hit(2)||hit(3))joy.act=true;}}
     else{
       const W=window.innerWidth,H=window.innerHeight, fire=(el,type,x,y)=>{try{el.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:77,pointerType:'mouse',isPrimary:true,buttons:type==='pointerup'?0:1,clientX:x,clientY:y}));}catch(e){}};
@@ -1407,7 +1423,7 @@ function onPeers(ch){
       if(pr.vote&&S.mini&&pr.vote.mid===S.mini.mid&&pr.vote.i>=0&&pr.vote.i<3)votes[k]={i:pr.vote.i|0,lock:!!pr.vote.lock};
       if(pr.rdy&&S.mini&&pr.rdy===S.mini.mid)ready[k]=1;
       if(pr.skip&&pr.skip===S.ui.ch)cardSkip=pr.skip;
-      if(Array.isArray(pr.a))avIn(k,pr.a);
+      if(Array.isArray(pr.a)&&S.mini&&pr.am===S.mini.mid)avIn(k,pr.a);   /* positions carry the number of the mini game they belong to, so one left over from the last game is ignored */
     }
     for(const p of ch.left){
       const s=S.seats.indexOf(p.peer); if(s>0)S.seats[s]=null;
@@ -1417,7 +1433,7 @@ function onPeers(ch){
     const h=ch.peers.find(p=>!p.sameTab&&p.presence&&p.presence.host);
     if(h){net.hadHost=true; net.lostAt=0; V=h.presence.s||null;
       if(V&&V.p)for(const p of ch.peers){if(p.sameTab)continue; const pr=p.presence||{}, k=V.p.findIndex(q=>q.seat===(p===h?'host':p.peer));
-        if(k>=0&&Array.isArray(pr.a))avIn(k,pr.a); if(p===h&&pr.cpu)for(const kk in pr.cpu)avIn(kk,pr.cpu[kk]); if(p===h&&Array.isArray(pr.hs))net.hs=pr.hs;}
+        const cur=!!V.mini&&pr.am===V.mini.mid; if(k>=0&&cur&&Array.isArray(pr.a))avIn(k,pr.a); if(p===h&&cur&&pr.cpu)for(const kk in pr.cpu)avIn(kk,pr.cpu[kk]); if(p===h&&cur&&pr.hs&&typeof pr.hs==='object')net.hs=pr.hs;}
     }else if(net.hadHost&&!net.lostAt)net.lostAt=Date.now();
   }
 }
@@ -1660,8 +1676,8 @@ async function frenzy(){
   best.pe++; S.ui.follow=best.k; S.ui.who=best.k; await sleep(600); S.ui.cheer++; S.ui.cheerK=best.k; S.ui.pe=(S.ui.pe||0)+1; say(`${nm(best)} wins the Mini Game Frenzy and takes a pearl! Everyone else keeps their frenzy tickets.`); await sleep(3200);
 }
 async function runMini(fz){
-  // one random shared-deck game per round; every game is played once before any comes round again
-  if(!S.deck.length){const d=GAMES.map((g,i)=>i).filter(i=>GAMES[i].arena); for(let i=d.length-1;i>0;i--){const j=rand(0,i); [d[i],d[j]]=[d[j],d[i]];} if(d.length>1&&d[d.length-1]===S.lastG)[d[0],d[d.length-1]]=[d[d.length-1],d[0]]; S.deck=d;}
+  // one random game per round: the shared-deck games, plus Drum Beater. Every game is played once before any comes round again
+  if(!S.deck.length){const d=GAMES.map((g,i)=>i).filter(i=>GAMES[i].arena||GAMES[i].rot); for(let i=d.length-1;i>0;i--){const j=rand(0,i); [d[i],d[j]]=[d[j],d[i]];} if(d.length>1&&d[d.length-1]===S.lastG)[d[0],d[d.length-1]]=[d[d.length-1],d[0]]; S.deck=d;}
   const gi=S.deck.pop(), g=GAMES[gi]; S.lastG=gi;
   miniRes={}; net.av={}; net.buf={}; votes={};
   S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,fz:fz?fz.i+1:0}; S.phase='mini';
@@ -1703,7 +1719,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=64; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=65; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1754,8 +1770,8 @@ function miniSync(){
   $('#mgTitle').textContent=g.name;
   if(m.phase==='intro'){$('#mgSub').textContent=m.prac?'Practice':m.note?'Duel':m.fz?`Mini Game Frenzy: game ${m.fz} of 3`:'This round\'s game';
     // the ready screen: a live preview of the game played by computer players, the written rules behind a button, and the Ready button
-    const can=myK()>=0&&(!m.only||m.only.includes(myK())), extra=`${m.note?`<p><b>${m.note}</b></p>`:''}${m.fz?'<p class="sub"><b>Mini Game Frenzy.</b> Whoever wins the most of the three games takes a pearl and no tickets. Everyone else keeps all the tickets they win in the three games.</p>':''}${m.note||m.prac?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2. With five or six players the prizes are 10, 6, 4, 2 and 1.</p>'}${g.arena&&!g.alone?'<p class="sub">Fall off the edge and you are out. Walk into other players to shove them.</p>':''}`;
-    const panel=`<div id="rdyPanel">${g.arena?'<span class="pvTag">Preview</span>':''}${m.note?`<p class="rnote"><b>${m.note}</b></p>`:''}<div class="rdy" id="rdyRow"></div><div class="rbtns">${g.arena?'<button class="btn ghost" id="rulesBtn">Rules</button>':''}${can?'<button class="btn" id="rdyBtn">Ready</button>':''}</div><p class="sub" id="rdyNote"></p>
+    const can=myK()>=0&&(!m.only||m.only.includes(myK())), extra=`${m.note?`<p><b>${m.note}</b></p>`:''}${m.fz?'<p class="sub"><b>Mini Game Frenzy.</b> Whoever wins the most of the three games takes a pearl and no tickets. Everyone else keeps all the tickets they win in the three games.</p>':''}${m.note||m.prac?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2. With five or six players the prizes are 10, 6, 4, 2 and 1.</p>'}${g.arena&&!g.alone&&!g.still?'<p class="sub">Fall off the edge and you are out. Walk into other players to shove them.</p>':''}`;
+    const panel=`<div id="rdyPanel">${g.arena?'<span class="pvTag">Preview</span>':''}${m.note?`<p class="rnote"><b>${m.note}</b></p>`:''}<div class="rdy" id="rdyRow"></div><div class="rbtns"><button class="btn ghost" id="rulesBtn">Rules</button>${can?'<button class="btn" id="rdyBtn">Ready</button>':''}</div><p class="sub" id="rdyNote"></p>
       <div id="rulesPop" hidden><div class="box"><h3>${g.name}</h3><p>${g.how}</p>${extra}<button class="btn" id="rulesX">Close</button></div></div></div>`;
     stopDemo(); if(g.arena){stage.innerHTML=''; runDemo(m,g); stage.insertAdjacentHTML('beforeend',panel);} else stage.innerHTML=`<p>${g.how}</p>${extra}${panel}`;
     const rb=$('#rdyBtn'); if(rb)rb.onclick=()=>{rb.disabled=true; rb.textContent='Ready!'; setReady(m.mid);};
@@ -1901,7 +1917,7 @@ function arenaSet(G,sc,sh){
 }
 let arenaRefit=null;
 function arena(G){return async function(ctx){
-  const demo=ctx.demo;   /* a preview on the ready screen: every player is run by the computer, nothing is sent or scored, and it stops when told to */
+  const mid=V&&V.mini?V.mini.mid:0, demo=ctx.demo;   /* a preview on the ready screen: every player is run by the computer, nothing is sent or scored, and it stops when told to */
   const sh=mkDeck(G.deck), cp=G.cam||[11.5,8.6,.6]; let kz=1;
   const fit=()=>{// pull the camera back until the whole platform fits the screen, whichever way the phone is held
     kz=1; const W=window.innerWidth,H=window.innerHeight, tv=Math.tan((W<H?60:45)*Math.PI/360), th=tv*W/H, e=G.fit||(sh.k==='c'?sh.R:sh.h), sq=sh.k!=='c';
@@ -1977,7 +1993,7 @@ function arena(G){return async function(ctx){
     }
     if(G.view)G.view(m.cam,me,dt,st);
     pubT-=dt;
-    if(pubT<=0&&net.nr&&!demo){pubT=.07; const pk=a=>{const q=[r2(a.x),r2(a.z),r2(a.y),a.alive?1:0,r2(a.score)]; if(G.ex)q.push(...G.ex(a)); return q;}, patch={a:pk(me)};
+    if(pubT<=0&&net.nr&&!demo){pubT=.07; const pk=a=>{const q=[r2(a.x),r2(a.z),r2(a.y),a.alive?1:0,r2(a.score)]; if(G.ex)q.push(...G.ex(a)); return q;}, patch={a:pk(me),am:mid};
       if(net.host&&!G.alone){patch.cpu={}; avs.forEach(a=>{if(a.cpu)patch.cpu[a.k]=pk(a);});} if(net.host&&G.host)patch.hs=st.hs; net.nr.presence(patch).catch(()=>{});}
     if(sb){sbT-=dt; if(sbT<=0){sbT=.25; sb.innerHTML=avs.slice().sort((a,b)=>b.score-a.score).map(a=>`<span style="--c:${CAST[V.p[a.k].i].c}"${a.mine?' class="me"':''}>${CAST[V.p[a.k].i].name} <b>${a.score.toFixed(1)}</b></span>`).join('');}}
     $('#n').textContent=G.num?G.num(st,t):G.left?Math.max(0,(st.max||G.max)-t).toFixed(1):G.surv?(me.alive?t:me.score).toFixed(1):G.dec?me.score.toFixed(1):me.score; $('#bar').style.transform=`scaleX(${Math.max(0,1-t/(st.max||G.max))})`;
@@ -1990,7 +2006,7 @@ function arena(G){return async function(ctx){
   avs.forEach(a=>{if(G.surv&&a.alive)a.score=st.max||G.max; if(G.dec)a.score=Math.round(a.score*10)/10;});
   if(G.final)G.final(me,st,t);
   if(net.host)avs.forEach(a=>{if(a.cpu)miniRes[a.k]=G.cpuScore?G.cpuScore(st):a.score;});
-  if(net.nr)net.nr.presence({a:[r2(me.x),r2(me.z),0,me.alive?1:0,me.score]}).catch(()=>{});
+  if(net.nr)net.nr.presence({a:[r2(me.x),r2(me.z),0,me.alive?1:0,me.score],am:mid}).catch(()=>{});
   pad(false); if(me.alive)SFX.win(); await gameFinished(); m.end(); return me.score;
 };}
 const wrapA=a=>{a=(a+Math.PI)%(Math.PI*2); if(a<0)a+=Math.PI*2; return a-Math.PI;};
@@ -2444,7 +2460,169 @@ const LANT={top:'court',set:'night',floor:'stage',hint:'Watch the lanterns',surv
     if(ai.rr!==st.ri){ai.rr=st.ri; ai.bad=Math.random()<.1+.045*r.len?Math.floor(Math.random()*r.len):-1; ai.wait=.3+Math.random()*1.2;}   // now and then a computer player misremembers one step
     if(ai.wait>0){ai.wait-=.2; ai.dx=ai.dz=0; return;}
     const want=st.seq[av.pi], go=av.pi===ai.bad?(want+1+((av.k+st.ri)%4))%6:want, p=st.pads[go], d=Math.hypot(p.x-av.x,p.z-av.z)||1; ai.dx=(p.x-av.x)/d*.9; ai.dz=(p.z-av.z)/d*.9;}};
-const TRK={'Conveyor Chaos':1,'Lantern Match':2,'Crab Scramble':1,'Boom Hop':1,'Hot Planks':1,'Coconut Drop':1,'Crumble Deck':1,'Slippery Slope':1,'Ticket Grab':2,'Spotlight':2,'Sumo Shove':2,'Hedge Maze':2,'Paint Fight':2,'Stomp':2,'Trap Doors':2,'Ghost Runner':1};
+/* ---------- Build 65: Hot Bomba, Musical Chairs and Drum Beater ---------- */
+/* the background track can be silenced for a moment (Musical Chairs stops the music; Drum Beater plays its own beat) */
+function duck(on){mDuck=!!on; if(mMaster)mMaster.gain.value=(musicOff||mDuck)?0:1;}
+/* a big word in the middle of the screen, with an optional white flash */
+function bigPop(tx,flash){if(DEMO)return; let d=$('#count'); if(!d){d=document.createElement('div'); d.id='count'; document.body.appendChild(d);}
+  d.textContent=tx; d.className=''; void d.offsetWidth; d.className='pop'; d.hidden=false; const id=d.popId=(d.popId||0)+1; setTimeout(()=>{if(d.popId===id)d.hidden=true;},900);
+  if(flash){let f=$('#flash'); if(!f){f=document.createElement('div'); f.id='flash'; document.body.appendChild(f);} f.className=''; void f.offsetWidth; f.className='go';}}
+
+/* Hot Bomba: hot potato with a bomb. Nobody walks; everyone stands in a ring facing in. The host owns the bomb: who holds it,
+   when it is passed and when it goes off. The fuse length is picked by the host each round and is never sent to anyone;
+   the phones only get the time that has gone by, which drives the ticking. Each phone sends a count of its own pass taps */
+const BOMBA={set:'crater',floor:'rock',hint:'Pass the bomb',surv:true,max:104,btn:'Pass',noEdge:true,fit:3.1,deck:{k:'c',R:3.9},RR:2.3,HOLD:.4,H0:{h:-1,ph:'arm',r:0,e:0,o:[],np:0},
+  ang:(i,n)=>Math.PI-i/n*6.283,   /* slot i of n; a higher slot is the next one clockwise as you look down on the ring */
+  start(k,n,st){if(st.rot==null)st.rot=-BOMBA.ang(Math.max(0,myK()),n); const a=BOMBA.ang(k,n)+st.rot; return[Math.sin(a)*BOMBA.RR,Math.cos(a)*BOMBA.RR];},   /* each phone turns the ring so that its own player stands nearest the camera */
+  init(sc,rng,sh,n){const g0=new THREE.Group(), g=new THREE.Group(); sc.add(g0); g0.add(g); g0.visible=false; g.scale.setScalar(1.35);
+    const body=mesh(new THREE.SphereGeometry(.3,16,12),new THREE.MeshPhongMaterial({color:0x1b2233,shininess:70}),0,0,0,g);
+    mesh(new THREE.CylinderGeometry(.1,.1,.12,10),0x7c8799,0,.3,0,g); const fuse=mesh(new THREE.CylinderGeometry(.03,.03,.22,6),0xe0c193,.04,.45,0,g); fuse.rotation.z=-.35;
+    const spark=mesh(new THREE.SphereGeometry(.1,8,6),new THREE.MeshBasicMaterial({color:0xffc531}),.09,.57,0,g); spark.castShadow=false;
+    const ring=flatM(mesh(new THREE.RingGeometry(.56,.8,36),new THREE.MeshBasicMaterial({color:0xff4d4d}),0,.04,0,sc)); ring.visible=false;
+    const blast=mesh(new THREE.SphereGeometry(1,16,12),new THREE.MeshBasicMaterial({color:0xff8a1a,transparent:true,opacity:0}),0,1,0,sc); blast.castShadow=false; blast.visible=false;
+    return{g:g0,body,spark,ring,blast,max:Math.max(1,n-1)*19+6,lh:-2,lnp:-1,lr:-1,lph:'',rt:0,tk:0,fl:0,bt:-9};},
+  host(st,t,dt){let H=st.H; const avs=st.avs, live=()=>avs.filter(a=>a.alive&&!H.o.includes(a.k)), any=()=>{const L=live(); return L.length?L[Math.floor(Math.random()*L.length)].k:-1;},
+      nxt=()=>{const L=live(), i=L.findIndex(a=>a.k===H.h); return L.length?L[(i+1)%L.length].k:-1;}, take=()=>{H.recv=t; H.pc0=avs[H.h]?avs[H.h].pc||0:0;};
+    if(!H){H=st.H={ph:'arm',r:0,pt:t,h:-1,o:[],e:0,np:0,fuse:9}; H.h=any();}
+    if(H.ph==='arm'){if(t-H.pt>1.6){H.ph='live'; H.fuse=5+Math.random()*10; H.e=0; take();}}   /* a new fuse every round, somewhere between 5 and 15 seconds */
+    else if(H.ph==='live'){H.e+=dt; const a=avs[H.h];
+      if(!a||!a.alive){H.h=nxt(); take();}
+      else if(H.e>=H.fuse){H.o.push(H.h); H.ph='boom'; H.pt=t;}
+      else if((a.pc||0)!==H.pc0&&t-H.recv>=BOMBA.HOLD){H.h=nxt(); H.np++; take();}}   /* it has to be held for a moment before it can go on */
+    else if(t-H.pt>2.1&&live().length>1){H.r++; H.ph='arm'; H.pt=t; H.h=any();}
+    return{h:H.h,ph:H.ph,r:H.r,e:Math.round(H.e*10)/10,o:H.o.slice(),np:H.np};},
+  step(st,t,dt){const hs=st.hs||BOMBA.H0, avs=st.avs, me=avs.find(a=>a.mine), L=avs.filter(a=>a.alive&&!hs.o.includes(a.k)), nm=k=>V.p[k]?CAST[V.p[k].i].name:'', live=hs.ph==='live';
+    L.forEach((a,i)=>{const ta=BOMBA.ang(i,L.length); if(a.ang==null)a.ang=ta; a.ang+=wrapA(ta-a.ang)*Math.min(1,dt*4);}); if(me&&me.alive&&me.ang!=null)st.rot=-me.ang;   /* the ring closes up when someone goes */
+    if(!DEMO){joy.id=-1; $('#joy').hidden=true;   /* no walking in this game, so a tap anywhere is a pass */
+      if(!st.lis){st.lis=1; const el=$('#mini'), f=()=>{if(window.__st!==st||!joy.on){el.removeEventListener('pointerdown',f); return;} joy.jump=true;}; el.addEventListener('pointerdown',f);}}
+    if(hs.h!==st.lh||hs.np!==st.lnp||hs.r!==st.lr){if(live&&hs.np!==st.lnp&&st.lnp>=0)tone(640,.07,'triangle',.05,900); st.lh=hs.h; st.lnp=hs.np; st.lr=hs.r; st.rt=t;}
+    if(hs.ph!==st.lph){if(hs.ph==='live')st.rt=t; if(hs.ph==='boom'){st.bt=t; st.blast.position.copy(st.g.position); tone(110,.55,'sawtooth',.14,35); tone(55,.7,'square',.1,28); bigPop('BOOM!',true);} st.lph=hs.ph;}
+    const hold=avs[hs.h], show=!!hold&&hs.ph!=='boom'; st.g.visible=show; st.ring.visible=show;
+    if(hold){const r=Math.hypot(hold.x,hold.z)||1, tx=hold.x-hold.x/r*.5, tz=hold.z-hold.z/r*.5, p=st.g.position, k=Math.min(1,dt*14); p.x+=(tx-p.x)*k; p.z+=(tz-p.z)*k; p.y=1+Math.min(1,Math.hypot(tx-p.x,tz-p.z)*.45); st.ring.position.set(hold.x,.04,hold.z);}
+    if(live){const e=hs.e, iv=Math.max(.11,.5-e*.027); st.tk-=dt; if(st.tk<=0){st.tk=iv; st.fl=.07; tone(1000+e*30,.03,'square',.03);}}   /* the ticking speeds up with the time gone by, not with the time left */
+    st.fl-=dt; st.spark.scale.setScalar(st.fl>0?2:.9+Math.sin(t*40)*.25); st.body.material.emissive.setRGB(st.fl>0?.55:0,0,0); st.g.scale.setScalar(st.fl>0?1.1:1); st.ring.scale.setScalar(1+Math.sin(t*9)*.08);
+    {const b=t-st.bt; st.blast.visible=b<.6; if(b<.6){st.blast.scale.setScalar(.4+b*6.5); st.blast.material.opacity=.85*(1-b/.6);}}
+    if(me&&me.alive){const mine=hs.h===me.k, el=$('#hint'), h=hs.ph==='arm'?`Round ${hs.r+1}: ${mine?'you start':nm(hs.h)+' starts'} with the bomb`:live?(mine?'You have the bomb! Tap to pass':nm(hs.h)+' has the bomb'):(hs.o.length?nm(hs.o[hs.o.length-1])+' is out!':'');
+      if(el.textContent!==h)el.textContent=h; el.classList.toggle('hot',live&&mine); $('#jumpBtn').classList.toggle('off',!(live&&mine&&t-st.rt>=BOMBA.HOLD));}
+    else if(me&&!DEMO){$('#hint').classList.remove('hot'); $('#jumpBtn').classList.add('off');}},
+  pin(av,st){if(av.ang!=null){const a=av.ang+(st.rot||0); av.x=Math.sin(a)*BOMBA.RR; av.z=Math.cos(a)*BOMBA.RR;} av.moving=false; av.face=Math.atan2(-av.x,-av.z);},
+  move(av,st){BOMBA.pin(av,st); av.vx=av.vz=av.kx=av.kz=0;},
+  check(av,st,t,local){const o=(st.hs||BOMBA.H0).o.includes(av.k); if(local)return o?'hit':0; BOMBA.pin(av,st); if(o&&av.alive){av.alive=false; av.gone=.6; av.fell=false;} return 0;},
+  press(av,st,t){const hs=st.hs||BOMBA.H0; if(hs.ph==='live'&&hs.h===av.k&&t-st.rt>=BOMBA.HOLD){av.pc=(av.pc||0)+1; if(av.mine)tone(520,.05,'square',.03,760);}},
+  ex:a=>[a.pc||0], sub(av,a){av.pc=a[5]||0;}, steer:()=>[0,0], num:()=>'',
+  // a computer player passes after a short wait, and now and then it dithers for far too long
+  ai(av,st,t,dt){const ai=av.ai, hs=st.hs||BOMBA.H0; ai.dx=ai.dz=0; if(hs.ph!=='live'||hs.h!==av.k){ai.hk=''; return;} const key=hs.r+'/'+hs.np;
+    if(ai.hk!==key){ai.hk=key; ai.w=BOMBA.HOLD+.08+Math.random()*.75+(Math.random()<.2?.9+Math.random()*2.4:0);} ai.w-=dt; if(ai.w<=0){ai.jump=true; ai.w=.25;}},
+  final(){const h=$('#hint'); if(h)h.classList.remove('hot');}};
+
+/* Musical Chairs: chairs in the middle, one fewer than the players still in. While the music plays everyone is carried round
+   the outside of a line; step over the line and you are out. The host stops the music at a moment nobody can see coming and
+   decides who got to each chair first, so every phone agrees */
+const CHAIRS={top:'circus',set:'fair',floor:'carpet',hint:'Walk while the music plays',surv:true,max:112,ring:4.2,deck:{k:'c',R:5.5},RL:2.9,W:.55,H0:{ph:'arm',r:0,n:0,s:[],o:[]},
+  pos(n,i,r){if(n<=1)return[0,0,0]; const a=i/n*6.283+r*.9, R=n===2?.9:n===3?1.2:1.45; return[Math.sin(a)*R,Math.cos(a)*R,a];},
+  init(sc,rng,sh,n){const line=flatM(mesh(new THREE.RingGeometry(CHAIRS.RL-.1,CHAIRS.RL+.1,72),new THREE.MeshBasicMaterial({color:0xffffff}),0,.035,0,sc));
+    return{sc,line,g:null,key:'',lph:'',o0:0,seatM:[],dt:.016,max:Math.max(1,n-1)*21+6};},
+  build(st,hs){if(st.g)st.sc.remove(st.g); const g=new THREE.Group(); st.sc.add(g); st.g=g; st.seatM=[];
+    for(let i=0;i<hs.n;i++){const p=CHAIRS.pos(hs.n,i,hs.r), c=new THREE.Group(), m=new THREE.MeshLambertMaterial({color:0x4fa8ff}); c.position.set(p[0],0,p[1]); c.rotation.y=p[2]; c.scale.setScalar(1.2); g.add(c);
+      mesh(new THREE.BoxGeometry(.64,.1,.64),m,0,.42,0,c); mesh(new THREE.BoxGeometry(.64,.62,.1),m,0,.78,-.27,c); for(const [x,z] of [[-.25,-.25],[.25,-.25],[-.25,.25],[.25,.25]])mesh(new THREE.BoxGeometry(.09,.4,.09),0x17304d,x,.2,z,c); st.seatM.push(m);}},
+  host(st,t,dt){let H=st.H; if(!H)H=st.H={ph:'arm',r:0,pt:t,o:[],s:[],n:0,stop:6}; const L=st.avs.filter(a=>a.alive&&!H.o.includes(a.k));
+    if(H.ph==='arm'){H.n=Math.max(0,L.length-1); if(t-H.pt>1.6){H.ph='play'; H.pt=t; H.stop=4+Math.random()*6;}}   /* the music runs for 4 to 10 seconds */
+    else if(H.ph==='play'){H.n=Math.min(H.n,Math.max(0,L.length-1)); if(t-H.pt>=H.stop&&L.length>1){H.ph='sit'; H.pt=t; H.s=Array(H.n).fill(-1);}}
+    else if(H.ph==='sit'){const c=[];   /* one player per chair: whoever is nearest when they get there has it */
+      L.forEach(a=>{if(H.s.includes(a.k))return; for(let i=0;i<H.n;i++){if(H.s[i]>=0)continue; const p=CHAIRS.pos(H.n,i,H.r), d=Math.hypot(a.x-p[0],a.z-p[1]); if(d<.7)c.push([d,a.k,i]);}});
+      c.sort((x,y)=>x[0]-y[0]).forEach(q=>{if(H.s[q[2]]<0&&!H.s.includes(q[1]))H.s[q[2]]=q[1];});
+      if(H.s.every(k=>k>=0)||t-H.pt>7){if(H.s.some(k=>k>=0))L.forEach(a=>{if(!H.s.includes(a.k))H.o.push(a.k);}); H.ph='rest'; H.pt=t;}}
+    else if(t-H.pt>2.2&&L.length>1){H.r++; H.ph='arm'; H.pt=t; H.s=[];}
+    return{ph:H.ph,r:H.r,n:H.n,s:H.s.slice(),o:H.o.slice()};},
+  step(st,t,dt){const hs=st.hs||CHAIRS.H0, me=st.avs.find(a=>a.mine), key=hs.r+'/'+hs.n, nm=k=>V.p[k]?CAST[V.p[k].i].name:'', play=hs.ph==='play'; st.dt=dt;
+    if(key!==st.key){st.key=key; CHAIRS.build(st,hs);}
+    if(hs.ph!==st.lph){st.lph=hs.ph;
+      if(!DEMO){duck(hs.ph==='sit'||hs.ph==='rest'); if(hs.ph==='sit'){st.o0=hs.o.length; tone(760,.4,'sawtooth',.1,70); bigPop('SIT!',true);} if(hs.ph==='rest'&&me)(hs.o.includes(me.k)?SFX.loss:SFX.gain)();}}   /* the music cuts out, the screen flashes and SIT! fills the screen */
+    st.line.material.color.setHex(play?0xff4d4d:hs.ph==='arm'?0xffffff:0x35c98a);
+    st.seatM.forEach((m,i)=>{const k=hs.s[i]; m.color.setHex(k>=0&&V.p[k]?CAST[V.p[k].i].hex:0x4fa8ff);});
+    if(me&&me.alive){const sat=hs.s.includes(me.k), lost=hs.o.slice(st.o0).map(nm), h=hs.ph==='arm'?`Round ${hs.r+1}: ${hs.n} chair${hs.n===1?'':'s'}. Get ready`:play?'Keep walking. Do not cross the red line!':hs.ph==='sit'?(sat?'You got a chair!':'SIT! Run for a chair!'):(lost.length?lost.join(' and ')+(lost.length>1?' are out':' is out'):'Nobody sat down. Again!'), el=$('#hint');
+      if(el.textContent!==h)el.textContent=h; el.classList.toggle('hot',hs.ph==='sit'&&!sat);}
+    else if(me&&!DEMO){const el=$('#hint'); el.classList.remove('hot'); if(me.why&&!st.whyS){st.whyS=1; el.textContent='You crossed the line. You are out!';}}},
+  move(av,st){const hs=st.hs||CHAIRS.H0, RL=CHAIRS.RL, si=hs.ph==='sit'||hs.ph==='rest'?hs.s.indexOf(av.k):-1; let r=Math.hypot(av.x,av.z);
+    if(si>=0){const p=CHAIRS.pos(hs.n,si,hs.r); av.x=p[0]; av.z=p[1]; av.vx=av.vz=av.kx=av.kz=0; av.moving=false; av.face=p[2]; return;}   /* sitting down */
+    if(hs.ph!=='arm'&&hs.ph!=='play')return;
+    let a=r>.3?Math.atan2(av.x,av.z):av.k/st.avs.length*6.283+hs.r;
+    if(av.rr!==hs.r){av.rr=hs.r; if(r<RL+.6)r=4.2;}   /* a new round: everyone goes back out to the ring */
+    if(hs.ph==='arm'){if(r<RL+.3)r=RL+.3;}   /* before the music starts the line is a wall */
+    else{a-=CHAIRS.W*st.dt; if(!av.moving)av.face=Math.atan2(-Math.cos(a),Math.sin(a)); av.moving=true;}   /* while it plays everyone is carried round clockwise, so nobody can camp */
+    av.x=Math.sin(a)*r; av.z=Math.cos(a)*r;},
+  check(av,st,t,local){const hs=st.hs||CHAIRS.H0, o=hs.o.includes(av.k); if(!local){if(o&&av.alive){av.alive=false; av.gone=.6; av.fell=false;} return 0;}
+    if(o)return'hit'; if(hs.ph==='play'&&Math.hypot(av.x,av.z)<CHAIRS.RL-.2){av.why=1; return'hit';} return 0;},   /* over the line while the music is playing */
+  // a computer player keeps a distance from the line that it picks afresh each round, then runs for the nearest free chair after a short reaction time
+  ai(av,st,t,dt){const ai=av.ai, hs=st.hs||CHAIRS.H0, r=Math.hypot(av.x,av.z)||.01;
+    if(hs.ph==='sit'){if(ai.sr!==hs.r){ai.sr=hs.r; ai.w=.12+Math.random()*.5+(Math.random()<.18?.5+Math.random()*.6:0);} ai.w-=dt; if(ai.w>0||hs.s.includes(av.k)){ai.dx=ai.dz=0; return;}
+      let b=null,bd=99; for(let i=0;i<hs.n;i++){if(hs.s[i]>=0)continue; const p=CHAIRS.pos(hs.n,i,hs.r), d=Math.hypot(p[0]-av.x,p[1]-av.z); if(d<bd){bd=d; b=p;}}
+      if(b&&bd>.05){ai.dx=(b[0]-av.x)/bd; ai.dz=(b[1]-av.z)/bd;} else ai.dx=ai.dz=0; return;}
+    if(hs.ph==='rest'){ai.dx=ai.dz=0; return;}
+    if(ai.trr!==hs.r){ai.trr=hs.r; ai.tr=CHAIRS.RL+.4+Math.random()*1.1;} const e=Math.max(-1,Math.min(1,(ai.tr-r)*1.5)); ai.dx=av.x/r*e; ai.dz=av.z/r*e;},
+  view(cam,me,dt,st){const hs=st.hs||CHAIRS.H0, sit=hs.ph==='sit'||hs.ph==='rest'; st.avs.forEach(a=>{const s=sit&&a.alive&&hs.s.includes(a.k); if(s){a.ch.position.y=.56; a.ch.cheer=1;} else if(a.ch.cheer)a.ch.cheer=0;});},
+  num:()=>'', final(){duck(false); const h=$('#hint'); if(h)h.classList.remove('hot');}};
+
+/* Drum Beater: a rhythm game on your own screen. The notes come from the shared seed, so everyone plays the same song.
+   The beat is made in code at a fixed tempo and the notes sit on that beat, on the audio clock, so sound and notes cannot drift apart */
+let gpLanes=null;
+const DRUM={LEN:40,FALL:1.5,STEP:.25,COL:['#ff4d4d','#ffc531','#35c98a','#2f8fff'],HEX:[0xff4d4d,0xffc531,0x35c98a,0x2f8fff],KEYS:['d','f','j','k'],SND:['tomL','snare','tomH','crash'],nz:null,
+  // 120 beats a minute, a step every half beat. Quiet to start with, busier after 10 seconds, busiest from 24 seconds with two notes at once now and then
+  chart(seed){const r=rng32(seed), N=[]; let last=-1, rep=0;
+    for(let s=8;s<158;s++){const tm=s*DRUM.STEP, on=s%2===0, half=s%4===0, u=r(), v=r(), w=r(), x=r(), p=tm<10?(half?.9:on?.5:0):tm<24?(on?.85:.24):(on?.95:.5);
+      if(u>=p)continue; let l=Math.floor(v*4); if(l===last&&++rep>1)l=(l+1+Math.floor(w*3))%4; if(l!==last)rep=0; last=l; N.push({t:tm,l});
+      if(tm>=24&&on&&x<.2)N.push({t:tm,l:(l+1+Math.floor(w*3))%4});}
+    return N;},
+  pts:(j,combo)=>Math.round((j===2?100:50)*(1+Math.min(4,Math.floor(combo/10))*.25)),   /* every 10 in a row is worth a quarter more, up to double */
+  cpu(seed){const N=DRUM.chart(seed), acc=.45+Math.random()*.52; let s=0,c=0; for(let i=0;i<N.length;i++){const u=Math.random(); if(u<acc*.6){c++; s+=DRUM.pts(2,c);} else if(u<acc){c++; s+=DRUM.pts(1,c);} else c=0;} return s;},
+  snd(kind,when,v){if(muted||!AC)return; try{const t=when||AC.currentTime, g=AC.createGain(); g.connect(AC.destination);
+      if(kind==='kick'||kind==='tomL'||kind==='tomH'){const o=AC.createOscillator(), f=kind==='kick'?[150,45,.16]:kind==='tomL'?[190,85,.2]:[310,150,.17]; o.type='sine'; o.frequency.setValueAtTime(f[0],t); o.frequency.exponentialRampToValueAtTime(f[1],t+f[2]);
+        g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.001,t+f[2]+.04); o.connect(g); o.start(t); o.stop(t+f[2]+.06); return;}
+      if(kind==='bass'){const o=AC.createOscillator(); o.type='square'; o.frequency.setValueAtTime(v,t); g.gain.setValueAtTime(.028,t); g.gain.exponentialRampToValueAtTime(.001,t+.2); o.connect(g); o.start(t); o.stop(t+.22); return;}
+      if(!DRUM.nz){const b=AC.createBuffer(1,Math.floor(AC.sampleRate*.5),AC.sampleRate), d=b.getChannelData(0); for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1; DRUM.nz=b;}
+      const s=AC.createBufferSource(), fl=AC.createBiquadFilter(), d=kind==='hat'?.04:kind==='snare'?.14:.42; s.buffer=DRUM.nz; fl.type=kind==='snare'?'bandpass':'highpass'; fl.frequency.value=kind==='snare'?1900:kind==='hat'?8000:5200;
+      g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.001,t+d); s.connect(fl); fl.connect(g); s.start(t); s.stop(t+d+.02);
+      if(kind==='snare'){const o=AC.createOscillator(), g2=AC.createGain(); o.type='triangle'; o.frequency.setValueAtTime(190,t); g2.gain.setValueAtTime(v*.6,t); g2.gain.exponentialRampToValueAtTime(.001,t+.09); o.connect(g2); g2.connect(AC.destination); o.start(t); o.stop(t+.1);}}catch(e){}},
+  // one step of the backing beat, booked ahead on the audio clock: kick on 1 and 3, snare on 2 and 4, a hat on every step and a bass note on each beat
+  beat(s,when){const q=s%8, bar=Math.floor(s/8); DRUM.snd('hat',when,q%2?.025:.045); if(q===0||q===4||(s>=80&&q===5))DRUM.snd('kick',when,.2); if(q===2||q===6)DRUM.snd('snare',when,.1); if(q%2===0)DRUM.snd('bass',when,[55,55,73.4,49][bar%4]*(q===6?2:1));},
+  async play(p){
+    const m=miniStage('Tap each note as it reaches the line',[0,4.6,8.4],[0,-1.2,0]), sc=m.scene, coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches; deck(sc,3.5);
+    const fitCam=()=>{const W=window.innerWidth,H=window.innerHeight; if(W>H){m.cam.position.set(0,3.2,9.6); m.cam.lookAt(0,-1.9,0);} else{m.cam.position.set(0,5.4,9.6); m.cam.lookAt(0,-1.7,0);}}; fitCam(); arenaRefit=()=>{if(MS===m){m.cam.aspect=window.innerWidth/window.innerHeight; m.cam.fov=window.innerWidth<window.innerHeight?60:45; m.cam.updateProjectionMatrix(); fitCam();}};
+    mesh(new THREE.CylinderGeometry(.3,.34,.36,14),0x17304d,0,.18,-.55,sc); const me=makeChar(p.i,sc); me.position.set(0,.36,-.55);
+    const D=[[-1.7,.62,.45,.52,.5],[-.58,.8,.8,.42,.3],[.58,.8,.8,.4,.38],[1.7,1.25,.45,.56,.05]].map((q,l)=>{const g=new THREE.Group(); g.position.set(q[0],q[1],q[2]); sc.add(g);
+      mesh(new THREE.CylinderGeometry(q[3],q[3]*(l===3?1:.92),q[4],22),DRUM.HEX[l],0,0,0,g); if(l<3)mesh(new THREE.CylinderGeometry(q[3]*.9,q[3]*.9,.03,22),0xfff6e0,0,q[4]/2+.01,0,g).castShadow=false;
+      mesh(new THREE.CylinderGeometry(.04,.04,q[1],6),0x17304d,q[0],q[1]/2-.1,q[2],sc); return{g,top:new THREE.Vector3(q[0],q[1]+q[4]/2+.12,q[2])};});
+    const stick=s=>{const k=mesh(new THREE.CylinderGeometry(.03,.04,.8,6),0xf2dfa0,0,0,0,sc); k.rest=new THREE.Vector3(s*.42,1.25,.05); k.rotation.x=1.15; k.position.copy(k.rest); k.u=0; k.to=k.rest; return k;}, sticks=[stick(-1),stick(1)];
+    stage.querySelector('.bar').insertAdjacentHTML('beforebegin',`<div class="drum"><canvas id="dhw"></canvas>${[0,1,2,3].map(l=>`<button data-l="${l}" style="--c:${DRUM.COL[l]}">${coarse?'':DRUM.KEYS[l].toUpperCase()}</button>`).join('')}</div>`);
+    const cv=$('#dhw'), g=cv.getContext('2d'), btns=[...stage.querySelectorAll('.drum button')], N=DRUM.chart(p.seed).map(n=>({t:n.t,l:n.l,s:0})), press=[0,0,0,0], pulse=[0,0,0,0], ink='#17304d';
+    let score=0, combo=0, fb='', fbT=0, fbL=0, on=false, T0=0, ns=0, face=0; const ac=!!AC&&AC.state==='running', clk=()=>ac?AC.currentTime:performance.now()/1000, now=()=>clk()-T0;
+    const hit=l=>{if(!on)return; const t=now(); press[l]=.12; pulse[l]=1; DRUM.snd(DRUM.SND[l],0,l===3?.11:.2); const k=sticks[l<2?0:1]; k.u=1; k.to=D[l].top; face=Math.atan2(D[l].top.x,D[l].top.z+.55)*.7;
+      let b=null, bd=9; for(const n of N){if(n.t-t>.3)break; if(n.s||n.l!==l)continue; const d=Math.abs(n.t-t); if(d<bd){bd=d; b=n;}}
+      if(!b||bd>.15)return; b.s=bd<=.065?2:1; combo++; score+=DRUM.pts(b.s,combo); fb=b.s===2?'Perfect!':'Good'; fbT=.45; fbL=l; $('#n').textContent=score; if(combo%10===0)me.cheer=.7;};
+    btns.forEach((b,l)=>{b.addEventListener('pointerdown',e=>{e.preventDefault(); e.stopPropagation(); hit(l);});});
+    const kd=e=>{if(e.repeat)return; const l=DRUM.KEYS.indexOf((e.key||'').toLowerCase()); if(l>=0)hit(l);}; window.addEventListener('keydown',kd); gpLanes=hit;
+    const draw=t=>{const w=cv.clientWidth, h=cv.clientHeight, d=Math.min(2,window.devicePixelRatio||1); if(!w||!h)return; if(cv.width!==Math.round(w*d)||cv.height!==Math.round(h*d)){cv.width=Math.round(w*d); cv.height=Math.round(h*d);}
+      g.setTransform(d,0,0,d,0,0); g.clearRect(0,0,w,h); const lw=w/4, hy=h-Math.max(30,h*.13), R=Math.min(lw*.34,h*.085,30);
+      for(let l=0;l<4;l++){g.fillStyle=press[l]>0?'rgba(255,255,255,.3)':l%2?'rgba(23,48,77,.7)':'rgba(23,48,77,.8)'; g.fillRect(l*lw,0,lw,h); g.beginPath(); g.arc(l*lw+lw/2,hy,R+4,0,6.283); g.lineWidth=4; g.strokeStyle=DRUM.COL[l]; g.stroke();}
+      g.fillStyle='#fff'; g.fillRect(0,hy-2,w,4);
+      for(const n of N){if(n.s>0)continue; const y=hy-(n.t-t)/DRUM.FALL*hy; if(y<-R)break; if(y>h+R)continue; const x=n.l*lw+lw/2; g.globalAlpha=n.s<0?.3:1; g.beginPath(); g.arc(x,y,R,0,6.283); g.fillStyle=DRUM.COL[n.l]; g.fill(); g.lineWidth=4; g.strokeStyle=ink; g.stroke();
+        g.beginPath(); g.arc(x-R*.3,y-R*.3,R*.22,0,6.283); g.fillStyle='rgba(255,255,255,.75)'; g.fill(); g.globalAlpha=1;}
+      g.textAlign='center'; g.lineJoin='round';
+      if(fbT>0){g.font=`${Math.max(18,Math.min(30,lw*.3))}px "Lilita One",sans-serif`; const x=Math.max(46,Math.min(w-46,fbL*lw+lw/2)), y=hy-R-14-(.45-fbT)*36; g.lineWidth=5; g.strokeStyle=ink; g.strokeText(fb,x,y); g.fillStyle=fb==='Miss'?'#ff8f8f':fb==='Good'?'#ffe9a8':'#b9ffd9'; g.fillText(fb,x,y);}
+      if(combo>=5){g.font='22px "Lilita One",sans-serif'; g.lineWidth=5; g.strokeStyle=ink; g.strokeText(combo+' in a row',w/2,28); g.fillStyle='#fff'; g.fillText(combo+' in a row',w/2,28);}};
+    draw(-9); await countdown($('#n')); $('#n').textContent='0'; duck(true); T0=clk()+.05; on=true;
+    const out=await m.run(dt=>{const t=now();
+      if(ac)while(ns<DRUM.LEN/DRUM.STEP&&ns*DRUM.STEP<t+.3){DRUM.beat(ns,T0+ns*DRUM.STEP); ns++;}   /* the beat is booked a little ahead, at exact times */
+      for(const n of N){if(n.t>t)break; if(!n.s&&t-n.t>.15){n.s=-1; combo=0; fb='Miss'; fbT=.45; fbL=n.l;}}
+      fbT-=dt; for(let l=0;l<4;l++){press[l]-=dt; pulse[l]=Math.max(0,pulse[l]-dt*6); btns[l].classList.toggle('dn',press[l]>0); const q=D[l].g; if(l===3)q.rotation.z=Math.sin(pulse[l]*9)*pulse[l]*.35; else q.scale.y=1-pulse[l]*.28;}
+      sticks.forEach(k=>{k.u=Math.max(0,k.u-dt*7); k.position.lerpVectors(k.rest,k.to,Math.sin(Math.min(1,k.u)*Math.PI/2)); k.rotation.x=1.15+k.u*.5;});
+      me.fig.rotation.y+=(face-me.fig.rotation.y)*Math.min(1,dt*12); face*=1-Math.min(1,dt*2); me.jy=Math.max(pulse[0],pulse[1],pulse[2],pulse[3])*.07; if(me.cheer>0)me.cheer-=dt;
+      draw(t); $('#bar').style.transform=`scaleX(${Math.max(0,1-t/DRUM.LEN)})`; {const el=$('#hint'), h=t<1.6?'Tap each note as it reaches the line':combo>=10?`${combo} in a row: notes are worth ${1+Math.min(4,Math.floor(combo/10))*.25} times as much`:'Tap each note as it reaches the line'; if(el.textContent!==h)el.textContent=h;}
+      if(t>=DRUM.LEN+.5||!V||!V.mini)return score;});
+    on=false; gpLanes=null; window.removeEventListener('keydown',kd); duck(false); await sleep(500); m.end(); return out;
+  }};
+
+const TRK={'Hot Bomba':1,'Drum Beater':2,'Musical Chairs':3,'Conveyor Chaos':1,'Lantern Match':2,'Crab Scramble':1,'Boom Hop':1,'Hot Planks':1,'Coconut Drop':1,'Crumble Deck':1,'Slippery Slope':1,'Ticket Grab':2,'Spotlight':2,'Sumo Shove':2,'Hedge Maze':2,'Paint Fight':2,'Stomp':2,'Trap Doors':2,'Ghost Runner':1};
 const GAMES=[
  {name:'Crab Scramble',unit:'sec',surv:true,arena:true,max:51,how:'Everyone shares one small island. Drag to run and dodge the crabs, which keep getting faster. You have 3 lives. Whoever lasts longest wins.',cpu:()=>rand(100,400)/10,play:arena(CRAB)},
  {name:'Boom Hop',unit:'sec',surv:true,arena:true,max:46,how:'Everyone shares one round deck. Tap Jump to clear the swinging boom. It keeps speeding up, and it flashes yellow just before it swings back the other way.',cpu:()=>rand(50,300)/10,play:arena(BOOM)},
@@ -2605,6 +2783,9 @@ const GAMES=[
     });
     await sleep(600); m.end(); return out;
   }},
+ {name:'Hot Bomba',unit:'sec',surv:true,arena:true,still:true,max:112,how:'Hot potato with a bomb. Everyone stands in a ring and one player holds a lit bomb. Tap the screen, or the Pass button, to hand it to the next player clockwise. You have to hold it for a moment before you can pass it. The bomb goes off after 5 to 15 seconds, at a moment nobody can see coming; the ticking gets faster as time goes by but never tells you exactly when. Whoever is holding it is out. The ring closes up and a new bomb is lit, until one player is left.',cpu:()=>rand(100,700)/10,play:arena(BOMBA)},
+ {name:'Drum Beater',unit:'pts',rot:true,max:54,how:'Forty seconds at the drum kit. Notes come down four lanes. Tap the button under a lane as its note reaches the white line: Perfect is worth 100, Good is worth 50, and a miss ends your run. Every 10 notes in a row makes each note worth a quarter more, up to double. Everyone gets the same notes. It starts easy and gets busier. Keyboard: D, F, J and K. Controller: left and right on the d-pad, then X and B.',cpu:()=>DRUM.cpu(V&&V.mini?V.mini.seed:1),play:DRUM.play},
+ {name:'Musical Chairs',unit:'sec',surv:true,arena:true,max:120,how:'Chairs stand in the middle, always one fewer than the players left. While the music plays everyone is carried round the outside of the red line; you can speed up, slow down and move in or out. Cross the red line or touch a chair while the music is playing, even if someone shoves you over, and you are out straight away. The music stops after 4 to 10 seconds: the sound cuts out, the screen flashes and SIT! appears. Then run for a chair. One player per chair, and the first to reach it has it. Whoever is left standing is out. One chair goes and the next round starts, until one player is left.',cpu:()=>rand(100,700)/10,play:arena(CHAIRS)},
 ];
 GAMES.forEach(g=>{g.trk=TRK[g.name]||3;});
 

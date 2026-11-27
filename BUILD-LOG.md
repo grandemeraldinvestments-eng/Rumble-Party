@@ -397,13 +397,24 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - **Online play has its own server.** `server.js` is a small Node server that serves the game and runs the join-code rooms over a web socket, so Host and Join work on any host that runs Node, not only inside the Claude artifact. The page uses the artifact's room service when it has one and the room server otherwise.
 - Tested with three browsers in one room: two full rounds including two mini games, with identical game state on all three; a player leaving hands their seat to the computer; the host leaving ends the game for the others.
 
+## Build 65
+- **Three new mini games.** Hot Bomba and Musical Chairs are shared-platform games; Drum Beater is played on your own screen. All three are in the practice list, the mini game tester and the round rotation.
+- **Hot Bomba.** Hot potato with a bomb. Everyone stands in a ring facing in and nobody walks. Tap anywhere, or the Pass button, to hand the bomb to the next player clockwise, after holding it for 0.4 seconds. The host picks a fuse of 5 to 15 seconds each round and never sends it; the phones only get the time gone by, which drives the ticking. Whoever holds it when it goes off is out, the ring closes up and a new bomb is lit. Each phone turns the ring so its own player stands nearest the camera.
+- **Musical Chairs.** One chair fewer than the players left. While the music plays everyone is carried clockwise round the outside of a red line, so nobody can camp; crossing the line then puts you out at once. The host stops the music after 4 to 10 seconds and decides who reached each chair first. When it stops the track cuts out, the screen flashes and SIT! fills the screen.
+- **Drum Beater.** Forty seconds, four lanes, four big buttons. Notes come from the shared seed, so everyone plays the same song. The drum beat is made in code at 120 beats a minute and booked on the audio clock, and the notes use the same clock, so they cannot drift apart. Perfect is within 65 ms (100 points), Good within 150 ms (50 points); every 10 in a row adds a quarter, up to double. Keyboard D F J K; controller d-pad left, d-pad right, X, B. In landscape the buttons sit in pairs at the two edges for the thumbs. Computer players get a random accuracy.
+- **Drum Beater joins the round rotation.** Until now only shared-platform games came up in a round; the older own-screen games are still practice only.
+- **Fixed, online:** a position left over from the previous mini game could make a player look knocked out on the other phones at the start of the next one. Positions and the host's game state now carry the number of the mini game they belong to. The host's game state can now be an object as well as a list.
+- Every ready screen now has the Rules button, including the own-screen games.
+- Three new game icons (g24 to g26), made in the same ChatGPT thread and style as the others.
+- Tested: each new game in practice mode with computer players, landscape and portrait, to the results screen; the three games in a row online with three browsers in one room. Not tested: real phones, a real controller, and how the sound lines up by ear.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
-Crab Scramble, Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Crumble Deck, Stomp, Trap Doors, Ghost Runner, Slippery Slope.
+Crab Scramble, Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Crumble Deck, Stomp, Trap Doors, Ghost Runner, Slippery Slope, Conveyor Chaos, Lantern Match, Hot Bomba, Musical Chairs.
 
 **Own screen (everyone plays at the same time, separately)**
-Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon Pop, Crate Stack.
+Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon Pop, Crate Stack, Drum Beater.
 
 ## How it is tested
 
