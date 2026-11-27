@@ -458,13 +458,42 @@ Three new boards. Each keeps the 60-space layout (a 45-space loop and a 15-space
 - Tested: full games with computer players on each new board with 2, 4 and 6 players and no errors; the wheel, the bulk purchase, the barrels and the metronome one at a time. Not tested: these boards on real phones, or online with more than one phone (the host sends its whole state, price and wheel included, so the phones draw what the host decided).
 - Known limits: the boards are flat, so the temple climb is a route across the island, not a real height change. The new boards share the existing board music.
 
+## Build 70
+Thirteen new mini games, which finishes the list of 25 (three were left out as too close to games already here: Domino Dash, Giant Slam and Treasure Tide).
+
+**Nine own-screen games.** Everyone plays the same puzzle, built from the round's seed, on their own phone. A computer player is scored by playing that same puzzle with a skill level.
+- **Critter Wrangler.** Draw a closed loop round wandering critters: 1 point each, 3 for a gold one. The ink runs out, so a loop cannot take in the whole garden.
+- **Dress for Success.** Remember who is wearing what, then pick that outfit out of look-alikes. More characters, more cards and closer look-alikes as it goes on.
+- **Candy Detective.** Find the exact sweet the shopkeeper asks for in a crowded jar.
+- **Hedge Hustle.** Five hedges: swipe leaves away, rub ladybirds off, keep your finger away from the bees.
+- **Chalkboard Drop.** Three falls on an elastic cord. One tap to brake; the cord takes room to stop you. Closest above the red line scores most.
+- **Matchstick Marksman.** Pull a bow back, aim and let go. Big villains 100, small ones 20, friends cost 30.
+- **Twist and Route.** Turn road tiles so a wind-up car can drive from the start to the flag. Every board can be solved.
+- **Sky Shapes.** Steer a skydiver through the gate with the right shape and colour, five times.
+- **Limelight Shuffle.** On each marked beat press Sun if a spotlight is on you and Moon if it is not. (The brief called it Spotlight Shuffle; there is already a game called Spotlight.)
+
+**Four shared games.**
+- **Snapshot Showdown.** A hedge maze where everyone has a camera. Hold another player in view until the camera has focused, then snap. First to photograph everyone wins.
+- **Crater Crawl.** Tap to climb a volcano wall, change lane to dodge vents that erupt, squeeze past climbers who block you, and stay ahead of the rising lava.
+- **Pixel Panic.** A race across tiles that vanish after anyone steps on them and grow back a few seconds later. A fall sends you back to the last checkpoint.
+- **Clockwork Climb.** A side-on race up a clock: turning gears, sliding and retracting bars, pendulums. Every ledge can be jumped up through.
+
+Also in this build
+- All nine own-screen games are in the round rotation, which now has 39 games.
+- The playfield of the older own-screen games (Ticket Catch, Pier Dash, Balloon Pop and the others) had collapsed to a thin line on a phone held sideways. It now takes the room there is.
+- The ready screen of an own-screen game shows one sentence and the control hint; the full rules are behind the Rules button.
+- Shuffles that decide a puzzle use the game's own seeded shuffle, because sorting with a random test gives different results in different browsers.
+- Thirteen new game icons, g34 to g46.
+- Tested: each of the thirteen to the results screen with computer players, in landscape and portrait. The own-screen games with a scripted player that used the real touch controls. The four shared games with 2, 4 and 6 players. Every Twist and Route board from 2,000 seeds checked for a solution. Online with three browsers: Twist and Route and Limelight Shuffle started with the same puzzle on every phone and were played through; the run was too slow here to collect the final tables for them. Not tested: real phones, sound, controllers.
+- Known limits: own-screen races do not show the other players while you play. Snapshot Showdown does not use "fewer times photographed" to break ties. Sky Shapes and Limelight Shuffle have keyboard controls; the other new own-screen games are touch and mouse only.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
-Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Crumble Deck, Stomp, Trap Doors, Slippery Slope, Conveyor Chaos, Lantern Match, Hot Bomba, Musical Chairs, Rail Riders, Tricycle Turbo, Marble Mayhem, Shortcut Circuit, Soapbox Surfers, Rapid Rafts, Ghost Hot Potato, Cannonball Kickoff, Vacuum Escape.
+Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Crumble Deck, Stomp, Trap Doors, Slippery Slope, Conveyor Chaos, Lantern Match, Hot Bomba, Musical Chairs, Rail Riders, Tricycle Turbo, Marble Mayhem, Shortcut Circuit, Soapbox Surfers, Rapid Rafts, Ghost Hot Potato, Cannonball Kickoff, Vacuum Escape, Snapshot Showdown, Crater Crawl, Pixel Panic, Clockwork Climb.
 
 **Own screen (everyone plays at the same time, separately)**
-Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon Pop, Crate Stack, Drum Beater.
+Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon Pop, Crate Stack, Drum Beater, Critter Wrangler, Dress for Success, Candy Detective, Hedge Hustle, Chalkboard Drop, Matchstick Marksman, Twist and Route, Sky Shapes, Limelight Shuffle.
 
 ## How it is tested
 

@@ -298,6 +298,7 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .gctl{position:fixed; inset:0; z-index:23; pointer-events:none}
 .gctl>*{position:absolute; pointer-events:auto; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent}
 .gbtn{bottom:calc(46px + env(safe-area-inset-bottom,0px)); width:min(31vw,150px); height:min(31vw,128px); padding:0 4px; border:3px solid var(--ink); border-radius:24px; background:#ffc531; color:var(--ink); font:400 1.25rem var(--display); line-height:1.05; box-shadow:inset 0 -9px 0 rgba(0,0,0,.18); cursor:pointer}
+.gbtn.ca,.gbtn.cb{width:min(22vw,104px); background:#6fb4ff; font-size:1.7rem} .gbtn.ca{left:max(10px,env(safe-area-inset-left,0px))} .gbtn.cb{left:calc(max(10px,env(safe-area-inset-left,0px)) + min(22vw,104px) + 8px)} .gbtn.cc{right:max(12px,env(safe-area-inset-right,0px)); width:min(38vw,170px)}
 .gbtn.gL{left:max(14px,env(safe-area-inset-left,0px))} .gbtn.gR{right:max(14px,env(safe-area-inset-right,0px))}
 .gbtn.gL.ped,.gbtn.gL{background:#ff7a7a} .gbtn.gR{background:#6fb4ff} .gbtn.dn{transform:translateY(4px); box-shadow:inset 0 -2px 0 rgba(0,0,0,.18); filter:brightness(1.15)} .gbtn.off{opacity:.45}
 .lever{right:max(18px,env(safe-area-inset-right,0px)); bottom:calc(46px + env(safe-area-inset-bottom,0px)); width:96px; height:min(48vh,236px); border:3px solid var(--ink); border-radius:48px; background:rgba(255,255,255,.45)}
@@ -314,6 +315,14 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 #flash{position:fixed; inset:0; z-index:39; background:#fff; opacity:0; pointer-events:none}
 #flash.go{animation:flashA .55s ease-out}
 @keyframes flashA{0%{opacity:.9}100%{opacity:0}}
+.f2{touch-action:none} #stage>.field{flex:1 1 0; min-height:150px; pointer-events:auto}   /* the playfield takes all the room there is */
+.f2top{display:flex; align-items:center; gap:12px; width:100%; min-height:42px} .f2top b{flex:none; min-width:2.3em; text-align:center; font:400 2.1rem/1 var(--display); color:#fff; text-shadow:0 3px 0 var(--ink),2px 0 0 var(--ink),-2px 0 0 var(--ink),0 -2px 0 var(--ink)} .f2top span{flex:1; text-align:left; font-weight:700; color:var(--foam); line-height:1.2}
+@media (orientation:landscape) and (max-height:560px){#mini:has(.f2)>header{display:none} .f2top{min-height:34px} .f2top b{font-size:1.7rem}}
+.fbtn{position:absolute; left:10px; bottom:10px; width:min(36%,210px); z-index:2} .fbtn:disabled{opacity:.45}
+.lime{display:flex; gap:12px; width:100%; align-items:center; justify-content:center; padding:0 10px; pointer-events:auto}
+.lime button{flex:1; max-width:280px; height:clamp(70px,17vh,120px); padding:0; border:4px solid var(--ink); border-radius:18px; box-shadow:0 6px 0 var(--ink); -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; cursor:pointer; display:flex; align-items:center; justify-content:center}
+.lime button svg{height:62%; pointer-events:none} .lime .sun{background:#ffc531} .lime .moon{background:#8a5cf6} .lime button.dn{transform:translateY(5px); box-shadow:0 1px 0 var(--ink); filter:brightness(1.15)}
+.lbeat{width:64px; height:64px; position:relative; flex:none} .lbeat::before{content:''; position:absolute; inset:14px; border-radius:50%; background:#fff; border:3px solid var(--ink)} .lbeat i{position:absolute; inset:0; border-radius:50%; border:4px solid #fff; box-shadow:0 0 0 2px var(--ink)}
 .drum{display:grid; grid-template-columns:repeat(4,1fr); width:min(100%,560px); align-self:center; pointer-events:auto}
 .drum canvas{grid-column:1/5; grid-row:1; width:100%; height:min(36vh,400px); border:3px solid var(--ink); border-bottom:0; border-radius:14px 14px 0 0; display:block; box-sizing:border-box}
 .drum button{grid-row:2; height:clamp(84px,19vh,132px); margin:0 2px; padding:0; border:3px solid var(--ink); border-radius:0 0 18px 18px; background:var(--c); color:var(--ink); font:400 1.5rem var(--display); box-shadow:inset 0 -9px 0 rgba(0,0,0,.2); -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; cursor:pointer}
@@ -1933,7 +1942,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=69; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=70; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1987,7 +1996,7 @@ function miniSync(){
     const can=myK()>=0&&(!m.only||m.only.includes(myK())), extra=`${m.note?`<p><b>${m.note}</b></p>`:''}${m.fz?'<p class="sub"><b>Mini Game Frenzy.</b> Whoever wins the most of the three games takes a pearl and no tickets. Everyone else keeps all the tickets they win in the three games.</p>':''}${m.note||m.prac?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2. With five or six players the prizes are 10, 6, 4, 2 and 1.</p>'}${g.arena&&!g.alone&&!g.still?'<p class="sub">Fall off the edge and you are out. Walk into other players to shove them.</p>':''}`;
     const panel=`<div id="rdyPanel">${g.arena?'<span class="pvTag">Preview</span>':''}${m.note?`<p class="rnote"><b>${m.note}</b></p>`:''}${g.ctl?`<p class="ctl">${g.ctl}</p>`:''}<div class="rdy" id="rdyRow"></div><div class="rbtns"><button class="btn ghost" id="rulesBtn">Rules</button>${can?'<button class="btn" id="rdyBtn">Ready</button>':''}</div><p class="sub" id="rdyNote"></p>
       <div id="rulesPop" hidden><div class="box"><h3>${g.name}</h3><p>${g.how}</p>${extra}<button class="btn" id="rulesX">Close</button></div></div></div>`;
-    stopDemo(); if(g.arena){stage.innerHTML=''; runDemo(m,g); stage.insertAdjacentHTML('beforeend',panel);} else stage.innerHTML=`<p>${g.how}</p>${extra}${panel}`;
+    stopDemo(); if(g.arena){stage.innerHTML=''; runDemo(m,g); stage.insertAdjacentHTML('beforeend',panel);} else stage.innerHTML=g.sum?`<p>${g.sum}</p>${panel}`:`<p>${g.how}</p>${extra}${panel}`;   /* a long set of rules stays behind the Rules button */
     const rb=$('#rdyBtn'); if(rb)rb.onclick=()=>{rb.disabled=true; rb.textContent='Ready!'; setReady(m.mid);};
     const rl=$('#rulesBtn'), rp=$('#rulesPop'); if(rl){rl.onclick=()=>{rp.hidden=false;}; $('#rulesX').onclick=()=>{rp.hidden=true;}; rp.onclick=e=>{if(e.target===rp)rp.hidden=true;};}
     rdyKey=''; drawReady(m);}
@@ -3216,7 +3225,554 @@ const VAC={hint:'Drag left and right. Do not get sucked in',max:60,left:true,noE
     I.steer=Math.max(-1,Math.min(1,(ai.tg-av.d)*2));},
   ex:RACE.ex, sub:RACE.sub, final:RACE.final};
 
-const TRK={'Ghost Hot Potato':2,'Cannonball Kickoff':1,'Vacuum Escape':3,'Rail Riders':1,'Tricycle Turbo':2,'Marble Mayhem':3,'Shortcut Circuit':1,'Soapbox Surfers':2,'Rapid Rafts':3,'Hot Bomba':1,'Drum Beater':2,'Musical Chairs':3,'Conveyor Chaos':1,'Lantern Match':2,'Crab Scramble':1,'Boom Hop':1,'Hot Planks':1,'Coconut Drop':1,'Crumble Deck':1,'Slippery Slope':1,'Ticket Grab':2,'Spotlight':2,'Sumo Shove':2,'Hedge Maze':2,'Paint Fight':2,'Stomp':2,'Trap Doors':2,'Ghost Runner':1};
+/* ---------- Build 70: own-screen games drawn on a canvas. Everyone gets the same puzzle, made from the round's seed, on their own phone.
+   A computer player is scored by playing that same puzzle with a skill level, not by picking a number ---------- */
+const INK2='#17304d', FNT2='"Lilita One",sans-serif', PAL8=['#ff4d4d','#ff8c1a','#ffc531','#35c98a','#18b7c9','#2f8fff','#8a5cf6','#ff5fa8'], PALN=['red','orange','yellow','green','teal','blue','purple','pink'];
+const mseed=()=>V&&V.mini?V.mini.seed:1;
+const shuf=(a,r)=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t;} return a;};   /* the same shuffle on every phone: sort() with a random test differs between browsers */
+/* the playfield: score on top, one line of text, the canvas, the time bar. run() calls frame(t,dt) until it returns a value */
+function fld(info,ctl){
+  stage.innerHTML=`<div class="f2top"><b id="n">0</b><span id="info">${info||''}</span></div><div class="field f2 grow"><canvas id="cv"></canvas>${ctl||''}</div><div class="bar"><i id="bar"></i></div>`;
+  const cv=$('#cv'), g=cv.getContext('2d'), o={cv,g,W:1,H:1,x0:0,y0:0,m:1};
+  o.fit=()=>{const r=cv.getBoundingClientRect(), d=Math.min(2,window.devicePixelRatio||1), w=Math.max(1,Math.round(r.width*d)), h=Math.max(1,Math.round(r.height*d)); if(cv.width!==w||cv.height!==h){cv.width=w; cv.height=h;} g.setTransform(d,0,0,d,0,0); o.W=r.width||1; o.H=r.height||1; o.m=Math.min(o.W,o.H); o.x0=r.left; o.y0=r.top;};
+  o.pt=e=>[e.clientX-o.x0,e.clientY-o.y0];
+  o.score=v=>{const n=$('#n'); if(n)n.textContent=v;}; o.info=v=>{const n=$('#info'); if(n&&n.textContent!==v)n.textContent=v;};
+  o.bar=k=>{const b=$('#bar'); if(b)b.style.transform=`scaleX(${Math.max(0,Math.min(1,k))})`;};
+  o.txt=(s,x,y,px,fill,al)=>{g.font=`${Math.round(px)}px ${FNT2}`; g.textAlign=al||'center'; g.textBaseline='middle'; g.lineJoin='round'; g.lineWidth=Math.max(3,px*.22); g.strokeStyle=INK2; g.strokeText(s,x,y); g.fillStyle=fill||'#fff'; g.fillText(s,x,y);};
+  o.rr=(x,y,w,h,r)=>{g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath();};
+  o.run=frame=>new Promise(res=>{let last=performance.now(), t=0; (function f(now){if(!cv.isConnected||!V||!V.mini){res(o.out||0); return;} const dt=Math.min(.05,Math.max(0,(now-last)/1000)); last=now; t+=dt; o.fit(); let r; try{r=frame(t,dt);}catch(e){console.error('mini',e); r=o.out||0;} if(r!==undefined)res(r); else requestAnimationFrame(f);})(last);});
+  o.fit(); window.__own=o; return o;}
+/* floating words: +1, Perfect and so on */
+const pops=(F,L,dt)=>{for(let i=L.length-1;i>=0;i--){const q=L[i]; q.t+=dt; if(q.t>.8){L.splice(i,1); continue;} F.g.globalAlpha=Math.min(1,(0.8-q.t)*3); F.txt(q.s,q.x,q.y-q.t*46,q.px||22,q.c||'#fff'); F.g.globalAlpha=1;}};
+
+/* --- Critter Wrangler: draw a closed loop round wandering critters --- */
+const CRTR={LEN:30,LIFE:8,INK:1.7,
+  /* every critter's whole life is fixed by the seed: when it appears and the path it wanders */
+  herd(seed){const r=rng32(seed), A=[]; for(let i=0,t=0;t<CRTR.LEN-1.5;i++){A.push({t0:t,gold:r()<.16,cx:.14+r()*.72,cy:.16+r()*.68,ax:.06+r()*.1,ay:.06+r()*.1,w1:.7+r()*1.1,w2:.6+r()*1.1,p1:r()*6.28,p2:r()*6.28,hue:Math.floor(r()*4)}); t+=i<6?.1:.5+r()*.5;} return A;},
+  at(c,t){const u=t-c.t0, s=c.gold?1.5:1; return[Math.min(.95,Math.max(.05,c.cx+c.ax*Math.sin(c.w1*s*u+c.p1)+.04*Math.sin(2.3*u+c.p2))),Math.min(.93,Math.max(.07,c.cy+c.ay*Math.sin(c.w2*s*u+c.p2)+.04*Math.cos(1.9*u+c.p1)))];},
+  cpu(seed){const H=CRTR.herd(seed), got=new Set(), sk=.3+Math.random()*.65; let s=0, t=.8+Math.random()*.6;
+    while(t<CRTR.LEN){const live=H.map((c,i)=>i).filter(i=>!got.has(i)&&H[i].t0<=t&&t<H[i].t0+CRTR.LIFE);
+      if(live.length&&Math.random()<.5+sk*.42){const gi=live.filter(i=>H[i].gold), k=gi.length&&Math.random()<.4+sk*.5?gi[rand(0,gi.length-1)]:live[rand(0,live.length-1)], [x,y]=CRTR.at(H[k],t);   /* a loop that closes: its target, and any neighbour that happens to be inside */
+        if(!H[k].gold||Math.random()<.45+sk*.45)for(const i of live){const [a,b]=CRTR.at(H[i],t); if(i===k||(Math.hypot(a-x,b-y)<.13&&Math.random()<.35+sk*.4)){got.add(i); s+=H[i].gold?3:1;}}}
+      t+=2.3-sk*1+Math.random()*.6;}
+    return s;},
+  async play(p){
+    const F=fld('Draw a loop round the critters. Gold ones are worth 3'), g=F.g, H=CRTR.herd(p.seed), got=new Set(), fx=[], pp=[], COL=['#ff8c6b','#7ad0ff','#c9a6ff','#ffd166'], bg=rng32(7).bind(null), BL=Array.from({length:14},()=>[bg(),bg(),.05+bg()*.08,bg()]);
+    let score=0, path=null, ink=0, t0d=0, tNow=0, loop=null, on=false;
+    const P=(c,t)=>{const [x,y]=CRTR.at(c,t); return[x*F.W,y*F.H];};
+    const close=()=>{if(!path)return; const q=path; path=null; if(q.length<6)return; const a=q[0], b=q[q.length-1]; let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,len=0;
+      for(let i=0;i<q.length;i++){x0=Math.min(x0,q[i][0]); x1=Math.max(x1,q[i][0]); y0=Math.min(y0,q[i][1]); y1=Math.max(y1,q[i][1]); if(i)len+=Math.hypot(q[i][0]-q[i-1][0],q[i][1]-q[i-1][1]);}
+      const ok=len>50&&Math.hypot(a[0]-b[0],a[1]-b[1])<Math.max(30,.33*Math.hypot(x1-x0,y1-y0)); loop={q,ok,t:.4}; if(!ok){tone(200,.1,'square',.03); pp.push({s:'Not closed',x:b[0],y:b[1],t:0,c:'#ff8f8f',px:18}); return;}
+      let n=0; H.forEach((c,i)=>{if(got.has(i)||c.t0>tNow||tNow>=c.t0+CRTR.LIFE)return; const [x,y]=P(c,tNow); let inn=false;
+        for(let j=0,k=q.length-1;j<q.length;k=j++){const xi=q[j][0],yi=q[j][1],xk=q[k][0],yk=q[k][1]; if((yi>y)!==(yk>y)&&x<(xk-xi)*(y-yi)/(yk-yi)+xi)inn=!inn;}
+        if(inn){got.add(i); n++; const v=c.gold?3:1; score+=v; fx.push({x,y,t:0,c:c.gold?'#ffc531':COL[c.hue]}); pp.push({s:'+'+v,x,y:y-14,t:0,c:c.gold?'#ffe27a':'#fff'});}});
+      if(n){F.score(score); tone(620+n*120,.12,'square',.05,1320);} else pp.push({s:'Empty',x:(x0+x1)/2,y:(y0+y1)/2,t:0,c:'#dfe9f5',px:18});};
+    F.cv.onpointerdown=e=>{e.preventDefault(); if(!on)return; try{F.cv.setPointerCapture(e.pointerId);}catch(_){} path=[F.pt(e)]; ink=0; t0d=tNow;};
+    F.cv.onpointermove=e=>{if(!path)return; const q=F.pt(e), l=path[path.length-1], d=Math.hypot(q[0]-l[0],q[1]-l[1]); if(d<3)return; ink+=d; path.push(q); if(ink>CRTR.INK*F.m)close();};   /* the ink runs out, so one loop cannot take in the whole garden */
+    F.cv.onpointerup=F.cv.onpointercancel=()=>close();
+    const critter=(x,y,R,c,t,k)=>{g.save(); g.translate(x,y); const hop=Math.abs(Math.sin(t*7+k))*R*.12; g.translate(0,-hop);
+      g.fillStyle='rgba(23,48,77,.2)'; g.beginPath(); g.ellipse(0,R*.95+hop,R*.8,R*.25,0,0,6.3); g.fill();
+      g.fillStyle=c.gold?'#ffc531':COL[c.hue]; g.strokeStyle=INK2; g.lineWidth=Math.max(2,R*.16); g.beginPath(); g.arc(0,0,R,0,6.3); g.fill(); g.stroke();
+      g.beginPath(); g.arc(-R*.62,-R*.85,R*.3,0,6.3); g.fill(); g.stroke(); g.beginPath(); g.arc(R*.62,-R*.85,R*.3,0,6.3); g.fill(); g.stroke();
+      g.fillStyle='#fff'; g.beginPath(); g.arc(-R*.35,-R*.1,R*.26,0,6.3); g.arc(R*.35,-R*.1,R*.26,0,6.3); g.fill(); g.fillStyle=INK2; g.beginPath(); g.arc(-R*.3,-R*.06,R*.12,0,6.3); g.arc(R*.4,-R*.06,R*.12,0,6.3); g.fill();
+      g.beginPath(); g.arc(0,R*.3,R*.3,.15,2.99); g.lineWidth=Math.max(1.5,R*.1); g.stroke();
+      if(c.gold){g.fillStyle='#fff'; for(let i=0;i<3;i++){const a=t*3+i*2.1; g.beginPath(); g.arc(Math.cos(a)*R*1.35,Math.sin(a)*R*1.35,R*.12,0,6.3); g.fill();}} g.restore();};
+    const draw=(t,dt)=>{const W=F.W, Hh=F.H, R=Math.max(12,F.m*.05); g.fillStyle='#6fcf6a'; g.fillRect(0,0,W,Hh); BL.forEach(b=>{g.fillStyle=b[3]<.5?'rgba(255,255,255,.1)':'rgba(23,90,60,.13)'; g.beginPath(); g.ellipse(b[0]*W,b[1]*Hh,b[2]*W,b[2]*Hh*.7,0,0,6.3); g.fill();});
+      H.forEach((c,i)=>{if(got.has(i)||c.t0>t||t>=c.t0+CRTR.LIFE)return; const u=t-c.t0, [x,y]=P(c,t), left=CRTR.LIFE-u; if(left<1.2&&Math.floor(left*8)%2)return; critter(x,y,R*Math.min(1,u*4)*(c.gold?.9:1),c,t,i);});
+      for(let i=fx.length-1;i>=0;i--){const q=fx[i]; q.t+=dt; if(q.t>.45){fx.splice(i,1); continue;} g.fillStyle=q.c; g.globalAlpha=1-q.t/.45; for(let k=0;k<8;k++){const a=k*.785; g.beginPath(); g.arc(q.x+Math.cos(a)*q.t*R*6,q.y+Math.sin(a)*q.t*R*6,R*.26,0,6.3); g.fill();} g.globalAlpha=1;}
+      const line=(q,col,w,cl)=>{g.beginPath(); q.forEach((a,i)=>i?g.lineTo(a[0],a[1]):g.moveTo(a[0],a[1])); if(cl)g.closePath(); g.lineCap='round'; g.lineJoin='round'; g.lineWidth=w+4; g.strokeStyle=INK2; g.stroke(); g.lineWidth=w; g.strokeStyle=col; g.stroke();};
+      if(loop){loop.t-=dt; g.globalAlpha=Math.max(0,loop.t/.4); line(loop.q,loop.ok?'#fff27a':'#ff6b6b',5,loop.ok); g.globalAlpha=1; if(loop.t<=0)loop=null;}
+      if(path&&path.length>1){line(path,'#fff27a',5); const k=1-ink/(CRTR.INK*F.m), a=path[path.length-1]; g.fillStyle=k<.25?'#ff6b6b':'#fff'; g.beginPath(); g.arc(a[0],a[1],4+k*7,0,6.3); g.fill(); g.lineWidth=2; g.strokeStyle=INK2; g.stroke();}
+      pops(F,pp,dt);};
+    F.hint=()=>H.map((c,i)=>got.has(i)||c.t0>tNow-.4||tNow>=c.t0+CRTR.LIFE-.8?null:P(c,tNow)).filter(Boolean);
+    F.fit(); draw(0,0); await countdown(); on=true;
+    return F.run((t,dt)=>{tNow=t; if(path&&t-t0d>1.9)close(); draw(t,dt); F.bar(1-t/CRTR.LEN); F.out=score; if(t>=CRTR.LEN){on=false; path=null; return score;}});
+  }};
+
+/* --- Dress for Success: remember who wore what, then pick that outfit out of look-alikes --- */
+const DRESS={LEN:40,
+  /* round k is the same for everyone: who is shown, whose outfit is asked for, and the cards */
+  round(seed,k){const r=rng32(seed+k*7919), pick=n=>Math.floor(r()*n), n=k<2?1:k<4?2:3, cards=k<1?4:k<3?6:8, hard=k>=3, P=[], hs=shuf([0,1,2,3,4],r);
+    const fit=()=>({c:pick(8),pat:pick(5),acc:pick(5)}), same=(a,b)=>a.c===b.c&&a.pat===b.pat&&a.acc===b.acc;
+    for(let i=0;i<n;i++){let o; do o=fit(); while(P.some(q=>same(q.o,o))); P.push({head:hs[i],fur:pick(5),hat:pick(5),o});}
+    const ask=pick(n), tgt=P[ask].o, C=[tgt]; P.forEach((q,i)=>{if(i!==ask)C.push(q.o);});
+    for(let g=0;C.length<cards&&g<200;g++){const o={c:tgt.c,pat:tgt.pat,acc:tgt.acc}, w=pick(3), two=!hard&&r()<.5;   /* a look-alike: one thing changed, and in the later rounds the colour only moves to the shade next to it */
+      if(w===0||two)o.c=(o.c+(hard?(r()<.5?1:7):1+pick(7)))%8; if(w===1)o.pat=(o.pat+1+pick(4))%5; if(w===2||two)o.acc=(o.acc+1+pick(4))%5; if(!C.some(q=>same(q,o)))C.push(o);}
+    const ord=shuf(C.map((o,i)=>i),r); return{n,P,ask,cards:ord.map(i=>C[i]),right:ord.indexOf(0),show:1.5+n*.85-(k>5?.4:0)};},
+  pts:ans=>100+Math.round(50*Math.max(0,1-ans/4)),
+  cpu(seed){const sk=.3+Math.random()*.65; let t=0, s=0, k=0; for(;;k++){const R=DRESS.round(seed,k); t+=R.show+.4; let ans=.7+(1-sk)*1.5+R.cards.length*.1+Math.random()*.6, ok=.5+sk*.46-(R.n-1)*.07; while(Math.random()>ok){ans+=2.1; ok+=.25;} t+=ans; if(t>DRESS.LEN)break; s+=DRESS.pts(ans); t+=.55;} return s;},
+  head(F,x,y,R,P){const g=F.g, fur=['#f2c79a','#c98f55','#f4f1ea','#9aa7b8','#ffd166'][P.fur]; g.lineWidth=Math.max(2,R*.11); g.strokeStyle=INK2; g.fillStyle=fur;
+    if(P.head===0){[-1,1].forEach(s=>{g.beginPath(); g.arc(x+s*R*.72,y-R*.72,R*.34,0,6.3); g.fill(); g.stroke();});}                                           /* bear */
+    else if(P.head===1){[-1,1].forEach(s=>{g.beginPath(); g.moveTo(x+s*R*.95,y-R*.3); g.lineTo(x+s*R*.8,y-R*1.3); g.lineTo(x+s*R*.2,y-R*.85); g.closePath(); g.fill(); g.stroke();});}   /* cat */
+    else if(P.head===2){[-1,1].forEach(s=>{g.beginPath(); g.ellipse(x+s*R*.4,y-R*1.35,R*.24,R*.7,s*.18,0,6.3); g.fill(); g.stroke();});}                    /* rabbit */
+    else if(P.head===3){[-1,1].forEach(s=>{g.beginPath(); g.arc(x+s*R*.5,y-R*.88,R*.36,0,6.3); g.fill(); g.stroke();});}                                     /* frog */
+    else{[-1,1].forEach(s=>{g.beginPath(); g.ellipse(x+s*R*1.02,y+R*.1,R*.3,R*.52,s*.3,0,6.3); g.fill(); g.stroke();});}                                      /* dog */
+    g.beginPath(); g.arc(x,y,R,0,6.3); g.fill(); g.stroke(); g.fillStyle=INK2; g.beginPath(); g.arc(x-R*.36,y-R*.1,R*.12,0,6.3); g.arc(x+R*.36,y-R*.1,R*.12,0,6.3); g.fill(); g.beginPath(); g.arc(x,y+R*.22,R*.36,.2,2.94); g.stroke();
+    g.fillStyle=['','#ff4d4d','#17304d','#ffc531','#35c98a'][P.hat]; const ty=y-R*.92;
+    if(P.hat===1){g.beginPath(); g.arc(x,ty+R*.12,R*.62,3.14,0); g.closePath(); g.fill(); g.stroke(); F.rr(x-R*.1,ty,R*1.0,R*.2,R*.08); g.fill(); g.stroke();}        /* cap */
+    else if(P.hat===2){F.rr(x-R*.45,ty-R*.75,R*.9,R*.85,R*.08); g.fill(); g.stroke(); F.rr(x-R*.8,ty,R*1.6,R*.2,R*.08); g.fill(); g.stroke();}                     /* top hat */
+    else if(P.hat===3){g.beginPath(); g.moveTo(x-R*.6,ty+R*.15); g.lineTo(x-R*.6,ty-R*.5); g.lineTo(x-R*.3,ty-R*.15); g.lineTo(x,ty-R*.6); g.lineTo(x+R*.3,ty-R*.15); g.lineTo(x+R*.6,ty-R*.5); g.lineTo(x+R*.6,ty+R*.15); g.closePath(); g.fill(); g.stroke();}   /* crown */
+    else if(P.hat===4){g.beginPath(); g.arc(x,ty+R*.2,R*.7,3.3,6.12); g.closePath(); g.fill(); g.stroke(); g.fillStyle='#fff'; g.beginPath(); g.arc(x,ty-R*.5,R*.2,0,6.3); g.fill(); g.stroke();}},   /* bobble hat */
+  body(F,x,y,w,h,o){const g=F.g, c=PAL8[o.c], lw=Math.max(2,w*.045); g.lineWidth=lw; g.strokeStyle=INK2; g.save(); g.beginPath(); g.moveTo(x-w*.3,y); g.lineTo(x+w*.3,y); g.lineTo(x+w*.5,y+h*.22); g.lineTo(x+w*.36,y+h*.42); g.lineTo(x+w*.3,y+h*.34); g.lineTo(x+w*.3,y+h); g.lineTo(x-w*.3,y+h); g.lineTo(x-w*.3,y+h*.34); g.lineTo(x-w*.36,y+h*.42); g.lineTo(x-w*.5,y+h*.22); g.closePath(); g.fillStyle=c; g.fill(); g.clip();
+    g.fillStyle='rgba(255,255,255,.8)'; if(o.pat===1)for(let i=0;i<4;i++)g.fillRect(x-w,y+h*(.14+i*.24),w*2,h*.1); else if(o.pat===2)for(let i=0;i<5;i++)for(let j=0;j<5;j++){g.beginPath(); g.arc(x-w*.4+j*w*.2+(i%2)*w*.1,y+h*(.12+i*.2),w*.045,0,6.3); g.fill();}
+    else if(o.pat===3)for(let i=0;i<6;i++)for(let j=0;j<6;j++){if((i+j)%2)g.fillRect(x-w*.5+j*w*.17,y+i*h*.17,w*.17,h*.17);} else if(o.pat===4)for(let i=0;i<5;i++)g.fillRect(x-w*.45+i*w*.22,y-h,w*.08,h*3);
+    g.restore(); g.beginPath(); g.moveTo(x-w*.3,y); g.lineTo(x+w*.3,y); g.lineTo(x+w*.5,y+h*.22); g.lineTo(x+w*.36,y+h*.42); g.lineTo(x+w*.3,y+h*.34); g.lineTo(x+w*.3,y+h); g.lineTo(x-w*.3,y+h); g.lineTo(x-w*.3,y+h*.34); g.lineTo(x-w*.36,y+h*.42); g.lineTo(x-w*.5,y+h*.22); g.closePath(); g.stroke();
+    g.fillStyle=INK2; if(o.acc===1){g.fillStyle='#17304d'; g.beginPath(); g.moveTo(x,y+h*.1); g.lineTo(x-w*.2,y); g.lineTo(x-w*.2,y+h*.2); g.closePath(); g.fill(); g.beginPath(); g.moveTo(x,y+h*.1); g.lineTo(x+w*.2,y); g.lineTo(x+w*.2,y+h*.2); g.closePath(); g.fill();}   /* bow tie */
+    else if(o.acc===2){g.fillStyle='#fff'; F.rr(x-w*.3,y-h*.02,w*.6,h*.14,h*.05); g.fill(); g.stroke(); F.rr(x+w*.04,y+h*.06,w*.14,h*.42,h*.04); g.fill(); g.stroke();}   /* scarf */
+    else if(o.acc===3){g.fillStyle='#ffc531'; g.beginPath(); for(let i=0;i<10;i++){const a=-1.57+i*.628, rr=i%2?w*.06:w*.14; g.lineTo(x+w*.13+Math.cos(a)*rr,y+h*.34+Math.sin(a)*rr);} g.closePath(); g.fill(); g.stroke();}   /* star badge */
+    else if(o.acc===4){g.strokeStyle='#17304d'; g.beginPath(); g.moveTo(x-w*.18,y); g.lineTo(x,y+h*.4); g.lineTo(x+w*.18,y); g.stroke(); g.fillStyle='#ffc531'; g.beginPath(); g.arc(x,y+h*.44,w*.1,0,6.3); g.fill(); g.stroke();}},   /* medal */
+  async play(p){
+    const F=fld('Remember who is wearing what'), g=F.g, pp=[]; let score=0, k=0, R=DRESS.round(p.seed,0), st='show', tS=0, tA=0, lock=0, bad=new Set(), flash=0, rects=[], on=false;
+    F.cv.onpointerdown=e=>{e.preventDefault(); if(!on||st!=='pick'||lock>0)return; const [x,y]=F.pt(e), i=rects.findIndex(q=>x>=q[0]&&x<=q[0]+q[2]&&y>=q[1]&&y<=q[1]+q[3]); if(i<0||bad.has(i))return;
+      if(i===R.right){const v=DRESS.pts(tA); score+=v; F.score(score); pp.push({s:'+'+v,x:rects[i][0]+rects[i][2]/2,y:rects[i][1],t:0,c:'#b9ffd9'}); tone(660,.12,'square',.05,1100); st='ok'; tS=0;}
+      else{bad.add(i); lock=1.5; flash=.3; tone(180,.18,'square',.05); pp.push({s:'Wrong: wait',x:rects[i][0]+rects[i][2]/2,y:rects[i][1],t:0,c:'#ff8f8f',px:18});}};
+    const draw=(t,dt)=>{const W=F.W, H=F.H; g.fillStyle='#ffe9d2'; g.fillRect(0,0,W,H); g.fillStyle='rgba(255,140,90,.14)'; for(let i=0;i<W;i+=44)g.fillRect(i,0,22,H);
+      if(st==='show'){const n=R.n, cw=Math.min(W/(n+.4),H*.62), R0=cw*.2; for(let i=0;i<n;i++){const x=W/2+(i-(n-1)/2)*cw, y=H*.3; DRESS.body(F,x,y+R0*.85,cw*.62,Math.min(H*.42,cw*.8),R.P[i].o); DRESS.head(F,x,y,R0,R.P[i]);} F.info(n>1?'Remember who is wearing what':'Remember this outfit');}
+      else{const land=W>H*1.25, hx=land?W*.13:W/2, hy=land?H*.42:H*.15, R0=land?Math.min(W*.075,H*.2):Math.min(H*.085,W*.16); DRESS.head(F,hx,hy,R0,R.P[R.ask]); F.txt('?',hx,hy+R0*1.9,R0*.9,'#ffc531');
+        const ax=land?W*.26:0, ay=land?0:H*.3, aw=W-ax, ah=H-ay, n=R.cards.length; let cols=2, best=0; for(let c=2;c<=n;c++){const rws=Math.ceil(n/c), s=Math.min(aw/c,ah/rws*.82); if(s>best){best=s; cols=c;}} const rws=Math.ceil(n/cols), cw=aw/cols, ch=ah/rws; rects=[];
+        R.cards.forEach((o,i)=>{const x=ax+(i%cols)*cw+cw*.07, y=ay+Math.floor(i/cols)*ch+ch*.07, w=cw*.86, h=ch*.86; rects.push([x,y,w,h]); g.globalAlpha=bad.has(i)?.35:1; F.rr(x,y,w,h,Math.min(w,h)*.12); g.fillStyle=st==='ok'&&i===R.right?'#b9ffd9':'#fff'; g.fill(); g.lineWidth=3; g.strokeStyle=INK2; g.stroke(); const bw=Math.min(w*.8,h*.8); DRESS.body(F,x+w/2,y+h*.14,bw,h*.72,o); g.globalAlpha=1;});
+        if(lock>0){g.fillStyle=`rgba(255,77,77,${.18+flash})`; g.fillRect(ax,ay,aw,ah);} F.info(lock>0?'Wrong one. Wait…':'Tap the outfit this one was wearing');}
+      pops(F,pp,dt);};
+    F.hint=()=>st==='pick'&&lock<=0&&rects[R.right]?[rects[R.right][0]+rects[R.right][2]/2,rects[R.right][1]+rects[R.right][3]/2]:null;
+    F.fit(); draw(0,0); await countdown(); on=true;
+    return F.run((t,dt)=>{tS+=dt; flash=Math.max(0,flash-dt); if(st==='show'&&tS>=R.show){st='pick'; tA=0; bad=new Set();} else if(st==='pick'){tA+=dt; if(lock>0)lock-=dt;} else if(st==='ok'&&tS>.55){k++; R=DRESS.round(p.seed,k); st='show'; tS=0;}
+      draw(t,dt); F.bar(1-t/DRESS.LEN); F.out=score; if(t>=DRESS.LEN){on=false; return score;}});
+  }};
+
+/* --- Candy Detective: find the one sweet the shopkeeper asked for in a crowded jar --- */
+const CANDY={LEN:40,
+  round(seed,k){const r=rng32(seed+k*104729), pick=n=>Math.floor(r()*n), n=k<2?14:k<5?20:26, near=k<1?2:k<3?5:k<6?9:13, same=(a,b)=>a.s===b.s&&a.c===b.c&&a.p===b.p, tgt={s:pick(6),c:pick(8),p:pick(4)}, L=[tgt];
+    for(let g=0;L.length<n&&g<400;g++){const o=L.length<=near?{s:tgt.s,c:tgt.c,p:tgt.p}:{s:pick(6),c:pick(8),p:pick(4)}; if(L.length<=near){const w=pick(3); if(w===0)o.s=(o.s+1+pick(5))%6; else if(w===1)o.c=(o.c+(k>3&&r()<.6?(r()<.5?1:7):1+pick(7)))%8; else o.p=(o.p+1+pick(3))%4;} if(!same(o,tgt))L.push(o);}
+    const cols=Math.ceil(Math.sqrt(n*1.5)), rows=Math.ceil(n/cols), cells=shuf(Array.from({length:cols*rows},(_,i)=>i),r);   /* a jittered grid, so every sweet can be seen */
+    return{n,cols,rows,L:L.map((o,i)=>({s:o.s,c:o.c,p:o.p,gx:(cells[i]%cols+.5+(r()-.5)*.36)/cols,gy:(Math.floor(cells[i]/cols)+.5+(r()-.5)*.36)/rows,a:(r()-.5)*1.2}))};},
+  pts:ans=>100+Math.round(50*Math.max(0,1-ans/5)),
+  cpu(seed){const sk=.3+Math.random()*.65; let t=0, s=0, k=0; for(;;k++){const R=CANDY.round(seed,k); let ans=.8+(1-sk)*2.1+R.n*.035+Math.random()*.9, bad=(.04+(1-sk)*.24)*(k>3?1.4:1); while(Math.random()<bad){ans+=1.2+.8+Math.random(); bad*=.5;} t+=ans; if(t>CANDY.LEN)break; s+=CANDY.pts(ans); t+=.5;} return s;},
+  sweet(F,x,y,R,o,a){const g=F.g, c=PAL8[o.c]; g.save(); g.translate(x,y); g.rotate(a||0); g.lineWidth=Math.max(2,R*.14); g.strokeStyle=INK2; g.lineJoin='round'; g.fillStyle=c;
+    const shape=()=>{g.beginPath(); if(o.s===0)g.arc(0,0,R*.82,0,6.3); else if(o.s===1)F.rr(-R*.78,-R*.62,R*1.56,R*1.24,R*.2); else if(o.s===2)g.ellipse(0,0,R*.66,R*.5,0,0,6.3); else if(o.s===3)g.arc(0,-R*.2,R*.66,0,6.3);
+      else if(o.s===4){g.moveTo(0,R*.8); g.bezierCurveTo(-R*1.5,-R*.2,-R*.6,-R*1.1,0,-R*.4); g.bezierCurveTo(R*.6,-R*1.1,R*1.5,-R*.2,0,R*.8);} else for(let i=0;i<10;i++){const q=-1.57+i*.628, rr=i%2?R*.45:R*.95; g.lineTo(Math.cos(q)*rr,Math.sin(q)*rr);} g.closePath();};
+    if(o.s===2){[-1,1].forEach(s=>{g.beginPath(); g.moveTo(s*R*.6,0); g.lineTo(s*R*1.08,-R*.42); g.lineTo(s*R*1.08,R*.42); g.closePath(); g.fill(); g.stroke();});}   /* the twisted ends of a wrapper */
+    if(o.s===3){g.fillStyle='#fff'; F.rr(-R*.09,R*.3,R*.18,R*.75,R*.06); g.fill(); g.stroke(); g.fillStyle=c;}                                                    /* the stick of a lolly */
+    shape(); g.fill(); g.save(); g.clip(); g.fillStyle='rgba(255,255,255,.85)'; const oy=o.s===3?-R*.2:0;
+    if(o.p===1)for(let i=-3;i<=3;i++){g.save(); g.rotate(.6); g.fillRect(i*R*.42-R*.09,-R*2,R*.18,R*4); g.restore();} else if(o.p===2)for(let i=0;i<7;i++){const q=i*.9; g.beginPath(); g.arc(Math.cos(q)*R*.42*(i?1:0),oy+Math.sin(q)*R*.42*(i?1:0),R*.13,0,6.3); g.fill();}
+    else if(o.p===3){g.beginPath(); g.lineWidth=R*.16; g.strokeStyle='rgba(255,255,255,.9)'; for(let q=0;q<12;q+=.3){const rr=q*R*.07; g.lineTo(Math.cos(q)*rr,oy+Math.sin(q)*rr);} g.stroke();}
+    g.restore(); g.lineWidth=Math.max(2,R*.14); g.strokeStyle=INK2; shape(); g.stroke(); g.restore();},
+  async play(p){
+    const F=fld('Find the sweet the shopkeeper asks for'), g=F.g, pp=[]; let score=0, k=0, R=CANDY.round(p.seed,0), tA=0, lock=0, bad=new Set(), st='pick', tS=0, on=false, geo=null, shake=0;
+    const lay=()=>{const W=F.W, H=F.H, land=W>H*1.2, jx=land?W*.27:W*.03, jy=land?H*.04:H*.27, jw=W-jx-W*.03, jh=H-jy-H*.04; return{land,jx,jy,jw,jh,R:Math.min(jw/R.cols,jh/R.rows)*.4,kx:land?W*.135:W*.2,ky:land?H*.26:H*.13,kr:land?Math.min(W*.08,H*.16):Math.min(H*.08,W*.14)};};
+    F.cv.onpointerdown=e=>{e.preventDefault(); if(!on||st!=='pick'||lock>0||!geo)return; const [x,y]=F.pt(e); let b=-1, bd=geo.R*1.25; R.L.forEach((o,i)=>{if(bad.has(i))return; const d=Math.hypot(geo.jx+o.gx*geo.jw-x,geo.jy+o.gy*geo.jh-y); if(d<bd){bd=d; b=i;}}); if(b<0)return;
+      if(b===0){const v=CANDY.pts(tA); score+=v; F.score(score); pp.push({s:'+'+v,x,y:y-10,t:0,c:'#b9ffd9'}); tone(700,.1,'square',.05,1300); st='ok'; tS=0;} else{bad.add(b); lock=1.2; shake=.3; tone(180,.18,'square',.05); pp.push({s:'Not that one',x,y:y-10,t:0,c:'#ff8f8f',px:18});}};
+    const draw=(t,dt)=>{const W=F.W, H=F.H, G=geo=lay(); g.fillStyle='#ffd9ec'; g.fillRect(0,0,W,H); g.fillStyle='rgba(255,95,168,.13)'; for(let i=-H;i<W;i+=40){g.beginPath(); g.moveTo(i,0); g.lineTo(i+18,0); g.lineTo(i+18+H,H); g.lineTo(i+H,H); g.closePath(); g.fill();}
+      F.rr(G.jx,G.jy,G.jw,G.jh,Math.min(G.jw,G.jh)*.08); g.fillStyle='rgba(255,255,255,.72)'; g.fill(); g.lineWidth=4; g.strokeStyle=INK2; g.stroke();
+      R.L.forEach((o,i)=>{if(st==='ok'&&i===0)return; const sx=bad.has(i)&&shake>0?Math.sin(t*60)*4:0; g.globalAlpha=bad.has(i)?.4:1; CANDY.sweet(F,G.jx+o.gx*G.jw+sx,G.jy+o.gy*G.jh,G.R,o,o.a); g.globalAlpha=1;});
+      /* the shopkeeper and the sweet he wants */
+      const r=G.kr, x=G.kx, y=G.ky; g.lineWidth=Math.max(2,r*.1); g.strokeStyle=INK2; g.fillStyle='#fff'; F.rr(x-r*.62,y-r*1.5,r*1.24,r*.7,r*.2); g.fill(); g.stroke(); g.fillStyle='#f2c79a'; g.beginPath(); g.arc(x,y,r,0,6.3); g.fill(); g.stroke();
+      g.fillStyle=INK2; g.beginPath(); g.arc(x-r*.36,y-r*.12,r*.1,0,6.3); g.arc(x+r*.36,y-r*.12,r*.1,0,6.3); g.fill(); g.fillStyle='#8a5a2b'; g.beginPath(); g.ellipse(x-r*.3,y+r*.3,r*.34,r*.14,-.2,0,6.3); g.ellipse(x+r*.3,y+r*.3,r*.34,r*.14,.2,0,6.3); g.fill();
+      if(st==='ok'){g.beginPath(); g.arc(x,y+r*.42,r*.3,.1,3.04); g.lineWidth=Math.max(2,r*.1); g.stroke();}
+      const bx=G.land?x:W*.62, by=G.land?H*.68:G.ky, br=G.land?Math.min(W*.1,H*.2):Math.min(H*.1,W*.17); g.fillStyle='#fff'; g.lineWidth=4; g.beginPath(); g.arc(bx,by,br*1.25,0,6.3); g.fill(); g.stroke(); CANDY.sweet(F,bx,by,br*.9,R.L[0],0);
+      if(lock>0){g.fillStyle='rgba(255,77,77,.2)'; g.fillRect(G.jx,G.jy,G.jw,G.jh);} F.info(lock>0?'Not that one. Wait…':'Tap the sweet that matches exactly'); pops(F,pp,dt);};
+    F.hint=()=>st==='pick'&&lock<=0&&geo?[geo.jx+R.L[0].gx*geo.jw,geo.jy+R.L[0].gy*geo.jh]:null;
+    F.fit(); draw(0,0); await countdown(); on=true;
+    return F.run((t,dt)=>{tS+=dt; shake=Math.max(0,shake-dt); if(st==='pick'){tA+=dt; if(lock>0)lock-=dt;} else if(tS>.5){k++; R=CANDY.round(p.seed,k); st='pick'; tA=0; bad=new Set();}
+      draw(t,dt); F.bar(1-t/CANDY.LEN); F.out=score; if(t>=CANDY.LEN){on=false; return score;}});
+  }};
+
+/* --- Hedge Hustle: swipe the leaves off five hedges, rub the ladybirds away, keep clear of the bees --- */
+const HEDGE={LEN:45,LV:[7,9,11,13,15],BG:[0,1,2,3,3],BE:[0,1,1,2,2],STING:1.2,
+  make(seed,h){const r=rng32(seed+h*3571), n=HEDGE.LV[h], L=[], B=[], Z=[]; for(let i=0;i<n;i++)L.push({x:.16+r()*.68,y:.2+r()*.6,a:r()*6.28,s:.85+r()*.4,on:1,held:0,c:Math.floor(r()*3)});
+    const ks=shuf(L.map((q,i)=>i),r); for(let i=0;i<HEDGE.BG[h];i++){L[ks[i]].held=1; B.push({k:ks[i],rub:0,on:1,fly:0});}   /* a ladybird sits on a leaf and holds it down */
+    for(let i=0;i<HEDGE.BE[h];i++){const y=.3+r()*.4, v=r()<.5; Z.push(v?{x0:.2+r()*.6,y0:.16,x1:.2+r()*.6,y1:.84,T:3.2+r(),p:r()*6.28}:{x0:.14,y0:y,x1:.86,y1:.3+r()*.4,T:3.4+r(),p:r()*6.28});}
+    return{L,B,Z,n};},
+  bee(z,t){const k=.5-.5*Math.cos(t*6.283/z.T+z.p); return[z.x0+(z.x1-z.x0)*k,z.y0+(z.y1-z.y0)*k];},   /* a bee flies up and down one marked line, so you can see where it will be */
+  cpu(){const sk=.3+Math.random()*.65; let t=0; for(let h=0;h<5;h++){const d=HEDGE.LV[h]*(.2+(1-sk)*.4)+HEDGE.BG[h]*(.8+(1-sk)*1.3)+HEDGE.BE[h]*(.4+Math.random()*.8)+(Math.random()<HEDGE.BE[h]*.3*(1-sk)?HEDGE.STING:0)+.7; if(t+d>HEDGE.LEN)return h*100+Math.round(99*(HEDGE.LEN-t)/d); t+=d;} return 1000+Math.round(10*(HEDGE.LEN-t));},
+  async play(p){
+    const F=fld('Swipe the leaves away'), g=F.g, fly=[], pp=[], GR=['#2fa866','#3fbf6f','#249457']; let h=0, Hd=HEDGE.make(p.seed,0), st='play', tS=0, lock=0, on=false, down=false, lx=0, ly=0, lt=0, mvx=0, mvy=0, tNow=0, score=0;
+    const sting=(x,y)=>{lock=HEDGE.STING; down=false; tone(160,.25,'sawtooth',.05); pp.push({s:'Stung!',x,y:y-16,t:0,c:'#ffe27a'});};
+    const beeHit=(x,y)=>Hd.Z.some(z=>{const [bx,by]=HEDGE.bee(z,tNow); return Math.hypot(bx*F.W-x,by*F.H-y)<F.m*.085;});
+    F.cv.onpointerdown=e=>{e.preventDefault(); if(!on||st!=='play'||lock>0)return; try{F.cv.setPointerCapture(e.pointerId);}catch(_){} const [x,y]=F.pt(e); if(beeHit(x,y)){sting(x,y); return;} down=true; lx=x; ly=y; lt=performance.now(); mvx=mvy=0;};
+    F.cv.onpointermove=e=>{if(!down||st!=='play')return; const [x,y]=F.pt(e), dx=x-lx, dy=y-ly, d=Math.hypot(dx,dy); if(d<2)return; const now=performance.now(), sp=d/Math.max(.004,(now-lt)/1000); if(beeHit(x,y)){sting(x,y); return;}
+      const RL=F.m*.115, RB=F.m*.06; let rubbing=false;
+      Hd.B.forEach(b=>{if(!b.on)return; const q=Hd.L[b.k]; if(Math.hypot(q.x*F.W-x,q.y*F.H-y)>RB*1.7)return; rubbing=true; if(dx*mvx+dy*mvy<0){b.rub++; tone(500+b.rub*70,.04,'triangle',.03); if(b.rub>=4){b.on=0; b.fly=.01; q.held=0; SFX.hop();}}});   /* back and forth four times and the ladybird flies off */
+      if(!rubbing&&sp>F.m*.55){for(let i=Hd.L.length-1;i>=0;i--){const q=Hd.L[i]; if(!q.on||q.held)continue; if(Math.hypot(q.x*F.W-x,q.y*F.H-y)<RL*q.s){q.on=0; fly.push({x:q.x*F.W,y:q.y*F.H,vx:dx/d*sp*.7,vy:dy/d*sp*.7-80,a:q.a,va:(Math.random()-.5)*14,s:q.s,c:q.c,t:0}); tone(700+Math.random()*300,.05,'triangle',.03); break;}}}   /* only the top leaf under your finger goes */
+      mvx=dx; mvy=dy; lx=x; ly=y; lt=now;
+      if(Hd.L.every(q=>!q.on)){st='run'; tS=0; down=false; SFX.gain();}};
+    F.cv.onpointerup=F.cv.onpointercancel=()=>{down=false;};
+    const leaf=(x,y,R,a,c)=>{g.save(); g.translate(x,y); g.rotate(a); g.beginPath(); g.moveTo(-R,0); g.quadraticCurveTo(0,-R*.85,R,0); g.quadraticCurveTo(0,R*.85,-R,0); g.closePath(); g.fillStyle=GR[c]; g.fill(); g.lineWidth=Math.max(2,R*.1); g.strokeStyle='#14553a'; g.stroke(); g.beginPath(); g.moveTo(-R*.8,0); g.lineTo(R*.8,0); g.lineWidth=Math.max(1,R*.05); g.stroke(); g.restore();};
+    const draw=(t,dt)=>{const W=F.W, H=F.H, m=F.m, RL=m*.115; g.fillStyle='#9fe3ff'; g.fillRect(0,0,W,H); g.fillStyle='#1f7d4c'; g.fillRect(0,H*.06,W,H*.94); g.fillStyle='rgba(255,255,255,.07)'; for(let i=0;i<9;i++){g.beginPath(); g.arc((i*.13+.03)*W,H*(.1+(i%3)*.33),m*.09,0,6.3); g.fill();}
+      /* the gap the leaves are blocking, with the path beyond it */
+      F.rr(W*.1,H*.12,W*.8,H*.8,m*.12); g.fillStyle='#ffe9a8'; g.fill(); g.lineWidth=5; g.strokeStyle='#14553a'; g.stroke(); g.fillStyle='#f6c95c'; g.beginPath(); g.moveTo(W*.42,H*.92); g.lineTo(W*.58,H*.92); g.lineTo(W*.53,H*.3); g.lineTo(W*.47,H*.3); g.closePath(); g.fill();
+      if(st==='run'){const k=Math.min(1,tS/.7), R=m*.07*(1-k*.5); g.fillStyle=CAST[p.i].c; g.strokeStyle=INK2; g.lineWidth=3; g.beginPath(); g.arc(W/2,H*(.86-k*.5)-Math.abs(Math.sin(k*18))*6,R,0,6.3); g.fill(); g.stroke();}
+      Hd.L.forEach(q=>{if(q.on)leaf(q.x*W,q.y*H,RL*q.s,q.a,q.c);});
+      Hd.B.forEach(b=>{const q=Hd.L[b.k]; let x=q.x*W, y=q.y*H; if(!b.on){if(b.fly<=0||b.fly>.8)return; b.fly+=dt; x+=b.fly*m*.7; y-=b.fly*m*.9;} const R=m*.05, wob=b.on?Math.sin(t*20)*b.rub*.8:0; g.save(); g.translate(x+wob,y);
+        g.fillStyle='#ff3b3b'; g.strokeStyle=INK2; g.lineWidth=Math.max(2,R*.14); g.beginPath(); g.arc(0,0,R,0,6.3); g.fill(); g.stroke(); g.beginPath(); g.moveTo(0,-R); g.lineTo(0,R); g.stroke(); g.fillStyle=INK2; g.beginPath(); g.arc(0,-R*.95,R*.42,0,6.3); g.fill(); [[-.45,-.2],[.45,-.2],[-.4,.45],[.4,.45]].forEach(d=>{g.beginPath(); g.arc(d[0]*R,d[1]*R,R*.17,0,6.3); g.fill();}); g.restore();});
+      for(let i=fly.length-1;i>=0;i--){const q=fly[i]; q.t+=dt; if(q.t>.7){fly.splice(i,1); continue;} q.x+=q.vx*dt; q.y+=q.vy*dt; q.vy+=900*dt; q.a+=q.va*dt; g.globalAlpha=1-q.t/.7; leaf(q.x,q.y,RL*q.s,q.a,q.c); g.globalAlpha=1;}
+      Hd.Z.forEach(z=>{g.setLineDash([4,7]); g.lineWidth=2; g.strokeStyle='rgba(23,48,77,.45)'; g.beginPath(); g.moveTo(z.x0*W,z.y0*H); g.lineTo(z.x1*W,z.y1*H); g.stroke(); g.setLineDash([]); const [bx,by]=HEDGE.bee(z,t), x=bx*W, y=by*H+Math.sin(t*30)*2, R=m*.04;
+        g.fillStyle='rgba(255,197,49,.22)'; g.beginPath(); g.arc(x,y,m*.085,0,6.3); g.fill(); g.fillStyle='rgba(255,255,255,.85)'; g.beginPath(); g.ellipse(x-R*.4,y-R*.9,R*.5,R*.3,-.5,0,6.3); g.ellipse(x+R*.4,y-R*.9,R*.5,R*.3,.5,0,6.3); g.fill();
+        g.fillStyle='#ffc531'; g.strokeStyle=INK2; g.lineWidth=Math.max(2,R*.16); g.beginPath(); g.ellipse(x,y,R*1.1,R*.8,0,0,6.3); g.fill(); g.stroke(); g.fillStyle=INK2; g.fillRect(x-R*.35,y-R*.72,R*.24,R*1.44); g.fillRect(x+R*.2,y-R*.66,R*.24,R*1.32);});
+      for(let i=0;i<5;i++){g.beginPath(); g.arc(W*.5+(i-2)*22,H*.06,7,0,6.3); g.fillStyle=i<h?'#ffc531':i===h?'#fff':'rgba(255,255,255,.35)'; g.fill(); g.lineWidth=2; g.strokeStyle=INK2; g.stroke();}
+      if(lock>0){g.fillStyle='rgba(255,197,49,.3)'; g.fillRect(0,0,W,H); F.txt('Stung! Wait…',W/2,H/2,Math.max(20,m*.09),'#fff');}
+      F.info(lock>0?'Stung! Keep your finger away from the bees':Hd.B.some(b=>b.on)?'Rub the ladybirds to and fro to shoo them':'Swipe the leaves away'); pops(F,pp,dt);};
+    F.hint=()=>({h,st,lock,leaves:Hd.L.map(q=>q.on&&!q.held?[q.x*F.W,q.y*F.H]:null).filter(Boolean),bugs:Hd.B.filter(b=>b.on).map(b=>[Hd.L[b.k].x*F.W,Hd.L[b.k].y*F.H]),bees:Hd.Z.map(z=>{const q=HEDGE.bee(z,tNow); return[q[0]*F.W,q[1]*F.H];})});
+    F.fit(); draw(0,0); await countdown(); on=true;
+    return F.run((t,dt)=>{tNow=t; tS+=dt; if(lock>0)lock-=dt; const left=Hd.L.filter(q=>q.on).length; score=h*100+Math.round(99*(1-left/Hd.n)); F.out=Math.min(score,599);
+      if(st==='run'&&tS>.7){h++; if(h>=5){const v=1000+Math.round(10*(HEDGE.LEN-t)); F.score(v); draw(t,dt); return v;} Hd=HEDGE.make(p.seed,h); st='play';}
+      draw(t,dt); F.score(h+' of 5'); F.bar(1-t/HEDGE.LEN); if(t>=HEDGE.LEN){on=false; return Math.min(599,score);}});
+  }};
+
+/* --- Chalkboard Drop: fall down the blackboard and brake as late as you dare. The cord takes room to stop you --- */
+const CHALK={G:9,K:.22,A:24,D:[40,58,78],
+  /* where a drop stops if the brake goes on at tb. The game itself runs the same sums, in the same small steps */
+  stop(tb){let y=0, v=0, t=0; const h=1/120; while(t<tb){v+=(CHALK.G-CHALK.K*v)*h; y+=v*h; t+=h;} while(v>0){v-=CHALK.A*h; y+=Math.max(0,v)*h;} return y;},
+  best(D){let a=0, b=12; for(let i=0;i<30;i++){const m=(a+b)/2; if(CHALK.stop(m)<D)a=m; else b=m;} return a;},
+  pts:gap=>gap<0?0:Math.max(0,Math.round(100-gap*5)),
+  cpu(){const sk=.3+Math.random()*.65; let s=0; for(const D of CHALK.D){const tb=CHALK.best(D)-(.08+(1-sk)*.35)*Math.random()*1.6+(Math.random()-.5)*(.06+(1-sk)*.22); s+=CHALK.pts(D-CHALK.stop(tb));} return s;},
+  async play(p){
+    const F=fld('Brake late, but stop above the red line','<button class="btn fbtn" id="brk">BRAKE</button>'), g=F.g, h=1/120, rr=rng32(p.seed), DOO=Array.from({length:26},()=>[rr(),rr()*110,Math.floor(rr()*4)]);
+    let k=0, st='ready', tS=0, y=0, v=0, acc=0, total=0, last='', lastC='#fff', on=false, yStop=0;
+    const brake=e=>{if(e&&e.preventDefault)e.preventDefault(); if(on&&st==='fall'){st='brake'; tone(300,.2,'sawtooth',.04,120);}}, kd=e=>{if(e.code==='Space')brake(e);};
+    $('#brk').addEventListener('pointerdown',brake); F.cv.onpointerdown=brake; window.addEventListener('keydown',kd);
+    const draw=(t,dt)=>{const W=F.W, H=F.H, D=CHALK.D[k], ppm=H/58, yv=st==='show'?yStop-2.4*Math.abs(Math.sin(tS*7))*Math.exp(-tS*2.6):y, cam=Math.max(-5,Math.min(yv-7,D+9-58)), Y=mm=>(mm-cam)*ppm, x=W*.6;
+      g.fillStyle='#235c46'; g.fillRect(0,0,W,H); g.strokeStyle='rgba(255,255,255,.5)'; g.fillStyle='rgba(255,255,255,.65)'; g.lineWidth=2; g.font=`${Math.max(11,Math.round(F.m*.045))}px ${FNT2}`; g.textAlign='left'; g.textBaseline='middle';
+      for(let mm=Math.max(0,Math.ceil(cam/5)*5);mm<cam+60&&mm<=D+8;mm+=5){const yy=Y(mm); g.beginPath(); g.moveTo(W*.04,yy); g.lineTo(W*(mm%10?.07:.1),yy); g.stroke(); if(mm%10===0)g.fillText(mm+' m',W*.115,yy);}
+      g.strokeStyle='rgba(255,255,255,.3)'; DOO.forEach(d=>{const yy=Y(d[1]), xx=(d[0]<.5?.2+d[0]*.4:.5+d[0]*.4)*W, s=F.m*.035; if(yy<-30||yy>H+30)return; g.beginPath(); if(d[2]===0)g.arc(xx,yy,s,0,6.3); else if(d[2]===1){g.moveTo(xx-s,yy+s); g.lineTo(xx,yy-s); g.lineTo(xx+s,yy+s); g.closePath();} else if(d[2]===2)g.rect(xx-s,yy-s,s*2,s*2); else{g.moveTo(xx-s,yy); g.lineTo(xx+s,yy); g.moveTo(xx,yy-s); g.lineTo(xx,yy+s);} g.stroke();});
+      g.fillStyle='#8a5a2b'; g.fillRect(0,Y(D+8),W,H); g.fillStyle='#ff4d4d'; g.fillRect(0,Y(D)-2,W,5); g.font=`${Math.max(12,Math.round(F.m*.05))}px ${FNT2}`; g.textAlign='right'; g.fillText('STOP ABOVE THIS LINE',W*.97,Y(D)+14);
+      /* the cord and the faller */
+      const fy=Y(yv), R=Math.max(13,F.m*.06), slack=st==='fall'||st==='ready'; g.strokeStyle='#fff'; g.lineWidth=3; g.beginPath(); g.moveTo(x,Y(0)); if(slack){for(let i=1;i<=12;i++)g.lineTo(x+Math.sin(i*1.3+t*9)*5,Y(0)+(fy-R-Y(0))*i/12);} else g.lineTo(x,fy-R); g.stroke(); g.fillStyle='#fff'; g.fillRect(x-22,Y(0)-5,44,8);
+      g.fillStyle=CAST[p.i].c; g.strokeStyle=INK2; g.lineWidth=3; g.beginPath(); g.ellipse(x,fy,R*(st==='brake'?.86:1),R*(st==='brake'?1.18:1),0,0,6.3); g.fill(); g.stroke(); g.fillStyle='#fff'; g.beginPath(); g.arc(x-R*.36,fy-R*.15,R*.24,0,6.3); g.arc(x+R*.36,fy-R*.15,R*.24,0,6.3); g.fill(); g.fillStyle=INK2; g.beginPath(); g.arc(x-R*.36,fy-R*.08,R*.11,0,6.3); g.arc(x+R*.36,fy-R*.08,R*.11,0,6.3); g.fill();
+      g.beginPath(); if(st==='fall')g.ellipse(x,fy+R*.45,R*.2,R*.28,0,0,6.3); else if(st==='brake')g.rect(x-R*.3,fy+R*.38,R*.6,R*.14); else g.arc(x,fy+R*.3,R*.3,.2,2.94); st==='fall'||st==='brake'?g.fill():g.stroke();
+      if(st==='fall'&&v>8){g.strokeStyle='rgba(255,255,255,.55)'; g.lineWidth=2; for(let i=0;i<5;i++){const xx=x+(i-2)*R*.7, l=v*1.2+((i*37)%11); g.beginPath(); g.moveTo(xx,fy-R*1.3); g.lineTo(xx,fy-R*1.3-l); g.stroke();}}
+      /* the whole drop at a glance, on the right */
+      const mx=W*.955, my=H*.08, mh=H*.84, q=mm=>my+mh*Math.min(1,mm/(D+8)); g.fillStyle='rgba(255,255,255,.25)'; g.fillRect(mx-2,my,4,mh); g.fillStyle='#ff4d4d'; g.fillRect(mx-8,q(D)-1.5,16,3); g.fillStyle='#fff'; g.beginPath(); g.arc(mx,q(yv),5,0,6.3); g.fill();
+      if(st==='ready')F.txt(`Drop ${k+1} of 3`,W/2,H*.5,Math.max(22,F.m*.1),'#fff'); if(st==='show')F.txt(last,W/2,H*.3,Math.max(18,F.m*.075),lastC);
+      const b=$('#brk'); if(b)b.disabled=st!=='fall';};
+    let tf=0; F.hint=()=>({st,k,tf});
+    F.fit(); draw(0,0); await countdown(); on=true;
+    return F.run((t,dt)=>{tS+=dt; if(st==='fall')tf+=dt; else if(st==='ready')tf=0; const D=CHALK.D[k];
+      if(st==='ready'&&tS>1.2){st='fall'; y=0; v=0; acc=0;}
+      else if(st==='fall'||st==='brake'){acc+=dt; while(acc>=h&&(st==='fall'||st==='brake')){acc-=h; if(st==='fall'){v+=(CHALK.G-CHALK.K*v)*h; y+=v*h; if(y>=D+7){st='show'; tS=0; yStop=D+7; last='Splat! No points'; lastC='#ff8f8f'; SFX.loss();}}
+          else{v-=CHALK.A*h; y+=Math.max(0,v)*h; if(v<=0){const gap=D-y, pts=CHALK.pts(gap); total+=pts; F.score(total); st='show'; tS=0; yStop=y; last=gap<0?'Over the line! No points':`${gap.toFixed(1)} m above the line: +${pts}`; lastC=gap<0?'#ff8f8f':pts>=85?'#b9ffd9':'#fff'; if(gap<0)SFX.loss(); else if(pts>=85)SFX.win(); else SFX.gain();}}}}
+      else if(st==='show'&&tS>1.9){k++; if(k>=3){on=false; window.removeEventListener('keydown',kd); return total;} st='ready'; tS=0; y=0; v=0;}
+      draw(t,dt); F.bar(1-(k+(st==='show'?1:.5))/3); F.out=total; F.info(st==='fall'?'Brake late, but stop above the red line':st==='brake'?'The cord is stretching…':'Three drops. The closer to the line, the more points');});
+  }};
+
+/* --- Matchstick Marksman: pull the bow back, aim and let go. Villains score, friends cost --- */
+const MARK={LEN:40,ROW:[.17,.34,.5],SLOT:[.2,.5,.8],VAL:{v:20,B:100,f:-30},
+  sched(seed){const r=rng32(seed), A=[]; for(let t=.3;t<MARK.LEN-2;t+=.75+r()*.5){const u=r(), kind=u<.6?'v':u<.9?'f':'B'; A.push({t0:t,row:Math.floor(r()*3),dir:r()<.5?1:-1,sp:(.15+r()*.15)*(kind==='B'?1.7:1),kind});}
+    for(let t=3;t<MARK.LEN-2;t+=4+r()*1.6)A.push({t0:t,pop:1,row:1+Math.floor(r()*2),slot:Math.floor(r()*3),kind:r()<.72?'B':'f',dur:1.5});   /* these pop up from behind a crate for a moment */
+    return A;},
+  /* where a target is at time t: [x, how far out of cover it is 0..1], or null when it is not there */
+  at(a,t){const u=t-a.t0; if(u<0)return null; if(a.pop){if(u>a.dur)return null; return[MARK.SLOT[a.slot],Math.min(1,u/.22,(a.dur-u)/.22)];} const x=a.dir>0?-.08+a.sp*u:1.08-a.sp*u; return x<-.09||x>1.09?null:[x,1];},
+  cpu(seed){const A=MARK.sched(seed), gone=new Set(), sk=.3+Math.random()*.65; let s=0, t=1+Math.random();
+    while(t<MARK.LEN){const see=A.map((a,i)=>i).filter(i=>{if(gone.has(i))return false; const q=MARK.at(A[i],t); return q&&q[0]>.1&&q[0]<.9&&q[1]>.6;}), bad=see.filter(i=>A[i].kind==='f'), good=see.filter(i=>A[i].kind!=='f');
+      if(good.length){const big=good.filter(i=>A[i].kind==='B'), k=big.length&&Math.random()<.3+sk*.6?big[0]:good[rand(0,good.length-1)], a=A[k]; if(Math.random()<(a.kind==='B'?.2+.4*sk:.4+.5*sk)-a.row*.04){gone.add(k); s+=MARK.VAL[a.kind];} else if(bad.length&&Math.random()<.3*(1-sk)){gone.add(bad[0]); s-=30;}}
+      t+=.45+.55+(1-sk)*.9+Math.random()*.4;}
+    return Math.max(0,s);},
+  async play(p){
+    const F=fld('Drag back from the bow, aim, let go'), g=F.g, A=MARK.sched(p.seed), gone=new Set(), arrows=[], pp=[], fx=[]; let score=0, on=false, drag=null, reload=0, tNow=0;
+    const U=()=>Math.min(F.W*.6,F.H), bow=()=>[F.W/2,F.H*.9], RAD={v:.075,f:.08,B:.115};
+    const aim=()=>{if(!drag)return null; let dx=drag[0]-drag[2], dy=drag[1]-drag[3]; const d=Math.hypot(dx,dy); if(d<8)return null; if(dy>-d*.34){dy=-d*.34; const s=Math.sign(dx)||1; dx=s*Math.sqrt(Math.max(0,d*d-dy*dy));} const pw=Math.max(.25,Math.min(1,d/(U()*.45))), v=pw*2.3*F.H; return[dx/d*v,dy/d*v,pw];};   /* the further back, the faster it flies */
+    F.cv.onpointerdown=e=>{e.preventDefault(); if(!on)return; try{F.cv.setPointerCapture(e.pointerId);}catch(_){} const q=F.pt(e); drag=[q[0],q[1],q[0],q[1]];};
+    F.cv.onpointermove=e=>{if(!drag)return; const q=F.pt(e); drag[2]=q[0]; drag[3]=q[1];};
+    F.cv.onpointerup=F.cv.onpointercancel=()=>{const a=aim(); drag=null; if(!a||!on||reload>0)return; const b=bow(); arrows.push({x:b[0],y:b[1],vx:a[0],vy:a[1]}); reload=.45; tone(520,.08,'triangle',.05,220);};
+    const face=(x,y,R,kind,up)=>{g.save(); g.translate(x,y); g.lineWidth=Math.max(2,R*.12); g.strokeStyle=INK2; g.fillStyle='#b98a4e'; g.fillRect(-R*.09,0,R*.18,R*1.7); g.strokeRect(-R*.09,0,R*.18,R*1.7);
+      if(kind==='f'){g.fillStyle='#35c98a'; g.beginPath(); g.arc(0,0,R,0,6.3); g.fill(); g.stroke(); g.fillStyle=INK2; g.beginPath(); g.arc(-R*.35,-R*.15,R*.12,0,6.3); g.arc(R*.35,-R*.15,R*.12,0,6.3); g.fill(); g.beginPath(); g.arc(0,R*.12,R*.42,.2,2.94); g.stroke(); g.strokeStyle='#ffe27a'; g.lineWidth=Math.max(2,R*.14); g.beginPath(); g.ellipse(0,-R*1.15,R*.5,R*.16,0,0,6.3); g.stroke();}   /* a friend: green, smiling, with a halo */
+      else{const big=kind==='B'; g.fillStyle=big?'#ff4d4d':'#8a5cf6'; if(big){[-1,1].forEach(s=>{g.beginPath(); g.moveTo(s*R*.45,-R*.75); g.lineTo(s*R*.95,-R*1.35); g.lineTo(s*R*.85,-R*.45); g.closePath(); g.fill(); g.stroke();});} g.beginPath(); g.arc(0,0,R,0,6.3); g.fill(); g.stroke(); if(big){g.strokeStyle='#ffc531'; g.lineWidth=Math.max(2,R*.1); g.beginPath(); g.arc(0,0,R*.8,0,6.3); g.stroke(); g.strokeStyle=INK2;}
+        g.fillStyle='#fff'; g.beginPath(); g.arc(-R*.35,-R*.08,R*.2,0,6.3); g.arc(R*.35,-R*.08,R*.2,0,6.3); g.fill(); g.fillStyle=INK2; g.beginPath(); g.arc(-R*.33,-R*.04,R*.09,0,6.3); g.arc(R*.37,-R*.04,R*.09,0,6.3); g.fill(); g.lineWidth=Math.max(2,R*.13); g.beginPath(); g.moveTo(-R*.62,-R*.42); g.lineTo(-R*.14,-R*.24); g.moveTo(R*.62,-R*.42); g.lineTo(R*.14,-R*.24); g.stroke(); g.beginPath(); g.arc(0,R*.62,R*.34,3.5,5.9); g.stroke();}   /* a villain: angry eyebrows and a scowl */
+      g.restore();};
+    const draw=(t,dt)=>{const W=F.W, H=F.H, u=U(), b=bow(); g.fillStyle='#5b2a3a'; g.fillRect(0,0,W,H); g.fillStyle='rgba(255,255,255,.05)'; for(let i=0;i<W;i+=36)g.fillRect(i,0,18,H*.62);
+      MARK.ROW.forEach((ry,r)=>{g.fillStyle=['#7a3b4c','#8a4756','#9a5361'][r]; g.fillRect(0,ry*H+u*.1,W,u*.05);
+        A.forEach((a,i)=>{if(a.row!==r||gone.has(i))return; const q=MARK.at(a,t); if(!q)return; const R=RAD[a.kind]*u; if(a.pop){g.save(); g.beginPath(); g.rect(0,0,W,ry*H+u*.1); g.clip(); face(q[0]*W,ry*H+(1-q[1])*R*2.4,R,a.kind); g.restore();} else face(q[0]*W,ry*H,R,a.kind);});
+        if(r>0)MARK.SLOT.forEach(sx=>{g.fillStyle='#c98f55'; g.strokeStyle=INK2; g.lineWidth=3; const cw=u*.3, ch=u*.16; g.fillRect(sx*W-cw/2,ry*H+u*.1-ch*.1,cw,ch); g.strokeRect(sx*W-cw/2,ry*H+u*.1-ch*.1,cw,ch);});});
+      g.fillStyle='#c98f55'; g.fillRect(0,H*.8,W,H*.2); g.fillStyle='#a8743f'; g.fillRect(0,H*.8,W,5);
+      for(let i=arrows.length-1;i>=0;i--){const a=arrows[i]; a.vy+=1.3*H*dt; a.x+=a.vx*dt; a.y+=a.vy*dt; let hit=-1; A.forEach((q,k)=>{if(hit>=0||gone.has(k))return; const w=MARK.at(q,t); if(!w||w[1]<.6)return; if(Math.hypot(w[0]*W-a.x,MARK.ROW[q.row]*H-a.y)<RAD[q.kind]*u)hit=k;});
+        if(hit>=0){const q=A[hit], v=MARK.VAL[q.kind]; gone.add(hit); score+=v; F.score(Math.max(0,score)); pp.push({s:(v>0?'+':'')+v,x:a.x,y:a.y-10,t:0,c:v<0?'#ff8f8f':v>50?'#ffe27a':'#fff',px:v>50?28:22}); fx.push({x:a.x,y:a.y,t:0}); v<0?SFX.loss():v>50?SFX.win():SFX.gain(); arrows.splice(i,1); continue;}
+        if(a.y>H+20||a.y<-40||a.x<-40||a.x>W+40){arrows.splice(i,1); continue;} const an=Math.atan2(a.vy,a.vx); g.save(); g.translate(a.x,a.y); g.rotate(an); g.strokeStyle='#f2dfa0'; g.lineWidth=4; g.beginPath(); g.moveTo(-u*.16,0); g.lineTo(0,0); g.stroke(); g.fillStyle='#ff4d4d'; g.beginPath(); g.arc(0,0,5,0,6.3); g.fill(); g.fillStyle='#ffc531'; g.beginPath(); g.arc(2,0,3+Math.sin(t*40)*1.5,0,6.3); g.fill(); g.restore();}
+      for(let i=fx.length-1;i>=0;i--){const q=fx[i]; q.t+=dt; if(q.t>.3){fx.splice(i,1); continue;} g.strokeStyle='#ffc531'; g.lineWidth=4; g.globalAlpha=1-q.t/.3; g.beginPath(); g.arc(q.x,q.y,q.t*u*.5,0,6.3); g.stroke(); g.globalAlpha=1;}
+      /* the bow, the string and the first part of the arrow's path */
+      const a=aim(), pull=a?a[2]*u*.2:0, ax=a?-a[0]/Math.hypot(a[0],a[1]):0, ay=a?-a[1]/Math.hypot(a[0],a[1]):1, R=u*.2; g.save(); g.translate(b[0],b[1]); g.rotate(Math.atan2(-ay,-ax)+Math.PI/2); g.strokeStyle='#8a5a2b'; g.lineWidth=7; g.beginPath(); g.arc(0,R*.5,R,3.6,5.82); g.stroke(); const ex=Math.cos(3.6)*R, ey=R*.5+Math.sin(3.6)*R;
+      g.strokeStyle='#fff'; g.lineWidth=2; g.beginPath(); g.moveTo(ex,ey); g.lineTo(0,ey+pull); g.lineTo(-ex,ey); g.stroke(); if(reload<=0){g.strokeStyle='#f2dfa0'; g.lineWidth=4; g.beginPath(); g.moveTo(0,ey+pull); g.lineTo(0,ey+pull-u*.3); g.stroke(); g.fillStyle='#ff4d4d'; g.beginPath(); g.arc(0,ey+pull-u*.3,5,0,6.3); g.fill();} g.restore();
+      if(a){g.fillStyle='rgba(255,255,255,.85)'; for(let i=1;i<=6;i++){const tt=i*.05; g.beginPath(); g.arc(b[0]+a[0]*tt,b[1]+a[1]*tt+.65*H*tt*tt,3.5-i*.3,0,6.3); g.fill();}}
+      pops(F,pp,dt);};
+    F.hint=()=>({bow:bow(),u:U(),n:arrows.length,score});
+    F.fit(); draw(0,0); await countdown(); on=true;
+    return F.run((t,dt)=>{tNow=t; reload-=dt; draw(t,dt); F.bar(1-t/MARK.LEN); F.out=Math.max(0,score); if(t>=MARK.LEN){on=false; return Math.max(0,score);}});
+  }};
+
+/* --- Twist and Route: turn the tiles so the wind-up car has a road from the start to the flag --- */
+const TWIST={LEN:60,C:6,R:4,PREP:5,DX:[0,1,0,-1],DY:[-1,0,1,0],
+  rot:m=>((m<<1)&15)|(m>>3),
+  make(seed){const C=TWIST.C, R=TWIST.R, DX=TWIST.DX, DY=TWIST.DY; let r=rng32(seed), path=null, rs=0, rg=0;
+    for(let tries=0;tries<80&&!path;tries++){rs=Math.floor(r()*R); rg=Math.floor(r()*R); const seen=new Set([rs*C]), P=[[0,rs]]; let c=0, y=rs;
+      for(let n=0;n<40;n++){if(c===C-1&&y===rg&&P.length>=8){path=P; break;} const o=[]; for(let d=0;d<4;d++){const nc=c+DX[d], ny=y+DY[d]; if(nc<0||nc>=C||ny<0||ny>=R||seen.has(ny*C+nc))continue; for(let w=d===1?3:d===3?1:2;w>0;w--)o.push(d);} if(!o.length)break; const d=o[Math.floor(r()*o.length)]; c+=DX[d]; y+=DY[d]; seen.add(y*C+c); P.push([c,y]);}}
+    if(!path){rs=rg=1; path=[]; for(let c=0;c<C;c++)path.push([c,1]);}   /* never needed in practice: a straight road as a last resort */
+    const T=Array.from({length:C*R},()=>({m:0,rock:0,a:0})), on=new Set(path.map(q=>q[1]*C+q[0])), need=[];
+    path.forEach((q,i)=>{const a=i?path[i-1]:[-1,rs], b=i<path.length-1?path[i+1]:[C,rg]; let m=0; for(let d=0;d<4;d++)if((q[0]+DX[d]===a[0]&&q[1]+DY[d]===a[1])||(q[0]+DX[d]===b[0]&&q[1]+DY[d]===b[1]))m|=1<<d; T[q[1]*C+q[0]].want=m;});
+    const free=shuf(T.map((q,i)=>i).filter(i=>!on.has(i)),r); free.slice(0,2).forEach(i=>{T[i].rock=1;});
+    T.forEach((q,i)=>{if(q.rock)return; let m=on.has(i)?q.want:(()=>{const u=r(); return u<.45?5:u<.82?3:7;})(); const k=Math.floor(r()*4); for(let j=0;j<k;j++)m=TWIST.rot(m); q.m=m;});
+    path.forEach(q=>{const t=T[q[1]*C+q[0]]; let m=t.m, k=0; while((m&t.want)!==t.want&&k<4){m=TWIST.rot(m); k++;} need.push(k);});   /* taps each tile of the road needs */
+    return{T,path,need,rs,rg};},
+  cpu(seed){const M=TWIST.make(seed), sk=.3+Math.random()*.65, n=M.path.length, ready=[]; let t=2+Math.random()*3; for(let i=0;i<n;i++){t+=.6+(1-sk)*1.6+M.need[i]*(.3+(1-sk)*.5)+(Math.random()<(1-sk)*.12?2.5:0); ready.push(t);}   /* it has to find the road first, then turn each tile of it */
+    let a=Math.max(TWIST.PREP,ready[0]), far=0; for(let i=0;i<n;i++){a=Math.max(a,ready[i]); if(a>TWIST.LEN)return 100*Math.min(5,far+1); far=M.path[i][0]>far?M.path[i][0]:far; a+=ready[n-1]<=a?1/2.2:1;} return a>TWIST.LEN?100*Math.min(5,far+1):1000+Math.round(10*(TWIST.LEN-a));},
+  async play(p){
+    const F=fld('Tap tiles to turn them'), g=F.g, M=TWIST.make(p.seed), T=M.T, C=TWIST.C, R=TWIST.R, DX=TWIST.DX, DY=TWIST.DY; let on=false, far=0, fast=false, buzz=0, won=false;
+    const v={c:-1,r:M.rs,inS:3,outS:1,u:1,at:'edge',wait:0};   /* the car waits just outside the first tile */
+    const G=()=>{const W=F.W, H=F.H, tp=W<H, cols=tp?R:C, rows=tp?C:R, ts=Math.min(W*.86/cols,H*.86/rows)*(tp?1:1), x0=(W-ts*cols)/2, y0=(H-ts*rows)/2; return{tp,ts,x0,y0,xy:(c,r)=>tp?[x0+(r+.5)*ts,y0+(c+.5)*ts]:[x0+(c+.5)*ts,y0+(r+.5)*ts],sv:s=>tp?[DY[s],DX[s]]:[DX[s],DY[s]]};};   /* on a tall screen the board is turned, and the road runs downwards */
+    const exit=(m,s)=>{for(const d of[(s+2)%4,(s+1)%4,(s+3)%4])if(m&(1<<d))return d; return s;};
+    /* would the car reach the flag from where it is, as the tiles stand now? Then it speeds up */
+    const clear=()=>{let c=v.c, r=v.r, o=v.outS; if(c<0){c=0; r=M.rs; const t=T[r*C]; if(t.rock||!(t.m&8))return false; o=exit(t.m,3);} for(let n=0;n<40;n++){const nc=c+DX[o], nr=r+DY[o]; if(nc===C&&r===M.rg&&o===1)return true; if(nc<0||nc>=C||nr<0||nr>=R)return false; const t=T[nr*C+nc], s=(o+2)%4; if(t.rock||!(t.m&(1<<s)))return false; c=nc; r=nr; o=exit(t.m,s);} return false;};
+    F.cv.onpointerdown=e=>{e.preventDefault(); if(!on||won)return; const [x,y]=F.pt(e), q=G(), a=Math.floor((x-q.x0)/q.ts), b=Math.floor((y-q.y0)/q.ts), c=q.tp?b:a, r=q.tp?a:b; if(c<0||c>=C||r<0||r>=R)return; const t=T[r*C+c]; if(t.rock)return;
+      if(c===v.c&&r===v.r){buzz=.25; tone(170,.1,'square',.04); return;} t.m=TWIST.rot(t.m); t.a=1; tone(600,.04,'square',.03); fast=clear();};
+    const draw=(t,dt)=>{const W=F.W, H=F.H, q=G(), ts=q.ts; g.fillStyle='#f4e2c2'; g.fillRect(0,0,W,H); g.fillStyle='rgba(201,143,85,.2)'; for(let i=0;i<H;i+=26)g.fillRect(0,i,W,3);
+      for(let r=0;r<R;r++)for(let c=0;c<C;c++){const tl=T[r*C+c], [x,y]=q.xy(c,r), lockd=c===v.c&&r===v.r; tl.a=Math.max(0,tl.a-dt*8); g.save(); g.translate(x,y); g.rotate(-tl.a*Math.PI/2*(q.tp?-1:1)); F.rr(-ts*.47,-ts*.47,ts*.94,ts*.94,ts*.12); g.fillStyle=tl.rock?'#9aa7b8':lockd?'#ffe9a8':'#e9c98f'; g.fill(); g.lineWidth=3; g.strokeStyle=lockd&&buzz>0?'#ff4d4d':INK2; g.stroke();
+        if(tl.rock){g.fillStyle='#6f7c8f'; [[-.15,.05,.2],[.14,-.1,.16],[.08,.18,.13]].forEach(d=>{g.beginPath(); g.arc(d[0]*ts,d[1]*ts,d[2]*ts,0,6.3); g.fill(); g.stroke();});}
+        else{for(const pass of[0,1]){g.lineCap='round'; g.lineWidth=pass?ts*.2:ts*.3; g.strokeStyle=pass?'#5d6b7e':INK2; for(let s=0;s<4;s++)if(tl.m&(1<<s)){const d=q.sv(s); g.beginPath(); g.moveTo(0,0); g.lineTo(d[0]*ts*.47,d[1]*ts*.47); g.stroke();}} g.setLineDash([ts*.07,ts*.07]); g.lineWidth=ts*.03; g.strokeStyle='#ffe27a'; for(let s=0;s<4;s++)if(tl.m&(1<<s)){const d=q.sv(s); g.beginPath(); g.moveTo(0,0); g.lineTo(d[0]*ts*.45,d[1]*ts*.45); g.stroke();} g.setLineDash([]);}
+        g.restore();}
+      /* the start and the flag */
+      const s0=q.xy(0,M.rs), d0=q.sv(3), g0=q.xy(C-1,M.rg), d1=q.sv(1); g.fillStyle='#35c98a'; g.strokeStyle=INK2; g.lineWidth=3; g.beginPath(); g.arc(s0[0]+d0[0]*ts*.62,s0[1]+d0[1]*ts*.62,ts*.13,0,6.3); g.fill(); g.stroke();
+      const fx=g0[0]+d1[0]*ts*.62, fy=g0[1]+d1[1]*ts*.62; g.beginPath(); g.moveTo(fx,fy+ts*.2); g.lineTo(fx,fy-ts*.25); g.stroke(); g.fillStyle='#ff4d4d'; g.beginPath(); g.moveTo(fx,fy-ts*.25); g.lineTo(fx+ts*.22,fy-ts*.15); g.lineTo(fx,fy-ts*.04); g.closePath(); g.fill(); g.stroke();
+      /* the car */
+      let cx, cy, hx, hy; if(v.c<0){cx=s0[0]+d0[0]*ts*.62; cy=s0[1]+d0[1]*ts*.62; hx=-d0[0]; hy=-d0[1];} else{const ce=q.xy(v.c,v.r), a=q.sv(v.inS), b=q.sv(v.outS), u=v.u, A=[ce[0]+a[0]*ts*.5,ce[1]+a[1]*ts*.5], B=[ce[0]+b[0]*ts*.5,ce[1]+b[1]*ts*.5]; cx=(1-u)*(1-u)*A[0]+2*u*(1-u)*ce[0]+u*u*B[0]; cy=(1-u)*(1-u)*A[1]+2*u*(1-u)*ce[1]+u*u*B[1]; hx=(1-u)*(ce[0]-A[0])+u*(B[0]-ce[0]); hy=(1-u)*(ce[1]-A[1])+u*(B[1]-ce[1]);}
+      const wob=v.at==='edge'&&t>TWIST.PREP&&!won?Math.sin(t*40)*2:0; g.save(); g.translate(cx+wob,cy); g.rotate(Math.atan2(hy,hx)); F.rr(-ts*.2,-ts*.13,ts*.4,ts*.26,ts*.07); g.fillStyle=fast?'#ffc531':CAST[p.i].c; g.fill(); g.lineWidth=3; g.strokeStyle=INK2; g.stroke(); g.fillStyle='#fff'; g.fillRect(ts*.04,-ts*.09,ts*.1,ts*.18); g.strokeRect(ts*.04,-ts*.09,ts*.1,ts*.18); g.fillStyle='#ffc531'; g.beginPath(); g.arc(-ts*.2,0,ts*.06,0,6.3); g.fill(); g.stroke(); g.restore();};
+    F.hint=()=>{const q=G(); for(const a of M.path){const tl=T[a[1]*C+a[0]]; if((tl.m&tl.want)!==tl.want&&!(a[0]===v.c&&a[1]===v.r))return q.xy(a[0],a[1]);} return null;};
+    F.fit(); draw(0,0); await countdown(); on=true;
+    return F.run((t,dt)=>{buzz=Math.max(0,buzz-dt);
+      if(t>=TWIST.PREP&&!won){if(v.at==='tile'){v.u+=dt*(fast?2.2:1); if(v.u>=1){v.u=1; v.at='edge'; v.wait=0;}}
+        if(v.at==='edge'){const o=v.c<0?1:v.outS, c0=v.c<0?-1:v.c, nc=c0+DX[o], nr=v.r+DY[o];
+          if(nc===C&&v.r===M.rg&&o===1){won=true; SFX.win();}
+          else{const out=nc<0||nc>=C||nr<0||nr>=R, tl=out?null:T[nr*C+nc], s=(o+2)%4;
+            if(tl&&!tl.rock&&(tl.m&(1<<s))){v.c=nc; v.r=nr; v.inS=s; v.outS=exit(tl.m,s); v.u=0; v.at='tile'; far=Math.max(far,nc); fast=clear(); tone(440,.03,'triangle',.02);}
+            else{v.wait+=dt; if((out||tl.rock)&&v.wait>1.4&&v.c>=0){const a=v.inS; v.inS=v.outS; v.outS=a; v.u=0; v.at='tile'; fast=false;}}}}}   /* a dead end: the car turns round and goes back */
+      draw(t,dt); F.bar(1-t/TWIST.LEN); F.out=100*Math.min(5,far+1); F.score(t<TWIST.PREP?Math.ceil(TWIST.PREP-t):won?'Home!':fast?'Fast!':v.at==='edge'?'Stuck':'Go');
+      F.info(t<TWIST.PREP?'The car sets off at 0. Tap tiles to turn them and build a road to the flag':v.at==='edge'&&v.wait>.3?'The road is broken ahead: turn the next tile':'Keep the road joined up ahead of the car');
+      if(won){on=false; return 1000+Math.round(10*(TWIST.LEN-t));} if(t>=TWIST.LEN){on=false; return 100*Math.min(5,far+1);}});
+  }};
+
+/* --- Sky Shapes: steer a skydiver through the gate that matches, five times --- */
+const SKY={N:5,R:.27,SH:['circle','triangle','square','star','diamond'],CI:[0,2,3,5,6,1],
+  round(seed,k){const r=rng32(seed+k*2741), n=[3,4,5,5,6][k], tgt={s:Math.floor(r()*5),c:Math.floor(r()*6)}, L=[tgt];
+    for(let g=0;L.length<n&&g<200;g++){const w=L.length, o=w===1?{s:(tgt.s+1+Math.floor(r()*4))%5,c:tgt.c}:w===2?{s:tgt.s,c:(tgt.c+1+Math.floor(r()*5))%6}:{s:Math.floor(r()*5),c:Math.floor(r()*6)}; if(!L.some(q=>q.s===o.s&&q.c===o.c))L.push(o);}   /* one gate has the right colour and the wrong shape, one the right shape and the wrong colour */
+    const ord=shuf(L.map((q,i)=>i),r), ring=n>4?n-1:n; return{n,T:5-k*.3,a0:r()*6.28,spin:k<3?0:(r()<.5?-1:1)*(k===3?.45:.7),tgt,gates:ord.map((gi,j)=>({s:L[gi].s,c:L[gi].c,hit:gi===0,j,mid:n>4&&j===n-1})),ring};},
+  /* where gate j is at time u into the round, on a square from -1 to 1. In the last two rounds the ring of gates turns */
+  at(R,q,u){if(q.mid)return[0,0]; const a=R.a0+q.j*6.283/R.ring+R.spin*u; return[Math.cos(a)*.64,Math.sin(a)*.64];},
+  cpu(){const sk=.3+Math.random()*.65; let s=0; for(let k=0;k<5;k++)if(Math.random()<.45+.5*sk-.05*k)s+=100+Math.round(20*Math.random()*sk); return s;},
+  shape(g,x,y,R,s){g.beginPath(); if(s===0)g.arc(x,y,R,0,6.3); else if(s===1){g.moveTo(x,y-R*1.1); g.lineTo(x+R,y+R*.75); g.lineTo(x-R,y+R*.75);} else if(s===2)g.rect(x-R*.85,y-R*.85,R*1.7,R*1.7); else if(s===3)for(let i=0;i<10;i++){const a=-1.57+i*.628, rr=i%2?R*.55:R*1.12; g.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr);} else{g.moveTo(x,y-R*1.15); g.lineTo(x+R*.85,y); g.lineTo(x,y+R*1.15); g.lineTo(x-R*.85,y);} g.closePath();},
+  async play(p){
+    const F=fld('Drag to steer through the matching gate'), g=F.g, pp=[], cl=rng32(11), CL=Array.from({length:16},()=>({a:cl()*6.28,z:cl(),w:.5+cl()}));
+    let k=0, R=SKY.round(p.seed,0), st='fly', tS=0, dx=0, dy=0, on=false, score=0, drag=null, res='', resC='#fff', keys={};
+    F.cv.onpointerdown=e=>{e.preventDefault(); try{F.cv.setPointerCapture(e.pointerId);}catch(_){} drag=F.pt(e);};
+    F.cv.onpointermove=e=>{if(!drag||!on)return; const q=F.pt(e), hs=F.m*.46, hx=Math.min(F.W*.46,hs*1.6); dx=Math.max(-.95,Math.min(.95,dx+(q[0]-drag[0])/hx*1.25)); dy=Math.max(-.95,Math.min(.95,dy+(q[1]-drag[1])/hs*1.25)); drag=q;};
+    F.cv.onpointerup=F.cv.onpointercancel=()=>{drag=null;};
+    const kd=e=>{keys[e.key]=e.type==='keydown';}; window.addEventListener('keydown',kd); window.addEventListener('keyup',kd);
+    const draw=(t,dt)=>{const W=F.W, H=F.H, hs=F.m*.46, hx=Math.min(W*.46,hs*1.6), cx=W/2, cy=H/2, gr=g.createLinearGradient(0,0,0,H); gr.addColorStop(0,'#2f8fff'); gr.addColorStop(1,'#bfeaff'); g.fillStyle=gr; g.fillRect(0,0,W,H);
+      CL.forEach(c=>{c.z+=dt*.33*c.w; if(c.z>1){c.z=0; c.a=Math.random()*6.28;} const d=c.z*c.z*Math.max(W,H)*.75, x=cx+Math.cos(c.a)*d, y=cy+Math.sin(c.a)*d, s=6+c.z*c.z*F.m*.2; g.fillStyle=`rgba(255,255,255,${.25+c.z*.5})`; g.beginPath(); g.arc(x,y,s,0,6.3); g.arc(x+s*.9,y+s*.2,s*.7,0,6.3); g.arc(x-s*.9,y+s*.25,s*.6,0,6.3); g.fill();});   /* clouds rushing outwards give the feeling of falling */
+      const u=Math.min(1,tS/R.T), z=st==='fly'?1+2.5*Math.pow(1-u,1.25):1, sc=1/z;
+      R.gates.forEach(q=>{const [gx,gy]=SKY.at(R,q,st==='fly'?tS:R.T), x=cx+gx*hx*sc, y=cy+gy*hs*sc, rr=SKY.R*hs*sc, col=PAL8[SKY.CI[q.c]]; g.globalAlpha=st==='res'?(q.hit?1:.3):Math.min(1,.45+sc*.6); g.lineJoin='round'; SKY.shape(g,x,y,rr,q.s); g.lineWidth=Math.max(3,rr*.38); g.strokeStyle=INK2; g.stroke(); g.lineWidth=Math.max(2,rr*.24); g.strokeStyle=col; g.stroke(); g.fillStyle='rgba(255,255,255,.14)'; g.fill(); g.globalAlpha=1;});
+      /* the skydiver, seen from above */
+      const x=cx+dx*hx, y=cy+dy*hs, r=Math.max(9,F.m*.045), w=Math.sin(t*9)*.12; g.strokeStyle=INK2; g.lineWidth=3; g.fillStyle=CAST[p.i].c; [[-1.25,-.9],[1.25,-.9],[-1,1.2],[1,1.2]].forEach((d,i)=>{g.beginPath(); g.arc(x+d[0]*r*(1+(i%2?w:-w)),y+d[1]*r,r*.42,0,6.3); g.fill(); g.stroke();}); g.beginPath(); g.arc(x,y,r,0,6.3); g.fill(); g.stroke(); g.fillStyle='#fff'; g.beginPath(); g.arc(x,y-r*.1,r*.55,0,6.3); g.fill(); g.stroke();
+      /* what to look for */
+      const tr=Math.max(14,F.m*.075); g.fillStyle='rgba(23,48,77,.55)'; F.rr(8,8,tr*2.6,tr*2.6,10); g.fill(); SKY.shape(g,8+tr*1.3,8+tr*1.3,tr*.8,R.tgt.s); g.fillStyle=PAL8[SKY.CI[R.tgt.c]]; g.fill(); g.lineWidth=3; g.strokeStyle='#fff'; g.stroke();
+      for(let i=0;i<5;i++){g.beginPath(); g.arc(W-18-(4-i)*18,18,6,0,6.3); g.fillStyle=i<k?'#ffc531':i===k?'#fff':'rgba(255,255,255,.35)'; g.fill(); g.lineWidth=2; g.strokeStyle=INK2; g.stroke();}
+      if(st==='res')F.txt(res,cx,H*.2,Math.max(20,F.m*.09),resC); pops(F,pp,dt);};
+    F.hint=()=>{const q=R.gates.find(x=>x.hit), a=SKY.at(R,q,R.T); return{st,d:[dx,dy],to:a,left:R.T-tS};};
+    F.fit(); draw(0,0); await countdown(); on=true;
+    return F.run((t,dt)=>{tS+=dt; const ks=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0), kv=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0); dx=Math.max(-.95,Math.min(.95,dx+ks*dt*1.5)); dy=Math.max(-.95,Math.min(.95,dy+kv*dt*1.5));
+      if(st==='fly'&&tS>=R.T){const hs=F.m*.46, hx=Math.min(F.W*.46,hs*1.6); let in_=null, d0=0; R.gates.forEach(q=>{const [gx,gy]=SKY.at(R,q,R.T), d=Math.hypot((gx-dx)*hx,(gy-dy)*hs); if(d<SKY.R*hs&&(!in_||d<d0)){in_=q; d0=d;}});
+        if(in_&&in_.hit){const v=100+Math.round(20*(1-d0/(SKY.R*hs))); score+=v; F.score(score); res='+'+v; resC='#b9ffd9'; SFX.win();} else{res=in_?'Wrong gate':'Missed'; resC='#ff8f8f'; SFX.loss();} st='res'; tS=0;}
+      else if(st==='res'&&tS>1){k++; if(k>=5){on=false; window.removeEventListener('keydown',kd); window.removeEventListener('keyup',kd); return score;} R=SKY.round(p.seed,k); st='fly'; tS=0;}
+      draw(t,dt); F.bar(1-(k+(st==='fly'?Math.min(1,tS/R.T):1))/5); F.out=score; F.info(`Fly through the ${PALN[SKY.CI[R.tgt.c]]} ${SKY.SH[R.tgt.s]}`);});
+  }};
+
+/* --- Limelight Shuffle: on each marked beat press Sun if the light is on you and Moon if it is not --- */
+const LIME={LEN:39.5,
+  seats:()=>Math.max(3,V&&V.p?V.p.length:3),
+  /* the beats you answer on and the seats lit on each one, the same for everyone. Three parts: steady, then more lights that move later, then quicker */
+  chart(seed,n){const r=rng32(seed), B=[]; for(let b=4;b<28;b+=2)B.push({t:b*.5,ph:0}); for(let b=28;b<52;b+=2)B.push({t:b*.5,ph:1}); for(let b=52;b<76;b++){const q=(b-52)%8; if(q===0||q===2||q===4||q===5||q===6)B.push({t:b*.5,ph:2});}
+    let prev=''; B.forEach(x=>{const m=Math.max(1,Math.min(n-1,Math.round(n/2)+(x.ph?Math.floor(r()*3)-1:0))); let set, tries=0; do set=shuf(Array.from({length:n},(_,i)=>i),r).slice(0,m).sort((a,b)=>a-b); while(set.join()===prev&&++tries<4); x.lit=set; prev=set.join();}); return B;},
+  cpu(seed){const N=LIME.chart(seed,LIME.seats()), acc=.45+Math.random()*.5; let s=0, c=0; N.forEach(x=>{const u=Math.random(), a=acc-(x.ph===2?.08:0); if(u<a*.55){c++; s+=DRUM.pts(2,c);} else if(u<a){c++; s+=DRUM.pts(1,c);} else c=0;}); return s;},
+  async play(p){
+    const n=LIME.seats(), sp=n>4?1.25:1.5, X=j=>(j-(n-1)/2)*sp, m=miniStage('Sun if the light is on you, Moon if it is not',[0,4,12],[0,1.2,0]), sc=m.scene; sc.traverse(o=>{if(o.geometry&&o.geometry.type==='CircleGeometry')o.visible=false;}); sc.background=new THREE.Color(0x1a1440);
+    const fitCam=()=>{const W=window.innerWidth, H=window.innerHeight, tv=Math.tan(m.cam.fov*Math.PI/360), D=Math.max(8.5,((n-1)*sp/2+1.2)/(tv*W/H)); m.cam.position.set(0,2.2+D*.2,D); m.cam.lookAt(0,W>H?1.5:.4,0);}; fitCam(); arenaRefit=()=>{if(MS===m){m.cam.aspect=window.innerWidth/window.innerHeight; m.cam.fov=window.innerWidth<window.innerHeight?60:45; m.cam.updateProjectionMatrix(); fitCam();}};
+    {const f=mesh(new THREE.BoxGeometry(n*sp+2.4,.5,3.6),0x3b2a6b,0,-.25,0,sc); f.castShadow=false; f.receiveShadow=true; mesh(new THREE.BoxGeometry(n*sp+2.8,.3,4),0xffc531,0,-.42,0,sc).castShadow=false; mesh(new THREE.BoxGeometry(n*sp+2.4,4.4,.3),0x6a1f4a,0,2,-2,sc).castShadow=false;}
+    const mine=Math.max(0,V.p.findIndex(q=>q.k===p.k)), used=new Set(V.p.map(q=>q.i)), spare=CAST.map((c,i)=>i).filter(i=>!used.has(i)), who=Array.from({length:n},(_,j)=>j<V.p.length?V.p[j].i:spare[(j-V.p.length)%Math.max(1,spare.length)]||0);
+    const ch=who.map((i,j)=>{const c=makeChar(i,sc); c.position.set(X(j),0,0); return c;}), mark=mesh(new THREE.ConeGeometry(.2,.4,4),0xffffff,X(mine),2.5,0,sc); mark.rotation.x=Math.PI; mark.castShadow=false;
+    const lm=new THREE.MeshBasicMaterial({color:0xfff27a,transparent:true,opacity:.26,depthWrite:false,side:THREE.DoubleSide}), dm=new THREE.MeshBasicMaterial({color:0xfff27a,transparent:true,opacity:.55,depthWrite:false});
+    const lights=Array.from({length:n-1},()=>{const g=new THREE.Group(); const c=new THREE.Mesh(new THREE.ConeGeometry(.72,5.2,20,1,true),lm.clone()); c.position.y=2.6; g.add(c); const d=new THREE.Mesh(new THREE.CircleGeometry(.72,24),dm.clone()); d.rotation.x=-Math.PI/2; d.position.y=.02; g.add(d); g.c=c; g.d=d; sc.add(g); return g;});
+    stage.querySelector('.bar').insertAdjacentHTML('beforebegin',`<div class="lime"><button class="sun" data-b="1" aria-label="Sun: I am lit"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="8" fill="#fff" stroke="#17304d" stroke-width="3"/><path d="M20 3v6M20 31v6M3 20h6M31 20h6M8 8l4 4M28 28l4 4M32 8l-4 4M12 28l-4 4" stroke="#17304d" stroke-width="3" stroke-linecap="round"/></svg></button><div class="lbeat"><i id="lring"></i></div><button class="moon" data-b="0" aria-label="Moon: I am not lit"><svg viewBox="0 0 40 40"><path d="M27 6a15 15 0 1 0 8 21a12 12 0 0 1-8-21z" fill="#fff" stroke="#17304d" stroke-width="3" stroke-linejoin="round"/></svg></button></div>`);
+    const B=LIME.chart(p.seed,n).map(x=>({t:x.t,ph:x.ph,lit:x.lit,s:0})), btns=[...stage.querySelectorAll('.lime button')], ring=$('#lring'); let score=0, combo=0, on=false, T0=0, ns=0, fb='', fbT=0, nb=0, press=[0,0];
+    const ac=!!AC&&AC.state==='running', clk=()=>ac?AC.currentTime:performance.now()/1000, now=()=>clk()-T0, OFF=j=>(j%2?1:-1)*((n-1)/2*sp+2.6);
+    const hit=b=>{if(!on)return; const t=now(); press[b?0:1]=.12; let x=null, bd=9; for(const q of B){if(q.t-t>.3)break; if(q.s)continue; const d=Math.abs(q.t-t); if(d<bd){bd=d; x=q;}} if(!x||bd>.16)return;
+      const lit=x.lit.includes(mine); if(lit!==!!b){x.s=-1; combo=0; fb='Wrong'; fbT=.5; tone(170,.14,'square',.05); return;} x.s=bd<=.07?2:1; combo++; score+=DRUM.pts(x.s,combo); fb=x.s===2?'Perfect!':'Good'; fbT=.5; $('#n').textContent=score; ch[mine].cheer=.45;};
+    btns.forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault(); e.stopPropagation(); hit(+b.dataset.b);}));
+    const kd=e=>{if(e.repeat)return; const k=(e.key||'').toLowerCase(); if(k==='arrowleft'||k==='a'||k==='f')hit(1); else if(k==='arrowright'||k==='d'||k==='j')hit(0);}; window.addEventListener('keydown',kd);
+    /* light j glides from where it stood on the last marked beat to where it stands on the next, a little later in each part */
+    const place=t=>{let i=B.findIndex(q=>q.t>=t); const end=i<0; if(end)i=B.length-1; const x=B[i], pv=i>0?B[i-1]:null, tp=pv?pv.t:x.t-1.5, a0=[.2,.34,.3][x.ph], a1=[.62,.76,.8][x.ph]; let k=end?1:Math.max(0,Math.min(1,((t-tp)/(x.t-tp)-a0)/(a1-a0))); k=k*k*(3-2*k);
+      lights.forEach((L,j)=>{const fromOn=pv&&j<pv.lit.length, toOn=j<x.lit.length, a=fromOn?X(pv.lit[j]):OFF(j), b=toOn?X(x.lit[j]):OFF(j), on2=(fromOn?1-k:0)+(toOn?k:0); L.position.x=a+(b-a)*k; L.visible=fromOn||toOn; L.c.material.opacity=.26*Math.min(1,on2*1.5+.25); L.d.material.opacity=.55*Math.min(1,on2*1.5+.25);});};
+    window.__own={hint:()=>{const t=now(), x=B.find(q=>!q.s&&q.t>=t-.05); return x&&on?{lead:x.t-t,lit:x.lit.includes(mine)}:null;}};
+    place(0); await countdown($('#n')); $('#n').textContent='0'; duck(true); T0=clk()+.05; on=true;
+    const out=await m.run(dt=>{const t=now(); if(ac)while(ns<LIME.LEN/.25&&ns*.25<t+.3){DRUM.beat(ns,T0+ns*.25); ns++;}
+      place(t); while(nb<B.length&&B[nb].t<=t){const x=B[nb++]; tone(1320,.03,'square',.03); ch.forEach((c,j)=>{c.hop=1; if(x.lit.includes(j)&&j!==mine)c.cheer=.3;});}
+      for(const q of B){if(q.t>t)break; if(!q.s&&t-q.t>.16){q.s=-1; combo=0; fb='Miss'; fbT=.5;}}
+      ch.forEach(c=>{c.hop=Math.max(0,(c.hop||0)-dt*5); c.jy=Math.sin(c.hop*Math.PI)*.16; if(c.cheer>0)c.cheer-=dt;}); mark.position.y=2.5+Math.sin(t*6)*.08; mark.rotation.y+=dt*3;
+      const nx=B.find(q=>q.t>=t-.05&&!q.s), lead=nx?nx.t-t:9; ring.style.transform=`scale(${lead>1?1.5:.56+Math.max(0,lead)*.94})`; ring.style.opacity=lead>1?.25:1; ring.style.borderColor=Math.abs(lead)<.08?'#ffc531':'#fff';
+      fbT-=dt; btns.forEach((b,i)=>{press[i]-=dt; b.classList.toggle('dn',press[i]>0);}); $('#bar').style.transform=`scaleX(${Math.max(0,1-t/LIME.LEN)})`;
+      {const el=$('#hint'), h=fbT>0?fb+(combo>=5&&fb!=='Miss'&&fb!=='Wrong'?` · ${combo} in a row`:''):t<2?'Sun if the light is on you, Moon if it is not':'Press when the ring closes'; if(el.textContent!==h)el.textContent=h;}
+      if(t>=LIME.LEN||!V||!V.mini)return score;});
+    on=false; window.removeEventListener('keydown',kd); duck(false); await sleep(400); m.end(); return out;
+  }};
+
+/* ---------- Build 70, continued: four more shared games ---------- */
+
+/* Crater Crawl: a climbing race up the inside of a volcano. Tap to climb, change lane to dodge the vents and to get past other climbers */
+const CRAWL={hint:'Tap Climb. Dodge the lava',max:60,left:true,noEdge:true,noDeck:true,noJoy:true,zs:[],fit:6,deck:{k:'s',h:900},LEN:96,LW:1.5,VMAX:7,
+  X:(st,l)=>(l-(st.L-1)/2)*CRAWL.LW, lava:t=>-12+1.1*t+.02*t*t,
+  hot(q,t){const u=((t+q.ph)%q.T+q.T)%q.T; return u>q.T-.8;}, warm(q,t){const u=((t+q.ph)%q.T+q.T)%q.T; return u>q.T-2&&u<=q.T-.8;},   /* a vent bubbles for 1.2 seconds, then throws lava for 0.8 */
+  rock:(st,l,s)=>st.zones.some(z=>s>=z.s0&&s<=z.s1&&(l<z.a||l>z.b)),
+  start(k,n,st){return[CRAWL.X(st,st.l0[k]),2];},
+  init(sc,rng,sh,n){const L=Math.min(7,Math.max(4,n+1)), st={L,n,sc,veh:[],vents:[],zones:[],l0:Array.from({length:n},(_,k)=>Math.min(L-1,Math.floor((k+.5)*L/n))),Z:s=>4-s}, parts=[], W=L*CRAWL.LW/2;
+    const T=mkTrack([[0,6],[0,-CRAWL.LEN-10]]); st.T=T; sc.background=new THREE.Color(0x2a1410); sc.traverse(o=>{if(o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1)o.visible=false;});
+    for(let i=0;i<2;i++){const s0=26+i*36+rng()*5, open=L>5?3:2, a=Math.floor(rng()*(L-open+1)); st.zones.push({s0,s1:s0+7,a,b:a+open-1});}   /* two narrow stretches where only a few lanes are open */
+    for(let s=11;s<CRAWL.LEN-5;s+=2.9+rng()*1.2){if(st.zones.some(z=>s>z.s0-2.5&&s<z.s1+1.5))continue; const ls=shuf(Array.from({length:L},(_,i)=>i),rng).slice(0,L>5?3:rng()<.5?2:1); ls.forEach(l=>st.vents.push({l,s,T:3.4,ph:rng()*3.4}));}
+    const rt=tex((g,s)=>{g.fillStyle='#5a3a30'; g.fillRect(0,0,s,s); const R=rng32(9); for(let i=0;i<40;i++){g.fillStyle=['#4b2f27','#6a463a','#50332b'][i%3]; g.beginPath(); g.ellipse(R()*s,R()*s,3+R()*5,2+R()*3,R()*3,0,6.3); g.fill();} g.fillStyle='rgba(255,255,255,.14)'; g.fillRect(0,0,1.5,s);}); rt.wrapS=rt.wrapT=THREE.RepeatWrapping;
+    flatM(mesh(new THREE.CircleGeometry(260,40),0x3a2420,0,-.07,0,sc)); ribbon(T,W,new THREE.MeshLambertMaterial({map:rt}),sc,{y:.02,us:1.5,ur:L});
+    st.zones.forEach(z=>{const side=(l0,l1)=>{if(l1<l0)return; const x0=CRAWL.X(st,l0)-CRAWL.LW/2, x1=CRAWL.X(st,l1)+CRAWL.LW/2; parts.push([GEO.box,0x4a4450,(x0+x1)/2,.5,st.Z((z.s0+z.s1)/2),0,x1-x0,1,z.s1-z.s0+.6],[GEO.sph,0x5c5562,(x0+x1)/2,1,st.Z(z.s0),0,x1-x0,1.2,1.6]);}; side(0,z.a-1); side(z.b+1,L-1);});
+    for(const sd of [-1,1])for(let s=0;s<CRAWL.LEN+8;s+=4)parts.push([GEO.sph,0x40282a,sd*(W+1.3+rng()),.6,st.Z(s),rng()*3,2.6,2+rng()*2,4.4]);
+    RACE.gate(sc,T,CRAWL.LEN+2,W,parts,0xffc531); solid(parts,sc);
+    const vm=new THREE.MeshBasicMaterial({color:0x1a0d0a}), gm=()=>new THREE.MeshBasicMaterial({color:0xff7a1f,transparent:true,opacity:0,depthWrite:false}), pm=new THREE.MeshBasicMaterial({color:0xff5a1f});
+    st.vents.forEach(q=>{const x=CRAWL.X(st,q.l), z=st.Z(q.s); flatM(mesh(new THREE.CircleGeometry(.5,14),vm,x,.04,z,sc)); q.g=flatM(mesh(new THREE.CircleGeometry(.68,14),gm(),x,.05,z,sc)); q.p=mesh(new THREE.CylinderGeometry(.5,.6,3,10),pm,x,1.5,z,sc); q.p.castShadow=false; q.p.visible=false;});
+    st.lv=flatM(mesh(new THREE.PlaneGeometry(60,80),new THREE.MeshBasicMaterial({color:0xff5a1f}),0,.07,60,sc)); return st;},
+  move(av,st){const I=av.in||(av.in={c:0,d:0}), dt=st.dt||.016, t=st.t||0; if(av.l==null){av.l=st.l0[av.k]; av.s=2; av.v=0; av.push=0; av.stun=0; av.slide=0; av.safe=0; av.xq=CRAWL.X(st,av.l);}
+    const c=I.c, d=I.d; I.c=0; I.d=0; av.stun-=dt; av.safe-=dt; const others=st.avs.filter(o=>o!==av&&o.alive&&!o.done&&o.l!=null);
+    if(av.stun>0){const q=Math.min(av.slide,dt*9); av.s-=q; av.slide-=q; av.v=0;}
+    else{if(c)av.v=Math.min(CRAWL.VMAX,av.v+1.25*c);
+      if(d){const nl=av.l+d; if(nl>=0&&nl<st.L&&!CRAWL.rock(st,nl,av.s)&&!CRAWL.rock(st,nl,av.s+.9)&&!others.some(o=>o.l===nl&&Math.abs(o.s-av.s)<1.05)){av.l=nl; if(av.mine)tone(520,.04,'triangle',.03);} else if(av.mine)tone(170,.06,'square',.03);}
+      av.v*=Math.exp(-dt*1.3); let ns=av.s+av.v*dt; const blk=others.find(o=>o.l===av.l&&o.s>av.s&&o.s-ns<1.05);
+      if(blk){ns=Math.min(ns,blk.s-1.05); av.v=Math.min(av.v,2.5); if(c)av.push+=.2*c; if(av.push>=1){av.push=0; ns=blk.s+1.1; av.v=4.5; if(av.mine){SFX.hop(); bigPop('Squeezed past!');}}} else av.push=Math.max(0,av.push-dt*.4);   /* blocked: keep climbing hard and you squeeze past */
+      if(CRAWL.rock(st,av.l,ns+.9)){ns=av.s; av.v=0;} av.s=Math.max(.5,ns);
+      if(av.safe<=0)for(const q of st.vents)if(q.l===av.l&&Math.abs(q.s-av.s)<.9&&CRAWL.hot(q,t)){av.stun=.9; av.slide=6; av.v=0; av.safe=2.2; av.fx=2; if(av.mine){SFX.loss(); bigPop('Lava!',1);} break;}}
+    const lv=CRAWL.lava(t); if(av.s<lv+.4){av.s=lv+5; av.stun=1; av.slide=0; av.v=0; av.safe=2; av.fx=2; if(av.mine){SFX.loss(); bigPop('The lava is rising!',1);}}   /* the lava from below throws you up the wall, and costs a moment */
+    if(av.stun<=0&&av.safe<=1.2)av.fx=0; av.xq+=(CRAWL.X(st,av.l)-av.xq)*Math.min(1,dt*12); av.x=av.xq; av.z=st.Z(av.s); av.face=Math.PI; av.moving=av.v>.6&&av.stun<=0; av.vx=av.vz=av.kx=av.kz=0; av.hd=av.l;},
+  check(av,st,t,local){return local&&av.s>=CRAWL.LEN?RACE.win(CRAWL,av,t):0;},
+  step(st,t,dt){const me=RACE.pre(CRAWL,st,t,dt); st.avs.forEach(a=>{if(a.mine||a.cpu)a.pr=Math.max(0,Math.min(1,(a.s||0)/CRAWL.LEN));});
+    st.vents.forEach(q=>{const h=CRAWL.hot(q,t), w=CRAWL.warm(q,t); q.g.material.opacity=h?.9:w?.35+.35*Math.sin(t*22):0; q.p.visible=h; if(h)q.p.scale.y=.7+.3*Math.sin(t*30);}); st.lv.position.z=st.Z(CRAWL.lava(t))+40;
+    if(me&&me.l!=null){const near=CRAWL.lava(t)>me.s-6; RACE.say(st,me,me.stun>0?'Knocked down!':me.push>.2?'Blocked: keep climbing to squeeze past':near?'The lava is close!':'',me.stun>0||near);}},
+  view(cam,me,dt,st){st.avs.forEach(a=>{if(a.alive){a.ch.position.y=.05; a.ch.rotation.x=a.fx===2?Math.sin((st.t||0)*30)*.2:0;}}); chaseCam(cam,me.x*.5,0,me.z,Math.PI,dt,{back:6.5,up:9,ahead:6,turn:9});},
+  ai(av,st,t,dt){const ai=av.ai, I=av.in||(av.in={c:0,d:0}); ai.dx=ai.dz=0; if(av.l==null)return; if(ai.sk==null){ai.sk=.5+Math.random()*.5; ai.ct=0; ai.lt=0; ai.hold=0;} ai.ct-=dt; ai.lt-=dt; ai.hold-=dt;
+    const danger=l=>{if(l<0||l>=st.L||CRAWL.rock(st,l,av.s)||CRAWL.rock(st,l,av.s+1))return 9; let d=CRAWL.rock(st,l,av.s+4)?2:0; for(const q of st.vents)if(q.l===l&&q.s>av.s-.6&&q.s<av.s+3.6){const eta=Math.max(0,q.s-av.s-.9)/Math.max(2.5,av.v); if(CRAWL.hot(q,t+eta)||CRAWL.hot(q,t+eta+.5)||(CRAWL.warm(q,t)&&q.s-av.s<2.4))d+=1;}
+      if(st.avs.some(o=>o!==av&&o.alive&&o.l===l&&(o.s||0)>av.s&&(o.s||0)-av.s<1.5))d+=.4; return d;};
+    if(ai.lt<=0){ai.lt=.2+(1-ai.sk)*.3; const z=st.zones.find(q=>q.s0>av.s&&q.s0-av.s<7&&(av.l<q.a||av.l>q.b));
+      if(z)I.d=av.l<z.a?1:-1;   /* a narrow stretch is coming: get into an open lane in good time */
+      else{const d0=danger(av.l); if(d0>0){const dl=danger(av.l-1), dr=danger(av.l+1); if(Math.min(dl,dr)<d0)I.d=dl<dr?-1:dr<dl?1:(Math.random()<.5?-1:1); else if(d0>=1)ai.hold=.25;}}}
+    if(ai.ct<=0&&ai.hold<=0){ai.ct=1/(3.2+ai.sk*2.4)*(.8+Math.random()*.4); I.c=1;}},
+  ui(st,me){const C=gameCtl('<button class="gbtn ca">&#9664;</button><button class="gbtn cb">&#9654;</button><button class="gbtn cc">CLIMB</button>'), I=me.in||(me.in={c:0,d:0});
+    C.btn('.ca',()=>{I.d=-1;}); C.btn('.cb',()=>{I.d=1;}); C.btn('.cc',()=>{I.c++; tone(300,.03,'triangle',.03);});
+    C.key((k,dn)=>{if(!dn)return; if(k==='arrowleft'||k==='a')I.d=-1; else if(k==='arrowright'||k==='d')I.d=1; else if(k===' '||k==='arrowup'||k==='w')I.c++;}); C.pad(l=>{if(l===0)I.d=-1; else if(l===1)I.d=1; else I.c++;}); return C;},
+  ex:RACE.ex, sub(av,a,st){RACE.sub(av,a); av.l=Math.round(av.hd); av.s=4-av.z;}, steer:()=>[0,0], final:RACE.final};
+
+/* Pixel Panic: a race across glowing tiles that vanish soon after anyone steps on them. They grow back, and a fall costs time, not the race */
+const PIXEL={hint:'Race to the far end. Tiles vanish behind you',max:60,left:true,noEdge:true,noDeck:true,jump:true,speed:.85,zs:[],fit:6,deck:{k:'s',h:900},S:1,COLS:7,ROWS:66,CP:[55,44,33,22,11,-1],GAP:[6,17,28,39,50,61],
+  start(k,n){return[(k-(n-1)/2)*Math.min(1,6/n),.2+(k%2)*.6];},
+  init(sc,rng,sh,n){const S=PIXEL.S, C=PIXEL.COLS, R=PIXEL.ROWS, cells=[], grid=[], st={n,sc,veh:[],cells,act:[],PERM:{s:0,perm:1}}; sc.background=new THREE.Color(0x0b0b2a); sc.traverse(o=>{if(o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1)o.visible=false;});
+    let prev=null; for(let r=-1;r<=R;r++){const perm=r<=1||PIXEL.CP.includes(r)||r===R, gap=PIXEL.GAP.includes(r), row=[]; let have;
+      do{have=[]; for(let c=0;c<C;c++)have.push(perm?1:gap?0:rng()<.8?1:0);}while(!perm&&!gap&&(have.reduce((a,b)=>a+b,0)<3||(prev&&!have.some((h,c)=>h&&(prev[c]||prev[c-1]||prev[c+1])))));   /* always a way on from the row before */
+      for(let c=0;c<C;c++){const q={x:(c-(C-1)/2)*S,z:-r*S,s:have[c]?0:3,tm:0,perm,i:cells.length,k:(r+c)&1}; row.push(q); cells.push(q);} grid.push(row); if(!gap)prev=have;}
+    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(S-.08,.3,S-.08),new THREE.MeshLambertMaterial({color:0xffffff}),cells.length), o=new THREE.Object3D(), col=new THREE.Color(); im.castShadow=false; im.receiveShadow=true; sc.add(im); st.im=im;
+    st.paint=q=>{o.position.set(q.x,q.s===1?-.15+Math.sin(q.tm*60)*.03:-.15,q.z); o.scale.setScalar(q.s>=2?.001:1); o.updateMatrix(); im.setMatrixAt(q.i,o.matrix); im.setColorAt(q.i,col.setHex(q.perm?0x8a5cf6:q.s===1?(Math.floor(q.tm*14)%2?0xff4d4d:0xffc531):q.k?0x35e0ff:0x2f8fff)); im.instanceMatrix.needsUpdate=true; if(im.instanceColor)im.instanceColor.needsUpdate=true;};
+    cells.forEach(st.paint); st.on=(x,z)=>{for(const [a,b] of [[0,0],[.24,0],[-.24,0],[0,.24],[0,-.24]]){const c=st.at(x+a,z+b); if(c&&c.s<2)return c;} return null;}; st.at=(x,z)=>{const r=Math.round(-z/S), c=Math.round(x/S+(C-1)/2); if(c<0||c>=C||r<-1)return null; if(r>R)return r<=R+4?st.PERM:null; return grid[r+1][c];};
+    const pad=mesh(new THREE.BoxGeometry(C*S,.3,4*S),0xffc531,0,-.15,-(R+2.5)*S,sc); pad.castShadow=false; pad.receiveShadow=true; const parts=[]; for(const sd of [-1,1])parts.push([GEO.cyl,0xff5fa8,sd*(C*S/2-.2),1.6,-(R+.6)*S,0,.25,3.2,.25]); parts.push([GEO.box,0xffffff,0,3.3,-(R+.6)*S,0,C*S,.5,.2]);
+    const R2=rng32(4); for(let i=0;i<70;i++)parts.push([GEO.box,[0x35e0ff,0xff5fa8,0x8a5cf6,0xffc531][i%4],(R2()<.5?-1:1)*(6+R2()*14),-3-R2()*9,-R2()*(R+8)*S,R2()*3,.6,.6,.6]); solid(parts,sc); return st;},
+  move(av,st){if(av.cp==null){av.cp=-1; av.pr=0;} av.x=Math.max(-4.2,Math.min(4.2,av.x)); if(av.z>1.4)av.z=1.4;},
+  check(av,st,t,local){const S=PIXEL.S, c=st.at(av.x,av.z); if(av.y<=.05&&c&&c.s===0&&!c.perm&&t>1){c.s=1; c.tm=.7; st.act.push(c);}   /* every phone works the tiles out from where it sees the players */
+    if(!local)return 0; const r=Math.round(-av.z/S); av.pr=Math.max(0,Math.min(1,-av.z/((PIXEL.ROWS+1)*S))); if(r>PIXEL.ROWS)return RACE.win(PIXEL,av,t);
+    if(av.y<=.02&&(!c||c.s>=2)&&!st.on(av.x,av.z)){const cp=PIXEL.CP.find(q=>q<=r); av.x=(av.k-(st.n-1)/2)*Math.min(1,6/st.n); av.z=-Math.max(0,cp)*S; av.frozen=1.4; av.inv=1.4; av.kx=av.kz=0; av.fx=2; av.fxT=1.4; if(av.mine){SFX.loss(); bigPop('Fell! Back to the checkpoint');}}   /* a fall: back to the last purple row, and a wait */
+    if(av.fx===2){av.fxT-=st.dt||.016; if(av.fxT<=0)av.fx=0;} return 0;},
+  step(st,t,dt){const me=RACE.pre(PIXEL,st,t,dt); for(let i=st.act.length-1;i>=0;i--){const q=st.act[i]; q.tm-=dt; if(q.s===1&&q.tm<=0){q.s=2; q.tm=3.5;} else if(q.s===2&&q.tm<=0){q.s=0; st.act.splice(i,1);} st.paint(q);}
+    if(me)RACE.say(st,me,me.frozen>0?'Back at the checkpoint…':'',me.frozen>0);},
+  view(cam,me,dt,st){chaseCam(cam,me.x*.6,0,me.z,Math.PI,dt,{back:6,up:8.5,ahead:4,turn:9});},
+  /* a computer player picks a tile one row on, or two rows on if it has to jump, and steers on to it. In the air it aims for the tile it chose */
+  ai(av,st,t,dt){const ai=av.ai, S=PIXEL.S, ok=c=>c&&(c.s===0||(c.s===1&&c.tm>.32)); if(ai.sk==null)ai.sk=.5+Math.random()*.5;
+    if(av.y>0&&ai.lx!=null){ai.dx=Math.max(-1,Math.min(1,(ai.lx-av.x)*3)); ai.dz=Math.max(-1,Math.min(1,(ai.lz-av.z)*3)); return;}
+    ai.t-=dt; if(ai.t>0)return; ai.t=.05+Math.random()*.05*(1.6-ai.sk); const r=Math.round(-av.z/S), c0=Math.round(av.x/S), T=(c,q)=>st.at(c*S,-q*S); let best=null, bv=-99;
+    for(let dc=-1;dc<=1;dc++){const a=T(c0+dc,r+1), b=T(c0+dc,r+2); let v=-Math.abs(dc)*.5+Math.random()*(1.2-ai.sk);
+      for(const o of st.avs)if(o!==av&&o.alive&&Math.abs(o.x-(c0+dc)*S)<.7&&o.z<av.z&&av.z-o.z<2.2)v-=.7;
+      if(ok(a)&&(!dc||ok(T(c0+dc,r))||ok(T(c0,r+1)))){const w=v+3+(ok(b)?.8:0)-(a.s===1?.6:0); if(w>bv){bv=w; best={c:c0+dc,q:r+1,j:0};}}
+      else if(ok(b)){const w=v+1.4; if(w>bv){bv=w; best={c:c0+dc,q:r+2,j:1};}}}
+    const here=T(c0,r); if(!best){if(here&&here.s===1&&here.tm<.2){for(const dc of [0,-1,1]){const d=T(c0+dc,r+3); if(ok(d)){best={c:c0+dc,q:r+3,j:1}; break;}}} if(!best){ai.dx=(c0*S-av.x)*2; ai.dz=(-r*S-av.z)*2; return;}}
+    ai.lx=best.c*S; ai.lz=-best.q*S; if(best.j){if(av.y===0)ai.jump=true; ai.dx=Math.max(-1,Math.min(1,(ai.lx-av.x)*3)); ai.dz=-1;} else{ai.dx=Math.max(-1,Math.min(1,(ai.lx-av.x)*3)); ai.dz=-1;}},
+  ex:RACE.ex, sub:RACE.sub, final:RACE.final};
+
+/* Snapshot Showdown: a hedge maze where everyone has a camera. Photograph every other player before they photograph you */
+const SNAP={floor:'grass',set:'fair',hint:'Photograph everyone',max:55,btn:'Snap',noEdge:true,speed:.95,ring:1,N:8,S:3,RNG:5.5,NEAR:1.6,ANG:.42,FOC:.9,deck:{k:'s',h:12.4},
+  start(k,n){const N=SNAP.N, c=[[0,0],[N-1,N-1],[N-1,0],[0,N-1],[3,4],[4,3]][k%6]; return[(c[0]-(N-1)/2)*SNAP.S,(c[1]-(N-1)/2)*SNAP.S];},
+  init(sc,rng,sh,n){const N=SNAP.N, S=SNAP.S, half=N*S/2, open=new Uint8Array(N*N), seen=new Uint8Array(N*N), D=[[1,0,1,4],[0,1,2,8],[-1,0,4,1],[0,-1,8,2]], stack=[0]; seen[0]=1;
+    while(stack.length){const c=stack[stack.length-1], i=c%N, j=(c-i)/N, o=[]; for(const d of D){const a=i+d[0], b=j+d[1]; if(a>=0&&b>=0&&a<N&&b<N&&!seen[a+N*b])o.push(d);} if(!o.length){stack.pop(); continue;} const d=o[Math.floor(rng()*o.length)], nc=i+d[0]+N*(j+d[1]); open[c]|=d[2]; open[nc]|=d[3]; seen[nc]=1; stack.push(nc);}
+    for(let j=0;j<N;j++)for(let i=0;i<N;i++){if(i<N-1&&rng()<.22){open[i+N*j]|=1; open[i+1+N*j]|=4;} if(j<N-1&&rng()<.22){open[i+N*j]|=2; open[i+N*(j+1)]|=8;}}   /* plenty of extra gaps, so there are loops and long views */
+    const walls=[], X=i=>-half+i*S, T=.16; for(let j=0;j<=N;j++)for(let i=0;i<N;i++)if(j===0||j===N||!(open[i+N*j]&8))walls.push([X(i+.5),X(j),S/2+T,T]); for(let i=0;i<=N;i++)for(let j=0;j<N;j++)if(i===0||i===N||!(open[i-1+N*j]&1))walls.push([X(i),X(j+.5),T,S/2+T]);
+    const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1.25,1),new THREE.MeshLambertMaterial({color:0x2f8f5b}),walls.length), o=new THREE.Object3D(); walls.forEach((w,k)=>{o.position.set(w[0],.62,w[1]); o.scale.set(w[2]*2,1,w[3]*2); o.updateMatrix(); im.setMatrixAt(k,o.matrix);}); im.castShadow=false; sc.add(im);
+    const cone=new THREE.Group(), cm=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.3,depthWrite:false,side:THREE.DoubleSide}); flatM(mesh(new THREE.CircleGeometry(SNAP.RNG,18,-SNAP.ANG,SNAP.ANG*2),cm,0,.06,0,cone)); sc.add(cone);
+    const fl=new THREE.Mesh(new THREE.SphereGeometry(.7,10,8),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false})); sc.add(fl);
+    return{n,sc,walls,open,N,S,half,D,cone,cm,fl,flT:0,cell:(x,z)=>Math.max(0,Math.min(N-1,Math.floor((x+half)/S)))+N*Math.max(0,Math.min(N-1,Math.floor((z+half)/S)))};},
+  /* can a see b: nothing but grass between them */
+  los(st,ax,az,bx,bz){const dx=bx-ax, dz=bz-az; for(const w of st.walls){let t0=0, t1=1; for(const [p,d,c,h] of [[ax,dx,w[0],w[2]],[az,dz,w[1],w[3]]]){if(Math.abs(d)<1e-6){if(Math.abs(p-c)>h){t0=2; break;}} else{let a=(c-h-p)/d, b=(c+h-p)/d; if(a>b){const q=a; a=b; b=q;} t0=Math.max(t0,a); t1=Math.min(t1,b);}} if(t0<=t1)return false;} return true;},
+  see(st,av,o){if(o===av||!o.alive||(av.got>>o.k&1))return false; const dx=o.x-av.x, dz=o.z-av.z, d=Math.hypot(dx,dz); return d<SNAP.RNG&&d>SNAP.NEAR&&Math.abs(wrapA(Math.atan2(dx,dz)-av.face))<SNAP.ANG&&SNAP.los(st,av.x,av.z,o.x,o.z);},   /* too close and the camera cannot focus */
+  ok:(st,av,o)=>!!av.fo&&(av.fo[o.k]||0)>=SNAP.FOC&&SNAP.see(st,av,o),   /* the camera needs a moment on someone before it will take them */
+  press(av,st,t){if((av.cdS||0)>t)return; av.cdS=t+1.5; av.sn=(av.sn||0)+1; let n=0; for(const o of st.avs)if(SNAP.ok(st,av,o)){av.got|=1<<o.k; n++;} if(av.mine){tone(1500,.05,'square',.05,400); if(n)SFX.gain(); st.flT=.25;}},
+  move(av,st){if(av.got==null){av.got=0; av.sn=0; av.fo={};} for(const w of st.walls){const qx=Math.max(w[0]-w[2],Math.min(w[0]+w[2],av.x)), qz=Math.max(w[1]-w[3],Math.min(w[1]+w[3],av.z)), dx=av.x-qx, dz=av.z-qz, d=Math.hypot(dx,dz); if(d<.36){if(d>.001){av.x=qx+dx/d*.36; av.z=qz+dz/d*.36;} else av.z+=.36;}}},
+  check(av,st,t,local,dt){const c=SNAP.cnt(av); if(!local)return 0; if(av.fo)for(const o of st.avs){if(o===av)continue; av.fo[o.k]=SNAP.see(st,av,o)?Math.min(SNAP.FOC+.2,(av.fo[o.k]||0)+(dt||.016)):Math.max(0,(av.fo[o.k]||0)-(dt||.016)*2);} const all=c>=st.avs.length-1; av.score=c*100+(all?Math.round(SNAP.max-t):0); return all&&st.avs.length>1?'win':0;},
+  cnt(av){let c=0, g=av.got|0; while(g){c+=g&1; g>>=1;} return c;},
+  step(st,t,dt){st.t=t; st.dt=dt; const me=st.avs.find(a=>a.mine); st.flT-=dt; if(!me){st.cone.visible=false; return;}
+    const any=st.avs.some(o=>SNAP.ok(st,me,o)), foc=!any&&st.avs.some(o=>SNAP.see(st,me,o)), cd=(me.cdS||0)>t; st.cone.visible=me.alive&&!me.done; st.cone.position.set(me.x,0,me.z); st.cone.rotation.y=me.face-Math.PI/2; st.cm.color.setHex(cd?0x9aa7b8:any?0x35ff8a:foc?0xffe27a:0xffffff); st.cm.opacity=cd?.2:any?.55:foc?.4+.15*Math.sin(t*18):.26;   /* yellow while it focuses, green when it is ready */   /* the view turns green when someone new is in shot */
+    st.fl.position.set(me.x,1,me.z); st.fl.material.opacity=Math.max(0,st.flT*3); st.fl.scale.setScalar(1+(.25-st.flT)*8);
+    if(!DEMO){const left=st.avs.filter(o=>o!==me&&!(me.got>>o.k&1)).map(o=>CAST[V.p[o.k].i].name), h=me.done?'You photographed everyone!':left.length?'Still to photograph: '+left.join(', '):'', el=$('#hint'); if(el&&el.textContent!==h)el.textContent=h;}},
+  num:(st,t)=>{const me=st.avs.find(a=>a.mine); return me?SNAP.cnt(me)+' of '+(st.avs.length-1):'';},
+  view(cam,me,dt){const pf=window.innerWidth<window.innerHeight?1.35:1; cam.position.set(me.x,12.5*pf,me.z+7*pf); cam.lookAt(me.x,0,me.z-.6);},
+  /* a computer player heads for the nearest player it still needs, cell by cell through the gaps, and presses the shutter a moment after the view turns green */
+  ai(av,st,t,dt){const ai=av.ai; if(av.got==null)return; if(ai.sk==null){ai.sk=.4+Math.random()*.6; ai.wt=0; ai.rt=0; ai.gx=av.x; ai.gz=av.z;} ai.wt-=dt;
+    let tg=null, bd=99; for(const o of st.avs){if(o===av||!o.alive||(av.got>>o.k&1))continue; const d=Math.hypot(o.x-av.x,o.z-av.z); if(d<bd){bd=d; tg=o;}}
+    if(ai.wt<=0){ai.wt=.4; if(Math.random()<.16*(1.5-ai.sk))ai.roam=1.5+Math.random()*2.5; const N=st.N, S=st.S, here=st.cell(av.x,av.z), cx=c=>(c%N+.5)*S-st.half, cz=c=>(Math.floor(c/N)+.5)*S-st.half; if(ai.roam>0&&ai.rg==null)ai.rg=Math.floor(Math.random()*N*N); if(!(ai.roam>0))ai.rg=null; let goal=tg&&ai.rg==null?st.cell(tg.x,tg.z):ai.rg!=null?ai.rg:Math.floor(Math.random()*N*N);
+      if(tg&&ai.rg==null&&SNAP.los(st,av.x,av.z,tg.x,tg.z)){ai.gx=tg.x; ai.gz=tg.z;}
+      else{const from=new Int16Array(N*N).fill(-1), q=[goal]; from[goal]=goal; for(let h=0;h<q.length&&from[here]<0;h++){const c=q[h], i=c%N, j=(c-i)/N; for(const d of st.D)if(st.open[c]&d[2]){const nc=i+d[0]+N*(j+d[1]); if(from[nc]<0){from[nc]=c; q.push(nc);}}} const nx=from[here]>=0?from[here]:here; ai.gx=cx(nx); ai.gz=cz(nx);}}
+    ai.roam=(ai.roam||0)-dt; const dx=ai.gx-av.x, dz=ai.gz-av.z, d=Math.hypot(dx,dz)||1, stop=tg&&ai.rg==null&&bd<3.4&&SNAP.los(st,av.x,av.z,tg.x,tg.z), sp=stop?(bd<2.2?-.5:.2):1; ai.dx=dx/d*sp; ai.dz=dz/d*sp; if(stop&&bd<2.2){av.face=Math.atan2(dx,dz);}
+    if(st.avs.some(o=>SNAP.ok(st,av,o))){ai.rt+=dt; if(ai.rt>.2+(1-ai.sk)*.8){ai.jump=true; ai.rt=0;}} else ai.rt=0;},
+  ex:a=>[a.got|0,a.sn|0], sub(av,a,st){const g=a[5]|0, me=st.avs.find(q=>q.mine); if(me&&av!==me&&(g>>me.k&1)&&!((av.got|0)>>me.k&1)&&!DEMO){bigPop(CAST[V.p[av.k].i].name+' took your photo!',1);} av.got=g; av.sn=a[6]|0;}};
+
+/* Clockwork Climb: a race up the inside of a clock. Gears carry you round, bars slide, some retract, pendulums knock you off. Every ledge can be jumped up through */
+const CLOCK={hint:'Jump from gear to gear to the top',max:75,left:true,noEdge:true,noDeck:true,btn:'Jump',speed:.9,zs:[],fit:6,deck:{k:'s',h:900},TOP:40.8,HW:5.2,G:21,J:9.4,
+  start(k,n){return[(k-(n-1)/2)*Math.min(1.1,8/n),0];},
+  solid:(p,t)=>p.t!=='blink'||((t+p.ph)%3.4+3.4)%3.4<2.2,
+  px:(p,t,x)=>p.full?x:p.t==='mov'?p.x+p.A*Math.sin(p.om*t+p.ph):p.x,
+  top:(p,t)=>p.t==='lift'?p.y+p.A*Math.sin(p.om*t+p.ph):p.y,
+  /* how high the standing surface is at x, or null if there is nothing to stand on there */
+  surf(p,x,t){if(p.full)return p.y; const dx=x-CLOCK.px(p,t,x); if(p.t==='gear')return Math.abs(dx)<p.R*.82?p.y-p.R+Math.sqrt(p.R*p.R-dx*dx):null; if(Math.abs(dx)>p.w||!CLOCK.solid(p,t))return null; return CLOCK.top(p,t);},
+  carry(p,x,t){if(p.t==='mov')return p.A*p.om*Math.cos(p.om*t+p.ph); if(p.t==='gear'){const dx=x-p.x; return p.om*Math.sqrt(Math.max(0,p.R*p.R-dx*dx));} return 0;},   /* a gear carries you the way its top is turning */
+  init(sc,rng,sh,n){const P=[{full:1,y:0,t:'bar'}], pend=[], st={n,sc,veh:[],P,pend}, HW=CLOCK.HW, parts=[], brass=0xd9a441; sc.background=new THREE.Color(0x24160f); sc.traverse(o=>{if(o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1)o.visible=false;});
+    for(let i=1;i<=23;i++){const y=i*1.7; if(i===8||i===16){P.push({full:1,y,t:'bar',cp:1}); continue;} const hard=Math.min(1,i/18);
+      const skip=i>2&&rng()<.2?(rng()<.5?-1:1):0; for(const sd of [-1,1]){if(sd===skip)continue; const u=rng(), t=u<.42-hard*.2?'bar':u<.62?'mov':u<.8?'gear':u<.9?'lift':'blink', x=sd*(1.3+rng()*2.3), p={t,x,y,w:t==='bar'?1.15:1,A:t==='mov'?1+rng()*.6:.55,om:(t==='gear'?(rng()<.5?-1:1)*(.7+hard*.5):1.1+rng()*.8+hard*.5),ph:rng()*6.28,R:1.15}; if(t==='mov')p.x=sd*(1.6+rng()*1.2); if(skip)p.x=sd*(.4+rng()*.9); P.push(p);}   /* a row with one ledge has it near the middle, in reach of both sides */
+      if(i>4&&i%4===2)pend.push({x:(rng()-.5)*3,y:y+3.1,L:2.3,A:.95,w:1.5+rng()*.6,ph:rng()*6.28});}
+    if(!P.some(p=>Math.abs(p.y-1.7)<.01))P.push({t:'bar',x:0,y:1.7,w:1.15}); P.push({full:1,y:CLOCK.TOP,t:'bar',end:1});
+    for(let i=1;i<P.length;i++){const p=P[i], g=new THREE.Group(); sc.add(g); p.g=g;
+      if(p.full)solid([[GEO.box,p.end?0xffc531:0x8a5a2b,0,-.2,0,0,HW*2+1,.4,1.6]],g); else if(p.t==='gear'){const q=[[GEO.cyl,brass,0,0,0,0,p.R*2,.7,p.R*2,Math.PI/2],[GEO.cyl,0x8a5a2b,0,0,.1,0,p.R*.7,.75,p.R*.7,Math.PI/2]]; for(let k=0;k<10;k++){const a=k*.628; q.push([GEO.box,brass,Math.cos(a)*p.R,Math.sin(a)*p.R,0,0,.34,.34,.66,0,a]);} solid(q,g);}
+      else solid([[GEO.box,p.t==='bar'?0xb9814f:p.t==='mov'?0xff8c1a:p.t==='lift'?0x2f8fff:0xff4d4d,0,-.16,0,0,p.w*2,.32,1.3],[GEO.box,0xfdf6e3,0,.01,0,0,p.w*2-.2,.03,1.1]],g);
+      g.position.set(p.full?0:p.x,p.t==='gear'?p.y-p.R:p.y,0);}
+    pend.forEach(q=>{const g=new THREE.Group(); g.position.set(q.x,q.y,.1); solid([[GEO.cyl,0x9aa7b8,0,-q.L/2,0,0,.12,q.L,.12],[GEO.sph,0xffc531,0,-q.L,0,0,1.1,1.1,.8]],g); sc.add(g); q.g=g;});
+    parts.push([GEO.box,0x3a2418,0,CLOCK.TOP/2,-1.4,0,HW*2+3,CLOCK.TOP+14,.4],[GEO.box,0x8a5a2b,0,-.25,0,0,HW*2+1,.5,1.8]); for(const sd of [-1,1])parts.push([GEO.box,0x5a3a26,sd*(HW+.9),CLOCK.TOP/2,-.3,0,.8,CLOCK.TOP+14,2.4]);
+    const R2=rng32(6); for(let i=0;i<16;i++){const r=1.2+R2()*2.2; parts.push([GEO.cyl,0x4a3020,(R2()-.5)*HW*2,R2()*CLOCK.TOP,-1.1,0,r*2,.2,r*2,Math.PI/2]);} parts.push([GEO.sph,0xffc531,0,CLOCK.TOP+1.2,-.4,0,1.6,1.6,.5],[GEO.box,0x17304d,0,CLOCK.TOP+1.6,-.1,0,.12,.8,.1],[GEO.box,0x17304d,.25,CLOCK.TOP+1.2,-.1,0,.5,.12,.1]);
+    solid(parts,sc); return st;},
+  press(av,st){if(av.on&&!(av.frozen>0)){av.vh=CLOCK.J; av.on=null; if(av.mine)SFX.hop();}},
+  move(av,st){const dt=st.dt||.016, t=st.t||0; if(av.vh==null){av.vh=0; av.on=st.P[0]; av.hy=0; av.pr=0;} av.z=0; av.x=Math.max(-CLOCK.HW,Math.min(CLOCK.HW,av.x)); let y=av.hy; const py=y;
+    if(av.on){const s=CLOCK.surf(av.on,av.x,t); if(s==null)av.on=null; else{y=s; av.vh=0; av.x+=CLOCK.carry(av.on,av.x,t)*dt;}}
+    if(!av.on){av.vh-=CLOCK.G*dt; y+=av.vh*dt; if(av.vh<=0)for(const p of st.P){const s=CLOCK.surf(p,av.x,t); if(s!=null&&py>=s-.12&&y<=s+.02){y=s; av.vh=0; av.on=p; break;}} if(y<0){y=0; av.vh=0; av.on=st.P[0];}}   /* you only land on a ledge from above, so you can jump up through it */
+    av.hy=y; av.y=y; av.vy=0;},
+  check(av,st,t,local){if(!local)return 0; av.pr=Math.max(0,Math.min(1,av.hy/CLOCK.TOP)); if(av.on&&av.on.end)return RACE.win(CLOCK,av,t);
+    if(!(av.inv>0))for(const q of st.pend){const th=q.A*Math.sin(q.w*t+q.ph), bx=q.x+q.L*Math.sin(th), by=q.y-q.L*Math.cos(th); if(Math.hypot(av.x-bx,av.hy+.5-by)<.85){av.kx=(av.x>=bx?1:-1)*8; av.vh=3.5; av.on=null; av.frozen=.45; av.inv=1.1; if(av.mine){SFX.bump(); bigPop('Bonk!');} break;}} return 0;},
+  step(st,t,dt){const me=RACE.pre(CLOCK,st,t,dt); for(let i=1;i<st.P.length;i++){const p=st.P[i]; if(p.full||p.t==='bar')continue; if(p.t==='gear')p.g.rotation.z=-p.om*t; else if(p.t==='mov')p.g.position.x=CLOCK.px(p,t,0); else if(p.t==='lift')p.g.position.y=CLOCK.top(p,t); else{const u=((t+p.ph)%3.4+3.4)%3.4; p.g.visible=u<2.2&&!(u>1.7&&Math.floor(u*12)%2);}}   /* a red bar blinks before it retracts */
+    st.pend.forEach(q=>{q.g.rotation.z=q.A*Math.sin(q.w*t+q.ph);}); if(me)RACE.say(st,me,me.frozen>0?'Bonk!':'',me.frozen>0);},
+  view(cam,me,dt,st){const pf=window.innerWidth<window.innerHeight; st.avs.forEach(a=>{a.ch.air=a.mine||a.cpu?!a.on:Math.abs(a.y-(a.py2==null?a.y:a.py2))>.012; a.py2=a.y;}); st.cy=st.cy==null?me.y:st.cy+(me.y-st.cy)*Math.min(1,dt*5); cam.position.set(0,st.cy+2.4,pf?19.5:13.5); cam.lookAt(0,st.cy+1.9,0);},
+  ai(av,st,t,dt){const ai=av.ai; ai.dz=0; if(av.vh==null)return; if(ai.sk==null){ai.sk=.45+Math.random()*.55; ai.w=0; ai.tg=null;} ai.w-=dt;
+    if(!av.on){if(ai.tg){const tx=CLOCK.px(ai.tg,t,av.x); ai.dx=Math.max(-1,Math.min(1,(tx-av.x)*2));} return;}
+    if(ai.w<=0||!ai.tg||CLOCK.top(ai.tg,t)<=av.hy+.3){ai.w=.45; let best=null, bv=1e9; for(const p of st.P){const ty=CLOCK.top(p,t); if(ty<av.hy+.5||ty>av.hy+2)continue; if(p.t==='blink'&&!CLOCK.solid(p,t+.7))continue; const d=Math.abs(CLOCK.px(p,t,av.x)-av.x)+Math.random()*1.5*(1-ai.sk)+(p.t==='gear'?.4:0); if(d<bv){bv=d; best=p;}} ai.tg=best;}
+    if(!ai.tg){ai.dx=Math.sin(t*.9+av.k)*.6; return;} const tx=CLOCK.px(ai.tg,t,av.x), dx=tx-av.x; ai.dx=Math.max(-1,Math.min(1,dx*1.6)); if(Math.abs(dx)<(ai.tg.full?9:2.2)&&Math.random()<dt*(5+ai.sk*9))ai.jump=true;},
+  ex:RACE.ex, sub:RACE.sub, steer:(av,ix)=>[ix,0], final:RACE.final};
+
+const TRK={'Ghost Hot Potato':2,'Cannonball Kickoff':1,'Vacuum Escape':3,'Rail Riders':1,'Tricycle Turbo':2,'Marble Mayhem':3,'Shortcut Circuit':1,'Soapbox Surfers':2,'Rapid Rafts':3,'Hot Bomba':1,'Drum Beater':2,'Musical Chairs':3,'Conveyor Chaos':1,'Lantern Match':2,'Crab Scramble':1,'Boom Hop':1,'Hot Planks':1,'Coconut Drop':1,'Crumble Deck':1,'Slippery Slope':1,'Ticket Grab':2,'Spotlight':2,'Sumo Shove':2,'Hedge Maze':2,'Paint Fight':2,'Stomp':2,'Trap Doors':2,'Ghost Runner':1,'Critter Wrangler':1,'Dress for Success':2,'Candy Detective':3,'Hedge Hustle':1,'Chalkboard Drop':2,'Matchstick Marksman':3,'Twist and Route':2,'Sky Shapes':1,'Snapshot Showdown':2,'Crater Crawl':1,'Pixel Panic':3,'Clockwork Climb':2};
 const GAMES=[
  {name:'Boom Hop',unit:'sec',surv:true,arena:true,max:46,how:'Everyone shares one round deck. Tap Jump to clear the swinging boom. It keeps speeding up, and it flashes yellow just before it swings back the other way.',cpu:()=>rand(50,300)/10,play:arena(BOOM)},
  {name:'Ticket Grab',unit:'tickets',arena:true,max:66,how:'One minute on a big square. Grab tickets before the others do; each one lasts 5 seconds. Pink tickets are worth 3. After 15 seconds the deck shrinks to half its size. In the last 15 seconds half the tickets are red, and each one costs you 1.',cpu:()=>rand(14,40),play:arena(GRAB)},
@@ -3387,6 +3943,19 @@ const GAMES=[
  {name:'Ghost Hot Potato',unit:'sec',low:true,dec:true,auth:true,arena:true,still:true,max:46,how:'A ghost possesses one player at a time. If it is you, you are a little faster than everyone else: catch another player and touch them to hand the ghost on. The player who passed it is safe for a moment and cannot be tagged straight back. Nobody is knocked out. The time each player spends possessed adds up on the board at the top, and after 40 seconds whoever has the least wins. Use the gravestones to get away. A fence runs round the yard, so nobody can fall off.',cpu:()=>rand(40,160)/10,play:arena(GTAG)},
  {name:'Cannonball Kickoff',unit:'sec',surv:true,arena:true,max:51,how:'Creatures round the edge of the pitch kick big footballs across it. Each one winds up before it kicks, and you can see the ball swell at its feet, so watch them. A ball does not knock you out: it knocks you back, and you are safe for a moment afterwards. Anyone knocked off the pitch is out. The balls get faster and more frequent, and later some bounce back off the far side once. Last player on the pitch wins; everyone still on it after 45 seconds shares the win.',cpu:()=>rand(100,400)/10,play:arena(KICK)},
  {name:'Vacuum Escape',unit:'sec left',arena:true,still:true,max:66,cap:VAC.max-20,ctl:'Drag left and right to dodge · you run by yourself',how:'Everyone runs down a bedroom floor with a vacuum cleaner coming up behind. You run by yourself; drag left and right to steer. Toys are solid, so you have to go round them, and every row has a way through. Dust slows you down. Balls rolling across knock you back. The vacuum never stops speeding up, and the closer it gets the harder it pulls. Anyone it catches is sucked in and out. First through the door at the end wins; if nobody gets there, whoever got furthest wins.',cpu:()=>rand(100,400)/10,play:arena(VAC)},
+  {name:'Critter Wrangler',unit:'pts',rot:true,sum:'Draw loops round the critters to catch them. Gold ones are worth 3.',max:45,cap:90,ctl:'Draw a closed loop round the critters with your finger',how:'Thirty seconds in the garden. Draw a loop round one or more critters and lift your finger: every critter inside a closed loop is caught. An ordinary critter is worth 1 and a gold one is worth 3. Gold ones are quicker. A loop that does not join up catches nothing, and the ink runs out, so one loop cannot take in the whole garden. Each critter only stays for 8 seconds. Everyone gets the same critters.',cpu:()=>CRTR.cpu(mseed()),play:CRTR.play},
+  {name:'Dress for Success',unit:'pts',rot:true,sum:'Remember who is wearing what, then pick the right outfit out of the look-alikes.',max:55,ctl:'Remember the outfits, then tap the right one',how:'Forty seconds. You are shown one, two or three characters and what they are wearing. Then the clothes are taken away and shuffled in among look-alikes, and you are shown one of the heads: tap the outfit that head was wearing. Look at the colour, the pattern and what is round the neck. A right answer is worth 100, plus up to 50 for answering quickly. A wrong answer locks the cards for a second and a half. It gets harder: more characters, more cards and closer look-alikes. Everyone gets the same rounds.',cpu:()=>DRESS.cpu(mseed()),play:DRESS.play},
+  {name:'Candy Detective',unit:'pts',rot:true,sum:'Find the exact sweet the shopkeeper asks for in a crowded jar.',max:55,ctl:'Tap the sweet that matches the one in the bubble',how:'Forty seconds in the sweet shop. The shopkeeper shows you the sweet he wants. Find the one in the jar that matches it exactly: the same shape, the same colour and the same pattern. Tap it. A right answer is worth 100, plus up to 50 for speed, and the jar is filled again. A wrong one locks the jar for a moment. Later jars are fuller and have more near misses in them. Everyone gets the same jars.',cpu:()=>CANDY.cpu(mseed()),play:CANDY.play},
+  {name:'Hedge Hustle',unit:'pts',rot:true,sum:'Race through five hedges: swipe the leaves away, rub off the ladybirds, keep clear of the bees.',max:60,ctl:'Swipe leaves away · rub ladybirds to and fro · keep off the bees',how:'A race through five hedges. Swipe quickly across a leaf to send it flying; only the top leaf under your finger goes. A ladybird holds its leaf down until you rub to and fro over it four times. Bees fly up and down a dotted line: touch one, or drag through it, and you are stung and cannot do anything for a moment, so wait for it to pass. Clear every leaf and you run through to the next hedge. Each hedge has more of everything. Finishing is worth 1,000 plus 10 for every second left; otherwise you score for how far you got.',cpu:()=>HEDGE.cpu(),play:HEDGE.play},
+  {name:'Chalkboard Drop',unit:'pts',rot:true,sum:'Fall down the blackboard and brake as late as you dare. Stop just above the red line.',max:44,cap:300,ctl:'One tap: brake as late as you dare',how:'You fall down a blackboard on an elastic cord, three times, and each drop is longer. Tap Brake once. The cord does not stop you at once: the faster you are falling, the further it stretches. Stop as close above the red line as you can. Each drop is worth up to 100, less 5 for every metre you stop short. Cross the line, or never brake, and that drop is worth nothing. Nobody sees when you brake.',cpu:()=>CHALK.cpu(),play:CHALK.play},
+  {name:'Matchstick Marksman',unit:'pts',rot:true,sum:'Shoot the villains with a toy bow. Do not hit the friends.',max:55,ctl:'Drag back from the bow to aim · let go to shoot',how:'Forty seconds at the shooting gallery. Drag your finger back, as if pulling a bowstring: the arrow flies the opposite way, and the further you pull, the faster it goes. A weak shot drops short. The dots show the start of its path. A big red villain with horns is worth 100, a purple villain is worth 20, and a green friend with a halo costs you 30. Targets cross at different speeds and the big ones also pop up from behind the crates. There is a short pause to reload. Everyone gets the same targets.',cpu:()=>MARK.cpu(mseed()),play:MARK.play},
+  {name:'Twist and Route',unit:'pts',rot:true,sum:'Turn the tiles to build a road, and get your wind-up car to the flag first.',max:75,ctl:'Tap a tile to turn it · join the road to the flag',how:'A wind-up car has to get from the green dot to the flag. Tap a tile to turn it a quarter turn. The car sets off after 5 seconds and follows the road; at a junction it goes straight on if it can. If the next tile does not join up it stops and waits for you, and at a dead end it turns round. You cannot turn the tile the car is on. Once the whole road to the flag is joined up the car goes at full speed. Grey rocks cannot be moved. Reaching the flag is worth 1,000 plus 10 for every second left. Everyone gets the same board, and it can always be solved.',cpu:()=>TWIST.cpu(mseed()),play:TWIST.play},
+  {name:'Sky Shapes',unit:'pts',rot:true,sum:'Skydive through the gate with the right shape and colour, five times.',max:44,cap:600,ctl:'Drag to steer · fly through the gate shown top left',how:'A skydive through five sets of floating gates. The gate to aim for is shown at the top left: the right shape in the right colour. One other gate has the right colour and the wrong shape, and one has the right shape and the wrong colour. Drag anywhere to steer; the gates start small and far away and grow as you fall towards them. In the last two rounds the gates circle. The right gate is worth 100, plus up to 20 for going through the middle. Everyone gets the same gates.',cpu:()=>SKY.cpu(),play:SKY.play},
+  {name:'Limelight Shuffle',unit:'pts',rot:true,sum:'On each beat, press Sun if the spotlight is on you and Moon if it is not.',max:56,ctl:'Sun if the light is on you · Moon if it is not · press as the ring closes',how:'Everyone stands in a row on stage, and spotlights slide from dancer to dancer in time with the music. Each time the ring closes, press the yellow Sun if a light is on you, or the purple Moon if it is not. Dead on the beat is worth 100, a little off is worth 50, and every 10 in a row makes each one worth a quarter more, up to double. The wrong button or a missed beat ends your run. The lights move later and the beats come quicker as the song goes on. The white arrow marks you. Keyboard: left arrow for Sun, right arrow for Moon.',cpu:()=>LIME.cpu(mseed()),play:LIME.play},
+  {name:'Snapshot Showdown',unit:'pts',arena:true,still:true,max:61,cap:600,ctl:'Walk to aim · hold someone in view until it turns green · Snap',how:'A hedge maze, and everyone has a camera. The pale wedge in front of you is what your camera sees: it points the way you last walked. It cannot focus on someone right next to you. Get another player inside it, close enough and with no hedge in between, and it turns yellow while the camera focuses. Keep them in it for a moment and it turns green: press Snap. Each player only counts once, and there is a short wait between shots. Being photographed does not knock you out. First to photograph everyone wins; if time runs out, the most photos wins. Each photo is worth 100, and a full set adds the seconds left.',cpu:()=>rand(0,3)*100,play:arena(SNAP)},
+  {name:'Crater Crawl',unit:'sec left',arena:true,still:true,max:66,cap:CRAWL.max-8,ctl:'Tap Climb to climb · arrows change lane · dodge the glowing vents',how:'A climbing race up the inside of a volcano. Tap Climb as fast as you can: every tap pulls you up, and you slow down the moment you stop. The arrows move you one lane left or right. A vent glows and bubbles for a second before it throws up lava; be in another lane, or wait below it. Lava knocks you a long way back down. Two narrow stretches have only a few open lanes. If a climber is in your way, change lane, or keep climbing hard and you squeeze past. Lava rises from below, so do not hang about. First to the rim wins.',cpu:()=>rand(100,400)/10,play:arena(CRAWL)},
+  {name:'Pixel Panic',unit:'sec left',arena:true,still:true,max:66,cap:PIXEL.max-8,ctl:'Run to the far end · Jump the gaps · tiles vanish behind you',how:'A race to the far platform across glowing tiles. A tile flashes and then vanishes shortly after anyone steps on it, and it stays gone for a few seconds, so whoever is in front takes the road away from those behind. There are holes already, and six gaps that have to be jumped. Purple rows never vanish: they are checkpoints. Fall and you go back to the last checkpoint and lose a moment. You can shove each other. First to the far end wins.',cpu:()=>rand(100,400)/10,play:arena(PIXEL)},
+  {name:'Clockwork Climb',unit:'sec left',arena:true,still:true,max:81,cap:CLOCK.max-10,ctl:'Move left and right · Jump up through the ledges',how:'A race to the top of a grandfather clock, seen from the side. Move left and right and tap Jump. You can jump up through any ledge and land on top of it. Brass gears turn and carry you towards one edge. Orange bars slide from side to side, blue ones go up and down, and red ones blink and then retract for a moment. Pendulums knock you off. The two wooden floors run the whole way across, so a fall never takes you below the last one. First to the golden floor at the top wins.',cpu:()=>rand(100,400)/10,play:arena(CLOCK)},
 ];
 GAMES.forEach(g=>{g.trk=TRK[g.name]||3;});
 

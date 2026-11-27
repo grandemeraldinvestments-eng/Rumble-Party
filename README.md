@@ -5,7 +5,7 @@ A 3D party board game for 2 to 6 players that runs in a web browser. Players run
 ## What's in it
 
 - Seven maps: Island, Carnival, Farm, Volcano, Melody Mansion, Pinball Paradise and Temple of the Golden Titan
-- Thirty-four mini games. Each round plays one of the shared-platform games or Drum Beater, picked at random
+- Forty-seven mini games. Each round plays one of the 39 in the rotation, picked at random; the other eight are short solo games kept for practice and duels
 - Items, shop spaces, chance spaces and special spaces that differ on every map
 - Computer opponents
 
