@@ -549,6 +549,7 @@ Every board
 Speed
 - Island is about 150,000 triangles in under 100 draws. Shadows are drawn at half detail on phones. If the game is still slow at its lowest sharpness, real shadows switch off and the soft blobs come back.
 - Smoothing of edges is on for ordinary desktop screens.
+- Soft shadows read the shadow picture 9 times a pixel, not 17, and the sea reads its wave picture 3 times, not 6. Both look the same and are cheaper on laptop and phone graphics chips.
 
 Not changed: rules, turns, dice, spaces, tickets, pearls, mini games, online play. The other six boards keep their old scenery for now, with the new clam, dice and effects.
 

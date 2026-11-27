@@ -1282,6 +1282,10 @@ class Kit{
 
 /* ---------- materials ---------- */
 const TOYM={};
+/* soft shadows cost a lot on laptop and phone graphics chips: three.js reads the shadow picture 17 times for every pixel. Nine reads look the same at this softness */
+THREE.ShaderChunk.shadowmap_pars_fragment=THREE.ShaderChunk.shadowmap_pars_fragment.replace(/shadow = \(\s*texture2DCompare\( shadowMap, shadowCoord\.xy \+ vec2\( dx0, dy0 \)[\s\S]*?\) \* \( 1\.0 \/ 17\.0 \);/,
+  `shadow = ( texture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z ) + texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx2, 0.0 ), shadowCoord.z ) + texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx3, 0.0 ), shadowCoord.z ) + texture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy2 ), shadowCoord.z ) + texture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy3 ), shadowCoord.z )
+    + texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, dy0 ), shadowCoord.z ) + texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, dy0 ), shadowCoord.z ) + texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, dy1 ), shadowCoord.z ) + texture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, dy1 ), shadowCoord.z ) ) * ( 1.0 / 9.0 );`);
 /* the wind: anything with a sway weight leans and rocks, more the higher its weight */
 const SWAYV='attribute vec2 aSw; uniform float uT;\n', SWAYB='{float sw=aSw.x, ph=aSw.y+uT*1.5; transformed.x+=sw*(sin(ph)+.45*sin(ph*2.3+1.3))*.11; transformed.z+=sw*cos(ph*.83)*.08; transformed.y-=sw*abs(sin(ph*.5))*.03;}';
 function toyMats(){
@@ -1411,11 +1415,11 @@ function seaNoise(){if(TOY.noise)return TOY.noise; const S=128, d=new Uint8Array
 const SEAFRAG=`
   uniform sampler2D uN; uniform float uT; varying vec3 vW; varying float vD;
   vec4 seaCol(float depth){
-    vec2 p=vW.xz; float n1=texture2D(uN,p*.043+vec2(uT*.011,uT*.006)).r, n2=texture2D(uN,p*.097-vec2(uT*.014,-uT*.009)).g;
+    vec2 p=vW.xz; vec3 A=texture2D(uN,p*.043+vec2(uT*.011,uT*.006)).rgb, B=texture2D(uN,p*.16+vec2(uT*.022,uT*.004)).rgb, C=texture2D(uN,p*.21+vec2(-uT*.017,uT*.02)).rgb; float n1=A.r, n2=B.g;   /* three reads of one small picture feed every wave, line and glint */
     vec3 col=mix(vec3(.58,.95,.88),vec3(.15,.74,.86),smoothstep(0.,.5,depth)); col=mix(col,vec3(.06,.50,.84),smoothstep(.45,1.9,depth+(n1-.5)*.6)); col+=(n1+n2-1.)*.07;
-    float wa=texture2D(uN,p*.16+vec2(uT*.022,uT*.004)).b, wb=texture2D(uN,p*.21+vec2(-uT*.017,uT*.02)).b;
+    float wa=B.b, wb=C.b;
     float line=(1.-smoothstep(0.,.03,abs(wa-wb)))*smoothstep(.2,.5,depth); col+=line*.16*(1.-.5*smoothstep(1.,2.2,depth));
-    float tw=texture2D(uN,p*.9+vec2(uT*.05,-uT*.03)).r*texture2D(uN,p*.61-vec2(uT*.04,uT*.02)).g; col+=smoothstep(.56,.62,tw)*.5*smoothstep(.5,1.4,depth);
+    float tw=C.r*B.r*(.6+.8*A.g); col+=smoothstep(.5,.56,tw)*.45*smoothstep(.5,1.4,depth);
     float edge=1.-smoothstep(.02,.1+(n2-.5)*.08,depth);
     float band=smoothstep(.55,.9,sin(depth*8.5+uT*1.25+n1*5.))*(1.-smoothstep(.12,.8,depth))*smoothstep(.02,.12,depth);
     float foam=clamp(max(edge,band*.8),0.,1.); col=mix(col,vec3(1.),foam);
