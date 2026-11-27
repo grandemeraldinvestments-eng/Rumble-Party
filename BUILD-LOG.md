@@ -408,6 +408,17 @@ Three new songs, each cropped to 90 seconds (the longest mini game), replace the
 - Three new game icons (g24 to g26), made in the same ChatGPT thread and style as the others.
 - Tested: each new game in practice mode with computer players, landscape and portrait, to the results screen; the three games in a row online with three browsers in one room. Not tested: real phones, a real controller, and how the sound lines up by ear.
 
+## Build 66
+Speed. Measured on a laptop with built-in Intel graphics, a board frame took about 20 ms, which is over the 16.7 ms a 60-frames-a-second screen allows, and lowering the resolution barely helped. The time was going on the number of separate things drawn, not on pixels.
+- **Characters are one mesh each.** A character model arrived as six skinned pieces, and every copy gave each piece its own skeleton, so one character cost six draws and six sets of bones a frame. The pieces are welded into one as the model loads: four characters now cost 4 draws, not 24.
+- **Still scenery is welded together.** When a board is built, every plain coloured piece that never moves is merged into one mesh with its colour stored per corner. Spaces, icons, boats, clouds and anything an event can move, recolour or hide are left alone. Checked by playing four rounds on each board and confirming that none of the merged pieces would have changed.
+- **Leak fixed.** Each mini game, and each preview of one, left 24 small textures and about 18 shapes behind on the graphics chip; a long game piled up hundreds. Scenes now free exactly what they made, including each character's bone data, and keep what is shared.
+- **Shared materials stay loaded.** Ending a mini game used to throw away shared materials and shapes as well, so the next scene had to send them to the graphics chip again.
+- Characters in the scene that is not on screen are no longer animated.
+- The mini game timer and bar only touch the page when the number shown changes.
+- The automatic resolution drop now starts when the frame rate falls below about 52 a second, not 42.
+- Draw calls in the opening view of a board: Island 138 to 95, Carnival 152 to 117, Farm 152 to 128, Volcano 151 to 125.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

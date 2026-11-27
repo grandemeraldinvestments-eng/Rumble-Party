@@ -822,6 +822,49 @@ function coast(shallow,sand,inner,sandT,innerT,sandTint){const sandC=sand; if(sa
   NODES.forEach(n=>{if(n.bridge&&!inLoop(n.x,n.z))flat(cyl,0x5a4636,n.x,-.3,n.z,.2,.9,.2);});
 }
 /* many copies of simple shapes baked into one mesh: items are [geometry, x, y, z, turn, sx, sy, sz] */
+/* Draw calls, not pixels, are what cost time on phone and laptop graphics chips. Once a board is built, every plain coloured piece of
+   scenery that never moves is welded into one mesh (two if shadows differ) with the colour stored per corner, so some 150 draws become 1 or 2.
+   Anything that moves, changes colour, or can be hidden later is left alone */
+function bakeWorld(dry){
+  if(!world)return 0; world.updateMatrixWorld(true);
+  const skip=new Set(), mark=o=>{if(o&&o.traverse)o.traverse(x=>skip.add(x));};
+  Object.keys(FXP).forEach(k=>mark(FXP[k])); boats.forEach(mark); clouds.forEach(mark); spin.forEach(q=>mark(q.o)); upright.forEach(mark); NODES.forEach(n=>{mark(n.disc); mark(n.ic);});
+  const inv=new THREE.Matrix4().copy(world.matrixWorld).invert(), mx=new THREE.Matrix4(), B={}, gone=[];
+  world.traverse(o=>{
+    if(!o.isMesh||o.isSkinnedMesh||o.isInstancedMesh||skip.has(o)||o.noBake||o.children.length||Array.isArray(o.material))return;
+    const m=o.material, g=o.geometry; if(m.type!=='MeshLambertMaterial'||m.map||m.transparent||m.opacity<1||m.keep||m.side!==THREE.FrontSide||m.vertexColors||m.emissive.getHex()||m.wireframe||!g.attributes.position||!g.attributes.normal||g.morphAttributes.position)return;
+    for(let p=o;p&&p!==world;p=p.parent)if(!p.visible||p.noBake)return;
+    const q=g.index?g.toNonIndexed():g.clone(); mx.multiplyMatrices(inv,o.matrixWorld); q.applyMatrix4(mx);
+    const P=q.attributes.position.array, N=q.attributes.normal.array, n=P.length/3, key=(o.castShadow?1:0)+'|'+(o.receiveShadow?1:0), b=B[key]||(B[key]={p:[],n:[],c:[],len:0,cast:o.castShadow,recv:o.receiveShadow}), C=new Float32Array(n*3), c=m.color;
+    if(mx.determinant()<0)for(let i=0;i<P.length;i+=9)for(const A of [P,N])for(let k=0;k<3;k++){const t=A[i+3+k]; A[i+3+k]=A[i+6+k]; A[i+6+k]=t;}   /* a mirrored piece: turn its triangles back to face out */
+    for(let i=0;i<n;i++){C[i*3]=c.r; C[i*3+1]=c.g; C[i*3+2]=c.b;}
+    b.p.push(P); b.n.push(N); b.c.push(C); b.len+=P.length; gone.push(o); q.dispose();});
+  if(dry)return gone; if(gone.length<8)return 0;
+  gone.forEach(o=>{o.parent.remove(o);});
+  for(const k in B){const b=B[k], cat=a=>{const out=new Float32Array(b.len); let at=0; a.forEach(x=>{out.set(x,at); at+=x.length;}); return out;}, g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(cat(b.p),3)); g.setAttribute('normal',new THREE.BufferAttribute(cat(b.n),3)); g.setAttribute('color',new THREE.BufferAttribute(cat(b.c),3));
+    const q=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true})); q.castShadow=b.cast; q.receiveShadow=b.recv; q.noBake=true; world.add(q);}
+  return gone.length;
+}
+/* A character model arrives as six separate skinned pieces, and each copy of it gave every piece its own skeleton, so one character
+   cost six draws and six sets of bones every frame. The pieces share one texture and one set of bones, so they are welded into one mesh as the model loads */
+function weldChar(root){
+  root.updateMatrixWorld(true); const sk=[]; root.traverse(o=>{if(o.isSkinnedMesh)sk.push(o);}); if(sk.length<2)return;
+  const a=sk[0], s0=a.skeleton, same=(x,y)=>x.elements.every((v,i)=>Math.abs(v-y.elements[i])<1e-5);
+  if(!sk.every(m=>m.bindMode==='attached'&&m.material.map===a.material.map&&m.skeleton.bones.length===s0.bones.length&&m.skeleton.bones.every((b,i)=>b===s0.bones[i])&&m.skeleton.boneInverses.every((b,i)=>same(b,s0.boneInverses[i]))&&['position','normal','uv','skinIndex','skinWeight'].every(k=>m.geometry.attributes[k])))return;
+  let nv=0, ni=0; sk.forEach(m=>{const g=m.geometry; nv+=g.attributes.position.count; ni+=g.index?g.index.count:g.attributes.position.count;});
+  const pos=new Float32Array(nv*3), nor=new Float32Array(nv*3), uv=new Float32Array(nv*2), si=new Uint16Array(nv*4), sw=new Float32Array(nv*4), idx=new (nv>65535?Uint32Array:Uint16Array)(ni), v3=new THREE.Vector3(), nm=new THREE.Matrix3(); let v=0, ii=0;
+  for(const m of sk){const g=m.geometry, A=g.attributes, n=A.position.count; nm.getNormalMatrix(m.bindMatrix);
+    for(let i=0;i<n;i++){v3.fromBufferAttribute(A.position,i).applyMatrix4(m.bindMatrix); pos.set([v3.x,v3.y,v3.z],(v+i)*3); v3.fromBufferAttribute(A.normal,i).applyMatrix3(nm).normalize(); nor.set([v3.x,v3.y,v3.z],(v+i)*3);
+      uv.set([A.uv.getX(i),A.uv.getY(i)],(v+i)*2); si.set([A.skinIndex.getX(i),A.skinIndex.getY(i),A.skinIndex.getZ(i),A.skinIndex.getW(i)],(v+i)*4); sw.set([A.skinWeight.getX(i),A.skinWeight.getY(i),A.skinWeight.getZ(i),A.skinWeight.getW(i)],(v+i)*4);}
+    if(g.index)for(let i=0;i<g.index.count;i++)idx[ii++]=g.index.getX(i)+v; else for(let i=0;i<n;i++)idx[ii++]=v+i; v+=n;}
+  const G=new THREE.BufferGeometry(); G.setAttribute('position',new THREE.BufferAttribute(pos,3)); G.setAttribute('normal',new THREE.BufferAttribute(nor,3)); G.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  G.setAttribute('skinIndex',new THREE.BufferAttribute(si,4)); G.setAttribute('skinWeight',new THREE.BufferAttribute(sw,4)); G.setIndex(new THREE.BufferAttribute(idx,1)); G.keep=true;
+  const one=new THREE.SkinnedMesh(G,a.material); one.castShadow=true; one.frustumCulled=false; a.parent.add(one); one.bind(s0,new THREE.Matrix4()); sk.forEach(m=>m.parent.remove(m));
+}
+/* free what a scene made for itself and nothing else: shared materials, shared shapes and shared pictures stay loaded, so the next scene does not have to send them to the graphics chip again */
+function freeScene(root){root.traverse(o=>{if(o.isSkinnedMesh&&o.skeleton)o.skeleton.dispose(); if(o.geometry&&!o.geometry.keep)o.geometry.dispose();
+  if(o.material)[].concat(o.material).forEach(x=>{if(x.keep)return; if(x.map&&!x.map.keep)x.map.dispose(); x.dispose();});});}
 function bake(items,col){
   const pos=[],nor=[],m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),P=new THREE.Vector3(),Sc=new THREE.Vector3(),flatG=new Map();
   for(const it of items){let src=flatG.get(it[0]); if(!src){src=it[0].index?it[0].toNonIndexed():it[0]; flatG.set(it[0],src);} const g=src.clone();
@@ -902,7 +945,7 @@ const AMAT={};
 function amat(name,col,fade){if(AMAT[name])return AMAT[name]; const m=AMAT[name]=fade?new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,visible:false}):new THREE.MeshLambertMaterial({color:col}); m.keep=true;   // surroundings are shown exactly as painted; tops take the scene's light
   new THREE.TextureLoader().load('assets/arena/'+name+'.webp',t=>{m.map=t; m.color.set(0xffffff); m.visible=true; m.needsUpdate=true; (m.wait||[]).forEach(f=>f()); m.wait=null;}); return m;}
 /* one painted tile (assets/arena/tile-<name>.webp), shared by every tile of a floor; the tile's own colour tints it */
-const TTEX={}; function ttex(name){return TTEX[name]||(TTEX[name]=new THREE.TextureLoader().load('assets/arena/tile-'+name+'.webp'));}
+const TTEX={}; function ttex(name){if(!TTEX[name]){TTEX[name]=new THREE.TextureLoader().load('assets/arena/tile-'+name+'.webp'); TTEX[name].keep=true;} return TTEX[name];}
 const PROP={
   sea(){const sea=mesh(new THREE.CircleGeometry(170,48),seaMat(),0,-.7,0); sea.rotation.x=-Math.PI/2; sea.castShadow=false;},
   ferris(x,z,sc){const fw=grp(x,0,z); fw.scale.setScalar(sc); const wheel=new THREE.Group(); wheel.position.y=2.7; fw.add(wheel); const se={o:wheel,ax:'z',v:.25}; spin.push(se); FXP.wheel={x,z,y:2.7*sc,s:sc,sp:se};
@@ -1019,7 +1062,7 @@ function ribbonGeo(P,hw,y){const pos=[],L=P.length,ed=[];
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.computeVertexNormals(); return g;}
 function buildWorld(id){
   const m=MAPS[id]||MAPS.island; curMap=id; MAPX=m;
-  if(world){scene.remove(world); world.traverse(o=>{if(o.geometry)o.geometry.dispose(); if(o.material)[].concat(o.material).forEach(x=>{if(!x.keep)x.dispose();});});}
+  if(world){scene.remove(world); freeScene(world);}
   world=new THREE.Group(); scene.add(world); defParent=world; spin=[]; upright=[]; clouds=[]; boats=[]; FXP={tong:[],boost:0,erupt:0}; shownBurn=-2; COAST=null; USED=[]; MBATCH={};
   NODES=buildGraph(m); $('#gl').style.background=`url(assets/sky/${id in THEME?id:'island'}.webp) center top/cover no-repeat, linear-gradient(${m.sky[0]},${m.sky[1]} 60%)`;   // painted sky, with the plain gradient behind it until it loads
   if(!ICONS){const mk=d=>{const tx=tex(d), mt=new THREE.MeshBasicMaterial({map:tx,transparent:true}); tx.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy()); mt.keep=true; return mt;};
@@ -1079,7 +1122,7 @@ function buildWorld(id){
     g.position.set(a.x+(b.x-a.x)/l*1.15,.9,a.z+(b.z-a.z)/l*1.15); g.rotation.y=Math.atan2(b.x-a.x,b.z-a.z); arrows.add(g);
     mesh(new THREE.ConeGeometry(.38,.6,16),new THREE.MeshBasicMaterial({color:0xffc531}),0,0,.2,g).rotation.x=Math.PI/2;
     mesh(new THREE.BoxGeometry(.24,.24,.5),new THREE.MeshBasicMaterial({color:0xffc531}),0,0,-.3,g);});
-  defParent=null; if(pearl)placePearl(12,true); if(mark)mark.visible=false;
+  defParent=null; bakeWorld(); if(pearl)placePearl(12,true); if(mark)mark.visible=false;
 }
 let numShown=-9;
 function setNum(n){if(n===numShown)return; numShown=n; const g=numC.getContext('2d'); g.clearRect(0,0,128,128); g.font=`800 84px ${FONT}`; g.textAlign='center'; g.textBaseline='middle';
@@ -1101,11 +1144,12 @@ let CHARON=false, CHARL=false; const CHARM=[];
 function loadChars(){
   if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return; let left=6;
   for(let i=0;i<6;i++)fetch('char-'+i+'.json').then(r=>{if(!r.ok)throw 0; return r.json();}).then(j=>{const bin=atob(j.glb),u=new Uint8Array(bin.length); for(let k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k); return new Promise((ok,no)=>new THREE.GLTFLoader().parse(u.buffer,'',ok,no));}).then(g=>{
-    g.scene.traverse(o=>{if(o.isMesh){const t=o.material.map; if(t){t.encoding=THREE.LinearEncoding; t.needsUpdate=true;} const m=new THREE.MeshLambertMaterial({map:t,skinning:!!o.isSkinnedMesh}); m.keep=true; o.material=m; o.castShadow=true; o.frustumCulled=false;}});
+    g.scene.traverse(o=>{if(o.isMesh){const t=o.material.map; if(t){t.encoding=THREE.LinearEncoding; t.needsUpdate=true;} const m=new THREE.MeshLambertMaterial({map:t,skinning:!!o.isSkinnedMesh}); m.keep=true; if(t)t.keep=true; o.geometry.keep=true; o.material=m; o.castShadow=true; o.frustumCulled=false;}});
+    try{weldChar(g.scene);}catch(e){console.error('weld',e);}
     CHARM[i]=g; if(--left===0)CHARL=true;}).catch(()=>{});
 }
 function applyChars(){if(CHARON||!CHARL||!MODELS||!MODELS.faces)return; CHARON=true; CAST.forEach((c,i)=>{c.name=c.mname; FACE[i]=MODELS.faces[i];}); hudKey=''; lobbyKey=''; rdyKey='';}
-const BLOB=new THREE.CircleGeometry(.36,20), BLOBM=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.22,depthWrite:false});
+const BLOB=new THREE.CircleGeometry(.36,20), BLOBM=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.22,depthWrite:false}); BLOB.keep=BLOBM.keep=true;
 function makeChar(i,parent){
   if(CHARON&&CHARM[i]){const g=new THREE.Group(), f=new THREE.Group(), m=THREE.SkeletonUtils.clone(CHARM[i].scene); g.add(f); g.fig=f; g.scale.setScalar(1.15); m.scale.setScalar(.56); f.add(m);
     g.mx=new THREE.AnimationMixer(m); g.act={}; CHARM[i].animations.forEach(a=>{g.act[a.name]=g.mx.clipAction(a);}); g.cur='Idle'; g.act.Idle.play(); g.mx.update(Math.random());
@@ -1167,14 +1211,14 @@ function spaceInfo(i){
 }
 function setupBoard(){
   if(curMap!==V.map)buildWorld(V.map);
-  pawns.forEach(g=>{g.sc.remove(g); chars.delete(g);}); shownGid=V.gid;
+  pawns.forEach(g=>{g.sc.remove(g); chars.delete(g); freeScene(g);}); shownGid=V.gid;
   pawns=V.p.map(p=>{const g=makeChar(p.i); g.at=p.pos; g.fly=p.fly; g.seg=null; g.jump=0; g.cheer=0; g.face=0; g.position.set(NODES[p.pos].x,.28,NODES[p.pos].z); g.sh={t:p.t,pe:p.pe,itn:p.it.length}; return g;});
   placePearl(V.pearlAt,true); sh={hit:V.ui.hit,sp:V.ui.sp,cheer:V.ui.cheer,pe:V.ui.pe||0,ch:V.ui.ch,fx:V.ui.fx?V.ui.fx.n:0}; shownBurn=-2; trapKey='?'; camT.set(NODES[0].x,0,NODES[0].z); camD=18; hudKey=''; camMode='follow'; hideInfo(); if(!V.prac)startIntro();
 }
 function sync(dt){
   if(!V)return;
   const want=V.phase==='lobby'?'lobby':V.phase==='results'?'results':'game';
-  if(V.phase==='lobby'){if(shownScreen!=='lobby')show('lobby'); if(curMap!==V.map)buildWorld(V.map); if(pawns.length){pawns.forEach(g=>{g.sc.remove(g); chars.delete(g);}); pawns=[]; shownGid=0;} drawLobby(); $('#mini').hidden=true; return;}
+  if(V.phase==='lobby'){if(shownScreen!=='lobby')show('lobby'); if(curMap!==V.map)buildWorld(V.map); if(pawns.length){pawns.forEach(g=>{g.sc.remove(g); chars.delete(g); freeScene(g);}); pawns=[]; shownGid=0;} drawLobby(); $('#mini').hidden=true; return;}
   if(shownGid!==V.gid||pawns.length!==V.p.length)setupBoard();
   if(shownScreen!==want)show(want);
   $('#game').hidden=V.phase!=='board'||introT>.9;
@@ -1372,7 +1416,7 @@ let last=0, PR=1, ADAPT=true, frT=0, frN=0;
 function frame(now){
   requestAnimationFrame(frame); const raw=(now-last)/1000||0, dt=Math.min(.05,raw); last=now; T+=dt; gpPoll(dt); if(!V||V.phase==='lobby')applyChars();
   if((++frN&1)===0)R.shadowMap.needsUpdate=true;
-  if(raw<.5){frT+=raw; if(frN>=60){if(ADAPT&&frT/frN>1/42&&PR>1){PR=Math.max(1,PR-.25); R.setPixelRatio(PR); resize();} frT=0; frN=0;}} else{frT=0; frN=0;}
+  if(raw<.5){frT+=raw; if(frN>=60){if(ADAPT&&frT/frN>1/52&&PR>1){PR=Math.max(1,PR-.25); R.setPixelRatio(PR); resize();} frT=0; frN=0;}} else{frT=0; frN=0;}
   sync(dt); mT-=dt; if(mT<=0){mT=.4; musicTick();}
   spin.forEach(q=>{q.o.rotation[q.ax]+=dt*q.v;}); upright.forEach(c=>{c.rotation.z=-c.parent.rotation.z;}); fxFrame(dt);
   pearl.position.x+=(pearl.tx-pearl.position.x)*Math.min(1,dt*2.2); pearl.position.z+=(pearl.tz-pearl.position.z)*Math.min(1,dt*2.2);
@@ -1380,7 +1424,7 @@ function frame(now){
   clouds.forEach(c=>{c.position.x+=dt*.35; if(c.position.x>46)c.position.x=-46;});
   if(SEATEX){SEATEX.offset.x=T*.011; SEATEX.offset.y=Math.sin(T*.35)*.02;} if(FOAMT)FOAMT.offset.x=T*.012;
   boats.forEach((b,i)=>{b.position.y=-.55+Math.sin(T*1.3+i*2)*.06; b.rotation.z=Math.sin(T*1.1+i)*.05;});
-  chars.forEach(c=>animChar(c,dt));
+  {const live=MS?MS.scene:scene; chars.forEach(c=>{if(c.sc===live)animChar(c,dt);});}   /* characters in the scene that is not on screen are left alone */
   if(conf.life>0){conf.life-=dt; const P=conf.geometry.attributes.position.array,Vv=conf.v;
     for(let i=0;i<P.length;i+=3){Vv[i+1]-=9*dt; P[i]+=Vv[i]*dt; P[i+1]+=Vv[i+1]*dt; P[i+2]+=Vv[i+2]*dt;}
     conf.geometry.attributes.position.needsUpdate=true; conf.material.opacity=Math.min(1,conf.life*1.5); if(conf.life<=0)conf.visible=false;}
@@ -1468,7 +1512,7 @@ function newLobby(code){net.host=true; S={phase:'lobby',code,gid:0,seats:['host'
 function leave(){
   const wasPrac=PRAC_ONLY||(S&&S.prac); gen++; if(MS)MS.end(); pad(false); miniBusy=false; miniMid=0; miniPh=''; $('#mini').hidden=true; stage.innerHTML='';
   if(net.nr){net.nr.leave().catch(()=>{}); net.nr=null;} net.host=false; pend=null; S=null; V=null; lastPub=''; askShown=''; hudKey='';
-  pawns.forEach(g=>{g.sc.remove(g); chars.delete(g);}); pawns=[]; shownGid=0; dice.visible=false; num.visible=false; arrows.visible=false; if(wasPrac)openPractice(); else show('menu');
+  pawns.forEach(g=>{g.sc.remove(g); chars.delete(g); freeScene(g);}); pawns=[]; shownGid=0; dice.visible=false; num.visible=false; arrows.visible=false; if(wasPrac)openPractice(); else show('menu');
 }
 
 /* ---------- host game logic: changes S and waits; the renderer does the rest ---------- */
@@ -1719,7 +1763,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=65; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=66; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1843,7 +1887,7 @@ function miniStage(hint,pos,look){
   m.ray=e=>{ndc.set(e.clientX/window.innerWidth*2-1,-(e.clientY/window.innerHeight)*2+1); ray.setFromCamera(ndc,c); return ray;};
   m.run=fn=>new Promise(res=>{m.update=dt=>{const r=fn(dt); if(r!==undefined){m.update=null; res(r);}};});
   m.end=()=>{m.offs.forEach(f=>f()); if(MS===m)MS=null; el.classList.remove('gl'); chars.forEach(ch=>{if(ch.sc===sc)chars.delete(ch);});
-    sc.traverse(o=>{if(o.geometry)o.geometry.dispose(); if(o.material)[].concat(o.material).forEach(x=>x.dispose());});};
+    freeScene(sc);};
   MS=m; return m;
 }
 
@@ -1940,7 +1984,7 @@ function arena(G){return async function(ctx){
   const out=(av,t,fell)=>{av.alive=false; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); hint(fell?'You fell off!':'You are out!');}};
   if(G.view)G.view(m.cam,me,.016,st);   /* so the opening view is right during the countdown */
   if(!demo)await countdown($('#n'));
-  let t=0,pubT=0,endT=-1;
+  let t=0,pubT=0,endT=-1,hudN=null,hudB=null;
   const body=dt=>{
     if(demo&&demo.stop)return 1;
     if(demo&&!m.vo){const q=$('#rdyPanel'); if(q){m.vo=1; const W=window.innerWidth,H=window.innerHeight, ph=Math.min(H*.6,q.offsetHeight+34), z=W>H?1.5:1.25; m.cam.setViewOffset(W,H,W/2-W*z/2,H/2-(H-ph)*z/2,W*z,H*z);}}   /* the preview sits in the space above the ready panel */
@@ -1996,7 +2040,7 @@ function arena(G){return async function(ctx){
     if(pubT<=0&&net.nr&&!demo){pubT=.07; const pk=a=>{const q=[r2(a.x),r2(a.z),r2(a.y),a.alive?1:0,r2(a.score)]; if(G.ex)q.push(...G.ex(a)); return q;}, patch={a:pk(me),am:mid};
       if(net.host&&!G.alone){patch.cpu={}; avs.forEach(a=>{if(a.cpu)patch.cpu[a.k]=pk(a);});} if(net.host&&G.host)patch.hs=st.hs; net.nr.presence(patch).catch(()=>{});}
     if(sb){sbT-=dt; if(sbT<=0){sbT=.25; sb.innerHTML=avs.slice().sort((a,b)=>b.score-a.score).map(a=>`<span style="--c:${CAST[V.p[a.k].i].c}"${a.mine?' class="me"':''}>${CAST[V.p[a.k].i].name} <b>${a.score.toFixed(1)}</b></span>`).join('');}}
-    $('#n').textContent=G.num?G.num(st,t):G.left?Math.max(0,(st.max||G.max)-t).toFixed(1):G.surv?(me.alive?t:me.score).toFixed(1):G.dec?me.score.toFixed(1):me.score; $('#bar').style.transform=`scaleX(${Math.max(0,1-t/(st.max||G.max))})`;
+    {const nv=String(G.num?G.num(st,t):G.left?Math.max(0,(st.max||G.max)-t).toFixed(1):G.surv?(me.alive?t:me.score).toFixed(1):G.dec?me.score.toFixed(1):me.score), bv=Math.max(0,1-t/(st.max||G.max)).toFixed(3); if(nv!==hudN){hudN=nv; $('#n').textContent=nv;} if(bv!==hudB){hudB=bv; $('#bar').style.transform=`scaleX(${bv})`;}}   /* the page is only touched when the number on it changes */
     if(endT<0&&t>1.5&&!G.alone&&avs.filter(a=>a.alive).length<=1)endT=t+1.4;   // last one standing ends the game
     if(G.alone&&endT<0&&!me.alive)endT=t+1;
     if(t>=(st.max||G.max)||(endT>0&&t>=endT))return 1;
@@ -2522,7 +2566,7 @@ const CHAIRS={top:'circus',set:'fair',floor:'carpet',hint:'Walk while the music 
   pos(n,i,r){if(n<=1)return[0,0,0]; const a=i/n*6.283+r*.9, R=n===2?.9:n===3?1.2:1.45; return[Math.sin(a)*R,Math.cos(a)*R,a];},
   init(sc,rng,sh,n){const line=flatM(mesh(new THREE.RingGeometry(CHAIRS.RL-.1,CHAIRS.RL+.1,72),new THREE.MeshBasicMaterial({color:0xffffff}),0,.035,0,sc));
     return{sc,line,g:null,key:'',lph:'',o0:0,seatM:[],dt:.016,max:Math.max(1,n-1)*21+6};},
-  build(st,hs){if(st.g)st.sc.remove(st.g); const g=new THREE.Group(); st.sc.add(g); st.g=g; st.seatM=[];
+  build(st,hs){if(st.g){st.sc.remove(st.g); freeScene(st.g);} const g=new THREE.Group(); st.sc.add(g); st.g=g; st.seatM=[];
     for(let i=0;i<hs.n;i++){const p=CHAIRS.pos(hs.n,i,hs.r), c=new THREE.Group(), m=new THREE.MeshLambertMaterial({color:0x4fa8ff}); c.position.set(p[0],0,p[1]); c.rotation.y=p[2]; c.scale.setScalar(1.2); g.add(c);
       mesh(new THREE.BoxGeometry(.64,.1,.64),m,0,.42,0,c); mesh(new THREE.BoxGeometry(.64,.62,.1),m,0,.78,-.27,c); for(const [x,z] of [[-.25,-.25],[.25,-.25],[-.25,.25],[.25,.25]])mesh(new THREE.BoxGeometry(.09,.4,.09),0x17304d,x,.2,z,c); st.seatM.push(m);}},
   host(st,t,dt){let H=st.H; if(!H)H=st.H={ph:'arm',r:0,pt:t,o:[],s:[],n:0,stop:6}; const L=st.avs.filter(a=>a.alive&&!H.o.includes(a.k));
