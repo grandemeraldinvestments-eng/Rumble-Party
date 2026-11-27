@@ -19,6 +19,8 @@ The only outside dependency is three.js r128, loaded from cdnjs, plus two Google
 
 The Island board is a 3D toy model built in code by the kit inside index.html (see ART-DIRECTION.md). The other boards will follow.
 
+Every board opens with an introduction that shows its special rule and where the first pearl is (see INTRO-VIDEOS.md for recorded films).
+
 ## Running it
 
 Serve the folder with any static web server and open it in a browser, for example:

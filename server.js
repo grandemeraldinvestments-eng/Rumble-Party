@@ -9,7 +9,7 @@ const MAX_ROOM = 8;                  // people in one room (6 players plus a lit
 const MAX_MSG = 512 * 1024;          // largest single message, bytes
 const MAX_RATE = 120;                // messages per second from one phone before it is dropped
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json',
-  '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.md': 'text/markdown; charset=utf-8' };
+  '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.mp4': 'video/mp4', '.webm': 'video/webm', '.md': 'text/markdown; charset=utf-8' };
 const PRIVATE = /^\/(server\.js|package(-lock)?\.json|node_modules|tools|art-source|\.)/;   // never served
 
 const server = http.createServer((req, res) => {
@@ -22,7 +22,17 @@ const server = http.createServer((req, res) => {
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) { res.writeHead(404); return res.end('Not found'); }
     const page = /\.(html|js|webmanifest)$/.test(file);   // the page and its worker are always re-checked, so an update shows at once; art and sound are kept for a day
-    res.writeHead(200, { 'content-type': TYPES[path.extname(file)], 'content-length': st.size, 'cache-control': page ? 'no-cache' : 'public, max-age=86400' });
+    const head = { 'content-type': TYPES[path.extname(file)], 'cache-control': page ? 'no-cache' : 'public, max-age=86400', 'accept-ranges': 'bytes' };
+    // part of a file: phones ask for films a piece at a time and will not play them from a server that cannot answer
+    const rg = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if (rg && (rg[1] || rg[2])) {
+      const a = rg[1] === '' ? Math.max(0, st.size - Number(rg[2])) : Number(rg[1]), b = rg[1] === '' || rg[2] === '' ? st.size - 1 : Math.min(Number(rg[2]), st.size - 1);
+      if (a > b || a >= st.size) { res.writeHead(416, { 'content-range': `bytes */${st.size}` }); return res.end(); }
+      res.writeHead(206, Object.assign(head, { 'content-length': b - a + 1, 'content-range': `bytes ${a}-${b}/${st.size}` }));
+      if (req.method === 'HEAD') return res.end();
+      return fs.createReadStream(file, { start: a, end: b }).pipe(res);
+    }
+    res.writeHead(200, Object.assign(head, { 'content-length': st.size }));
     if (req.method === 'HEAD') return res.end();
     fs.createReadStream(file).pipe(res);
   });

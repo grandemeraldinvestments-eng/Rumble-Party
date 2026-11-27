@@ -560,6 +560,33 @@ Limits
 
 Tested: Island built and viewed on a desktop screen and a phone screen; full four-round solo game with no errors; the tide; the other boards and two mini games still run. Not tested: real phones.
 
+## Build 74
+An introduction before the first turn on every board.
+
+What players see (full length, about 11.5 seconds)
+- A flight in over the board, with its name.
+- The one rule that makes the board different, on a card, while the camera circles the place it happens. On Island the tide really comes in; on Carnival the wheel spins up; on Volcano it erupts. Each line was checked against the rules in the code.
+- The first pearl: the camera goes to the stall's real space for this game, the clam opens, rings of light spread from the space, and the card gives the distance from the start and the price.
+- The camera settles into the game's own view. There is no cut and no fade: it is the same camera.
+
+How it is built
+- Flown live through the real board, timed by the clock so a slow phone takes no longer. One entry per board in INTRO.boards.
+- A board can name a recorded film for the first two parts. The film player is built and tested (plays over the scene, words stay in step, dissolves into the live scene, falls back to the live flight on any failure). No films have been made, so none is switched on. INTRO-VIDEOS.md has the specification, the shot plan and a tool that records a film from the game.
+- Length is each player's choice in Settings: full, quick (about 5 seconds: the rule and the pearl) or skip. A Skip button ends your own introduction early.
+- Settings also has Board overview, which replays the flight, the rule and where the pearl is now, at any time in a game.
+
+Online
+- Each phone plays its own introduction, then tells the host it is ready. The host starts the first turn when every player is ready, or after 21 seconds. Until then a phone that has finished shows who it is waiting for. One player skipping never pulls the others in early.
+- The pearl's space comes from the host's game state, which every phone already had before the introduction, so all phones show the same space.
+- A phone that arrives late and finds the game already begun jumps to the end of its introduction.
+- The fixed wait of 6 to 7 seconds at the start of every game is gone.
+
+Loading
+- Nothing the board needs is fetched when a game starts: the board is built in code and the characters and props are fetched when the page opens. The introduction waits for the characters, the props (on boards that use them) and the fonts, and if they are late it holds its last shot with "Preparing the board…" for up to 7 seconds, then goes on with the stand-ins the game already has.
+- server.js can now send part of a file, which phones need to play films.
+
+Tested: the full, quick and skip lengths on Island on a desktop and a phone screen; the rule and pearl shots on Carnival and Volcano; an online game with a host who skips and a joiner on full, and the other way round (both waited, both saw the same pearl space); the film path with a test film and with a missing film; Board overview; a full solo game. Not tested: real phones.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

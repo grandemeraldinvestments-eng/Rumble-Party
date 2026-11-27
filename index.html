@@ -60,6 +60,19 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--p1); outline-of
 h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; line-height:1.3}
 
 #fade{position:fixed; inset:0; z-index:2; background:var(--ink); pointer-events:none; opacity:0}
+/* board introductions */
+#introVid{position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; background:var(--ink); transition:opacity .6s; pointer-events:none}
+#introCard{position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom,0px)); transform:translate(-50%,18px) scale(.96); z-index:4; width:min(92vw,580px); box-sizing:border-box; display:flex; gap:12px; align-items:center; background:linear-gradient(#fffef9,#fff5dc); border:3px solid var(--ink); border-radius:20px; box-shadow:0 5px 0 var(--ink),0 14px 30px rgba(23,48,77,.25); padding:12px 16px 12px 12px; opacity:0; transition:opacity .28s, transform .38s cubic-bezier(.2,1.5,.4,1); pointer-events:none}
+#introCard.on{opacity:1; transform:translate(-50%,0) scale(1)}
+#introCard img{width:68px; height:68px; flex:none; object-fit:contain; filter:drop-shadow(0 3px 0 rgba(23,48,77,.25))}
+#introCard b{display:block; font-family:var(--display); font-weight:400; font-size:1.35rem; line-height:1.1; color:var(--ink); margin-bottom:3px}
+#introCard span{display:block; font-size:.98rem; line-height:1.3; color:var(--ink); font-weight:600}
+#introSkip{position:fixed; right:12px; top:calc(12px + env(safe-area-inset-top,0px)); z-index:5; font-family:var(--display); font-size:1rem; color:var(--ink); background:var(--card); border:3px solid var(--ink); border-radius:999px; padding:7px 16px; box-shadow:0 3px 0 var(--ink); cursor:pointer}
+#introSkip:active{transform:translateY(2px); box-shadow:0 1px 0 var(--ink)}
+#introWait{position:fixed; left:50%; top:calc(74px + env(safe-area-inset-top,0px)); transform:translateX(-50%); z-index:5; max-width:90vw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:var(--display); font-size:1rem; color:#fff; background:var(--ink); border-radius:999px; padding:8px 18px 8px 38px; box-shadow:0 4px 14px rgba(23,48,77,.35); pointer-events:none}
+#introWait::before{content:''; position:absolute; left:13px; top:50%; width:14px; height:14px; margin-top:-9px; border:3px solid rgba(255,255,255,.35); border-top-color:var(--sun); border-radius:50%; animation:introSpin .8s linear infinite}
+@keyframes introSpin{to{transform:rotate(360deg)}}
+@media (max-height:480px){#introCard{padding:8px 12px 8px 8px} #introCard img{width:48px; height:48px} #introCard b{font-size:1.1rem} #introCard span{font-size:.86rem}}
 #titleCard{position:fixed; left:0; right:0; top:28%; z-index:3; text-align:center; pointer-events:none; padding-inline:16px; transition:opacity .45s}
 #titleCard h1{font-size:clamp(1.7rem,10vw,3rem); color:#fff; text-shadow:0 4px 0 var(--ink),4px 0 0 var(--ink),-4px 0 0 var(--ink),0 -4px 0 var(--ink),4px 4px 0 var(--ink)}
 #titleCard p{display:inline-block; margin:14px 0 0; background:var(--card); border:3px solid var(--ink); box-shadow:4px 4px 0 var(--ink); padding:4px 14px; font-weight:800}
@@ -496,6 +509,10 @@ img.gi{display:block; width:44px; height:44px; object-fit:contain; flex:none}
 <canvas id="gl"></canvas>
 <div id="fade" hidden></div>
 <div id="titleCard" hidden><h1 id="titleName"></h1><p id="titleSub"></p></div>
+<video id="introVid" hidden muted playsinline preload="none"></video>
+<div id="introCard"><img alt=""><div><b></b><span></span></div></div>
+<button id="introSkip" hidden>Skip</button>
+<div id="introWait" hidden></div>
 
 <section class="screen center" id="menu">
   <div class="card">
@@ -602,6 +619,8 @@ img.gi{display:block; width:44px; height:44px; object-fit:contain; flex:none}
       <button class="btn alt" id="musBtn">Music: on</button>
       <button class="btn alt" id="gfxBtn">Graphics: smooth</button>
       <p class="sub" id="perfLine"></p>
+      <button class="btn alt" id="introBtn">Board introduction: full</button>
+      <button class="btn alt" id="ovBtn" hidden>Board overview</button>
       <button class="btn alt" id="fsBtn">Full screen: off</button>
       <p class="lede" id="fsNote" hidden>To play full screen on this phone, add the game to your Home Screen and open it from there.</p>
       <button class="btn alt" id="quitBtn">Leave game</button>
@@ -1713,7 +1732,8 @@ function toyFrame(dt){TOY.U.uT.value=T; for(const d of TOY.dyn)d.f(d.o,T,dt);
   /* the dice bobs while it spins and lands with a bounce when the number comes up */
   if(dice&&dice.visible&&V&&V.ui){const f=V.ui.dface||0; if(f&&!dice.shown){dice.pop=.42;} dice.shown=f; if(dice.pop>0){dice.pop-=dt; const e=1-Math.max(0,dice.pop)/.42; dice.scale.setScalar(1+.38*Math.sin(e*Math.PI)*(1-e)); dice.position.y+=.5*Math.abs(Math.sin(e*Math.PI*2))*(1-e);} else{dice.scale.setScalar(1); if(!f)dice.position.y+=Math.sin(T*8)*.07;}}
   else if(dice){dice.shown=0; dice.pop=0;}
-  if(mark&&mark.visible){const k=1+.06*Math.sin(T*6); mark.scale.set(k,k,1); if(mark.glow)mark.glow.material.opacity=.35+.25*Math.sin(T*6);}}
+  if(mark&&mark.visible){const k=1+.06*Math.sin(T*6); mark.scale.set(k,k,1); if(mark.glow)mark.glow.material.opacity=.35+.25*Math.sin(T*6);}
+  introHud();}
 /* ---------- models from Blender ----------
    Any prop built above can be swapped for a real model. Export it as .glb (Y up, metres, origin at its feet), put it in
    assets/models/, and in a board's builder write:
@@ -1722,12 +1742,100 @@ function toyFrame(dt){TOY.U.uT.value=T; for(const d of TOY.dyn)d.f(d.o,T,dt);
 const GLBS={};
 function toyGLB(url,cb){const hit=GLBS[url], copy=e=>()=>{const m=e.scene.clone(true); m.noBake=true; return m;}; if(hit&&hit.scene){cb(copy(hit)); return;} if(hit){hit.q.push(cb); return;}
   const e=GLBS[url]={q:[cb]}; new THREE.GLTFLoader().load(url,g=>{e.scene=g.scene; g.scene.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true; o.noBake=true; o.geometry.keep=true; [].concat(o.material).forEach(m=>{m.keep=true; if(m.map)m.map.keep=true;});}}); e.q.forEach(f=>f(copy(e))); e.q=null;},undefined,()=>{delete GLBS[url];});}
+/* ====================================================================================================
+   Board introductions (Build 74)
+   Before the first turn every player is shown the board: a flight over it with its name, the one rule that makes this board
+   different, and the space where the first pearl really is in this game. The camera then settles into the game's own view.
+   - It is flown live through the real board, so the pearl is the real pearl and there is no cut into play. A board may also name a
+     recorded film for the first two parts (INTRO.boards.<id>.video); the film is played over the scene and dissolved into it.
+   - Each phone plays its own introduction at the length its owner chose (full, quick or skip), then tells the host it is ready.
+     The host starts the first turn when every player is ready, or after a limit, so nobody is pulled in early or left behind.
+   - To add a board: one entry in INTRO.boards. `line` must state a rule exactly as the game plays it.
+   ==================================================================================================== */
+const INTRO={
+  boards:{
+    island:{icon:'spaces/T',head:'High tide',line:'Land on a tide space and the short cut floods until the end of the next round. Anyone on it is swept to the far end.',focus:()=>({x:NODES[50].x,z:NODES[50].z+1.5,r:17,h:12.5,az:.2}),demo:'tide'},
+    carnival:{icon:'spaces/F',head:'Big wheel',line:'Land on a wheel space to ride the big wheel. It sets you down on a random space of the main path.',focus:()=>FXP.wheel,demo:'wheel'},
+    farm:{icon:'spaces/V',head:'Harvest',line:'A harvest space pays more the longer nobody lands on it.',focus:()=>NODES.find(n=>n.t==='V')},
+    volcano:{icon:'spaces/E',head:'Eruption',line:'An eruption space sets off the volcano. Lava covers part of the board for 2 rounds.',focus:()=>FXP.volc,demo:'erupt'},
+    melody:{icon:'maps/melody',head:'The Golden Note',line:MAPS.melody.note,focus:()=>FXP.metro},
+    pinball:{icon:'maps/pinball',head:'High risk, high reward',line:MAPS.pinball.note.replace(/^High risk, high reward\.\s*/,''),focus:()=>({x:0,z:0})},
+    temple:{icon:'maps/temple',head:'The summit merchant',line:MAPS.temple.note,focus:()=>MAPX.top?{x:MAPX.top[0],z:MAPX.top[1]}:null}},
+  /* the parts of each length, in seconds */
+  seq:{full:[['wide',3.2],['focus',4.2],['pearl',2.9],['start',1.4]],quick:[['focus',2.3],['pearl',1.8],['start',.9]],skip:[['start',.9]],replay:[['wide',2.2],['focus',3.6],['pearl',2.6],['back',1]]},
+  LIMIT:21000, names:{full:'full',quick:'quick',skip:'skip'}};
+let IN=null, introRdy={};
+/* for recording a film or checking a shot: hold the introduction at one moment */
+INTRO.seek=t=>{if(IN){IN.frozen=true; IN.t=t;}};
+function introPref(){let p='full'; try{p=localStorage.getItem('rumble-intro')||'full';}catch(e){} return INTRO.seq[p]?p:'full';}
+/* where the camera is for one part of the flight, u running 0 to 1 through it. The same sums are used to record a film of it */
+function introPose(shot,u,I){const pt=cam.aspect<1, a=MAPX.a;
+  if(shot==='wide'){const az=-1.0+u*.8, r=a*(pt?2.7:1.95)*(1-.2*u), h=a*(1.3-.45*u); return{p:[Math.sin(az)*r,h,Math.cos(az)*r],l:[0,0,0]};}
+  if(shot==='focus'){const f=I.focus, y=GY(f.x,f.z), az=(f.az==null?.95:f.az)+u*.5, r=(f.r||13)*(pt?1.3:1)-u*1.3; return{p:[f.x+Math.sin(az)*r,y+(f.h||9)-u*.7,f.z+Math.cos(az)*r],l:[f.x,y+1,f.z]};}
+  if(shot==='pearl'){const n=NODES[I.pearl], q={x:(pearl.tx+n.x)/2,z:(pearl.tz+n.z)/2}, y=GY(q.x,q.z), az=-.6+u*.5, r=(pt?11:8.8)-u*2.3; return{p:[q.x+Math.sin(az)*r,y+5.8-u*1.2,q.z+Math.cos(az)*r],l:[q.x,y+.6,q.z]};}
+  if(shot==='back')return{p:[camT.x,camGY+camD*.84,camT.z+camD*.8],l:[camT.x,camGY+.3,camT.z+.4]};
+  const n=NODES[0], gy=GY(n.x,n.z), d=18; return{p:[n.x,gy+d*.84,n.z+d*.8],l:[n.x,gy+.3,n.z+.4]};}
+function introStart(replay){
+  const mode=replay?'replay':introPref(), cfg=INTRO.boards[V.map]||{}; let f=null; try{f=cfg.focus&&cfg.focus();}catch(e){}
+  const seq=INTRO.seq[mode].filter(s=>s[0]!=='focus'||(f&&cfg.line)), total=seq.reduce((s,q)=>s+q[1],0);
+  IN={gid:V.gid,mode,replay:!!replay,t:0,t0:performance.now(),seq,total,cfg,focus:f,pearl:V.pearlAt,done:false,shot:'',from:{p:cam.position.toArray(),l:replay?[camT.x,camGY+.3,camT.z+.4]:[0,0,0]},cap:performance.now()+(total*1000+7000)/SPEED,vid:null};
+  introT=total; $('#fade').hidden=true; $('#titleName').textContent=(MAPS[V.map]||MAPS.island).name; $('#titleSub').textContent=replay?'Board overview':`${V.rounds} rounds · ${V.p.length} players`;
+  $('#titleCard').hidden=false; $('#titleCard').style.opacity=0; $('#introCard').className=''; $('#introWait').hidden=true; $('#introSkip').hidden=mode==='skip'; $('#introSkip').textContent=replay?'Close':'Skip';
+  [cfg.icon,'icons/pearl'].forEach(q=>{if(q)new Image().src='assets/'+q+'.webp';});   /* have the card pictures in hand before they are needed */
+  if(!replay)introFilm(IN);}
+/* a recorded film for the opening, if this board has one and this screen can show it. Any trouble and the live flight carries on alone */
+function introFilm(I){const v=I.cfg.video, el=$('#introVid'); if(!v||I.mode!=='full'||(innerWidth<innerHeight&&!v.portrait)||(navigator.connection&&navigator.connection.saveData))return;
+  const fail=()=>{if(I.vid){I.vid=null; el.hidden=true; el.removeAttribute('src'); try{el.load();}catch(e){}}};
+  I.vid={el,until:v.until||INTRO.seq.full[0][1]+INTRO.seq.full[1][1],ok:false,cover:false}; el.muted=true; el.playsInline=true; el.poster=v.poster||''; el.src=innerWidth<innerHeight&&v.portrait?v.portrait:v.src; el.style.opacity=1; el.hidden=false;
+  el.onerror=fail; el.onplaying=()=>{if(I.vid){I.vid.ok=true; I.vid.cover=true;}}; try{el.currentTime=0; const p=el.play(); if(p&&p.catch)p.catch(fail);}catch(e){fail();} setTimeout(()=>{if(I.vid&&!I.vid.ok)fail();},1800);}
+function introCard(icon,head,line){const c=$('#introCard'), im=c.querySelector('img'), u='assets/'+icon+'.webp'; if(im.getAttribute('src')!==u){im.removeAttribute('src'); im.src=u;} c.querySelector('b').textContent=head; c.querySelector('span').textContent=line; c.className='on';}
+function introReady(I){return performance.now()>I.cap||((CHARL||!THREE.GLTFLoader)&&(MAPX.toy||!!MODELS)&&(!document.fonts||document.fonts.status==='loaded'));}
+function introFrame(dt){const I=IN; if(!I||!V||I.gid!==V.gid){introStop(); return;}
+  const now=performance.now();   /* timed by the clock, not by frames, so a slow phone is not kept waiting longer */
+  if(I.vid&&I.vid.ok&&!I.frozen){const el=I.vid.el; I.t=Math.max(I.t,Math.min(el.currentTime,I.vid.until)); I.t0=now-I.t*1000/SPEED; if(el.ended||I.t>=I.vid.until-.6){el.style.opacity=0; I.vid.cover=false; if(I.t>=I.vid.until||el.ended){const v=I.vid; I.vid=null; setTimeout(()=>{v.el.hidden=true; v.el.pause(); v.el.removeAttribute('src');},650);}}}   /* the film sets the pace while it runs, so the words stay with the pictures */
+  else if(!I.frozen)I.t=(now-I.t0)/1000*SPEED;
+  let t=Math.min(I.t,I.total), acc=0, i=0; while(i<I.seq.length-1&&t>=acc+I.seq[i][1]){acc+=I.seq[i][1]; i++;}
+  const cur=I.seq[i], u=clamp01((t-acc)/cur[1]), B=Math.min(.95,cur[1]*.42), left=acc+cur[1]-t, mx=(A,C,k)=>({p:A.p.map((v,j)=>mixn(v,C.p[j],k)),l:A.l.map((v,j)=>mixn(v,C.l[j],k))});
+  let P=introPose(cur[0],u,I); if(i<I.seq.length-1&&left<B)P=mx(P,introPose(I.seq[i+1][0],0,I),sstep(B,0,left)); if(I.t<.9)P=mx(I.from,P,sstep(0,.9,I.t));
+  cam.position.set(P.p[0],P.p[1],P.p[2]); cam.lookAt(P.l[0],P.l[1],P.l[2]);
+  /* words and effects for the part now showing */
+  if(cur[0]!==I.shot){I.shot=cur[0]; I.at=t;
+    if(cur[0]==='focus'){introCard(I.cfg.icon,I.cfg.head,I.cfg.line); if(I.cfg.demo==='erupt')FXP.erupt=3.2;}
+    else if(cur[0]==='pearl'){const d=bfs(0,I.pearl).d, pr=V.price!=null?V.price:COST; introCard('icons/pearl',I.replay?'The pearl stall':'The first pearl',(I.replay?'The pearl stall is here now':'The pearl stall starts here')+(d>0?`, ${d} spaces from the start. `:'. ')+`A pearl costs ${pr} tickets.`); pearl.flash=2.2; toyPuff(pearl.tx,GY(pearl.tx,pearl.tz)+.7,pearl.tz,0xe9dcff,9,1.5); if(V.phase==='board'&&!I.replay)SFX.pearl();}
+    else $('#introCard').className='';}
+  if(cur[0]==='focus'&&I.cfg.demo==='wheel')FXP.boost=Math.max(FXP.boost,.3);
+  INTRO.tide=cur[0]==='focus'&&I.cfg.demo==='tide'&&u<.8;
+  if(left<.35&&I.shot!=='start'&&I.shot!=='back')$('#introCard').className='';
+  $('#titleCard').style.opacity=I.seq[0][0]==='wide'&&I.t>.35&&I.t<I.seq[0][1]-.5?1:0;
+  introRing(cur[0]==='pearl'?I.pearl:-1);
+  introT=Math.max(.01,I.total-I.t);
+  if(!I.replay&&!I.frozen&&I.t>1&&I.shot!=='start'&&V.ui.who>=0&&!V.ui.iw)introSkipNow();   /* the game has begun without this phone (it was slow to get here): catch up */
+  if(I.t>=I.total){if(I.replay||introReady(I))introStop(true); else{const w=$('#introWait'); w.hidden=false; w.textContent='Preparing the board…';}}}
+/* rings of light that spread from the pearl's space */
+function introRing(at){if(!INTRO.rings){INTRO.rings=[0,1].map(i=>{const q=new THREE.Mesh(new THREE.RingGeometry(.92,1.12,48),new THREE.MeshBasicMaterial({color:0xc9a6ff,transparent:true,depthWrite:false,side:THREE.DoubleSide})); q.rotation.x=-Math.PI/2; q.visible=false; q.material.keep=q.geometry.keep=true; scene.add(q); return q;});}
+  INTRO.rings.forEach((q,i)=>{q.visible=at>=0; if(at<0)return; const n=NODES[at], e=(T*.9+i*.5)%1; q.position.set(n.x,n.y+.34,n.z); q.scale.setScalar(1+e*1.5); q.material.opacity=.85*(1-e);});}
+function introStop(done){const I=IN; INTRO.tide=false; introT=0; if(INTRO.rings)introRing(-1); $('#titleCard').hidden=true; $('#fade').hidden=true; $('#introCard').className=''; $('#introSkip').hidden=true; $('#introWait').hidden=true;
+  if(I&&I.vid){I.vid.el.hidden=true; try{I.vid.el.pause();}catch(e){} I.vid=null;}
+  if(!I||I.done)return; I.done=true; if(!done||I.replay)return;
+  {const n=NODES[0]; camT.set(n.x,0,n.z); camD=18; camGY=GY(n.x,n.z);}
+  if(net.host)introRdy[myK()]=1; else if(net.nr)net.nr.presence({ir:I.gid}).catch(()=>{});}   /* tell the host this phone has seen the board and is ready to play */
+/* the host holds the first turn until every player's phone is ready, or the limit passes */
+async function introWait(){const gid=S.gid, t0=Date.now(); introRdy={};
+  while(S&&S.gid===gid&&S.phase==='board'){const wait=S.p.filter(p=>!p.cpu&&!introRdy[p.k]).map(p=>p.k); if(!wait.length||Date.now()-t0>INTRO.LIMIT/SPEED)break; if(JSON.stringify(S.ui.iw||[])!==JSON.stringify(wait))S.ui.iw=wait; await sleep(100);}
+  if(S&&S.gid===gid){S.ui.iw=null; await sleep(450);}}
+/* once a frame: on a phone that is ready, say who the game is still waiting for */
+function introHud(){const w=$('#introWait'); if(!w||(IN&&!IN.done))return; const iw=V&&V.phase==='board'&&V.ui&&V.ui.iw, me=myK(), others=iw?iw.filter(k=>k!==me):[];
+  if(others.length&&IN&&IN.gid===V.gid&&!IN.replay){const t='Waiting for '+others.map(k=>CAST[V.p[k].i].name).join(', ')+'…'; if(w.hidden||w.textContent!==t){w.textContent=t; w.hidden=false;}} else if(!w.hidden)w.hidden=true;}
+function introSkipNow(){const I=IN; if(!I||I.done)return; const last=I.seq[I.seq.length-1][1]; if(I.vid){const v=I.vid; I.vid=null; v.el.style.opacity=0; setTimeout(()=>{v.el.hidden=true; v.el.pause();},400);} I.t=Math.max(I.t,I.total-last-.5); I.t0=performance.now()-I.t*1000/SPEED; $('#introSkip').hidden=true;}
+function introLbl(){const b=$('#introBtn'); if(b)b.textContent='Board introduction: '+INTRO.names[introPref()];}
+/* start fetching a board's film the moment the board is chosen, so it is ready when the game starts */
+function introPreload(id){const c=INTRO.boards[id], el=$('#introVid'); if(!el||!c||!c.video||introPref()!=='full')return; el.preload='auto'; el.poster=c.video.poster||''; if(el.getAttribute('src')!==c.video.src){el.src=c.video.src; try{el.load();}catch(e){}}}
 /* </TOY3D> */
 function buildWorld(id){
   const m=MAPS[id]||MAPS.island; curMap=id; MAPX=m;
   if(world){scene.remove(world); freeScene(world);}
   world=new THREE.Group(); scene.add(world); defParent=world; spin=[]; upright=[]; clouds=[]; boats=[]; FXP={tong:[],boost:0,erupt:0}; shownBurn=-2; COAST=null; USED=[]; MBATCH={}; GY=()=>0; TOY.dyn=[]; if(TOY.sea&&TOY.sea.sea)TOY.sea.sea.dispose(); TOY.sea=null; TOY.T=null; toyRig(!!m.toy);
-  NODES=buildGraph(m); NODES.forEach(n=>{n.y=0;}); $('#gl').style.background=`url(assets/sky/${id in THEME?id:'island'}.webp) center top/cover no-repeat, linear-gradient(${m.sky[0]},${m.sky[1]} 60%)`;   // painted sky, with the plain gradient behind it until it loads
+  NODES=buildGraph(m); NODES.forEach(n=>{n.y=0;}); introPreload(id); $('#gl').style.background=`url(assets/sky/${id in THEME?id:'island'}.webp) center top/cover no-repeat, linear-gradient(${m.sky[0]},${m.sky[1]} 60%)`;   // painted sky, with the plain gradient behind it until it loads
   if(!ICONS){const mk=d=>{const tx=tex(d), mt=new THREE.MeshBasicMaterial({map:tx,transparent:true}); tx.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy()); mt.keep=true; return mt;};
     ICONS={S:mk((g,s)=>label(g,s,'GO','#17304d',26)),
       '+':mk(g=>{g.fillStyle='#fff'; g.fillRect(27,14,10,36); g.fillRect(14,27,36,10);}), '-':mk(g=>{g.fillStyle='#fff'; g.fillRect(14,27,36,10);}),
@@ -1856,7 +1964,7 @@ function toast(t){const d=document.createElement('div'); d.className='toast'; d.
 /* ---------- the renderer: draws whatever V says, animating the differences ---------- */
 const OFFS=[[-.42,-.3],[.42,-.3],[-.42,.36],[.42,.36],[0,-.62],[0,.66]];
 let shownGid=0, shownScreen='menu', hudKey='', askShown='', sh={hit:0,sp:0,cheer:0}, lobbyKey='', resKey='';
-function show(id){shownScreen=id; for(const s of ['menu','join','lobby','guide','game','results','practice'])$('#'+s).hidden=s!==id; if(id!=='game'){mapView=false; $('#mapBtn').textContent='Map'; hideInfo(); $('#settings').hidden=true; $('#chance').hidden=true; introT=0; $('#titleCard').hidden=true; $('#fade').hidden=true;}}
+function show(id){shownScreen=id; for(const s of ['menu','join','lobby','guide','game','results','practice'])$('#'+s).hidden=s!==id; if(id!=='game'){mapView=false; $('#mapBtn').textContent='Map'; hideInfo(); $('#settings').hidden=true; $('#chance').hidden=true; introStop();}}
 function showChance(u){const el=$('#chance'), raw=u.chG||'?', it=raw.indexOf('item:')===0?ITEMS[raw.slice(5)]:null, gl=it?'★':raw; el.hidden=false; el.className='spin'; $('#chText').textContent=u.chT; $('#chHead').textContent=u.chH||'Chance';
   $('#chDisc').style.background=u.chC||''; $('#chG').textContent=gl; $('#chG').style.fontSize=gl.length>1?'3.6rem':''; $('#chG').style.color=u.chC&&u.chC!=='#ffc531'?'#fff':''; setTimeout(()=>{el.className=''; if(it){$('#chG').innerHTML=it.svg; $('#chDisc').style.background='#fff';} else{const k=Object.keys(SP).find(k=>SP[k][0]===u.chH); if(k){$('#chG').innerHTML=`<img class="ic" src="assets/spaces/${k}.webp" alt="">`; $('#chDisc').style.background='#fff';}}},1700/SPEED); const id=u.ch; setTimeout(()=>{if(V&&V.ui.ch===id)el.hidden=true;},((u.chD||3300)-200)/SPEED);
   chanceSkip=()=>{if(el.hidden||el.className==='spin'||!V||myK()<0||V.ui.ch!==id)return false; el.hidden=true; if(net.host)cardSkip=id; else if(net.nr)net.nr.presence({skip:id}).catch(()=>{}); return true;};}   // any player can close a card once it has been revealed: tap anywhere, press a key or a controller button
@@ -1878,7 +1986,7 @@ function setupBoard(){
   if(curMap!==V.map)buildWorld(V.map);
   pawns.forEach(g=>{g.sc.remove(g); chars.delete(g); freeScene(g);}); shownGid=V.gid;
   pawns=V.p.map(p=>{const g=makeChar(p.i); g.at=p.pos; g.fly=p.fly; g.seg=null; g.jump=0; g.cheer=0; g.face=0; g.position.set(NODES[p.pos].x,.28,NODES[p.pos].z); g.sh={t:p.t,pe:p.pe,itn:p.it.length}; return g;});
-  placePearl(V.pearlAt,true); sh={hit:V.ui.hit,sp:V.ui.sp,cheer:V.ui.cheer,pe:V.ui.pe||0,ch:V.ui.ch,fx:V.ui.fx?V.ui.fx.n:0}; shownBurn=-2; trapKey='?'; camT.set(NODES[0].x,0,NODES[0].z); camD=18; hudKey=''; camMode='follow'; hideInfo(); if(!V.prac)startIntro();
+  placePearl(V.pearlAt,true); sh={hit:V.ui.hit,sp:V.ui.sp,cheer:V.ui.cheer,pe:V.ui.pe||0,ch:V.ui.ch,fx:V.ui.fx?V.ui.fx.n:0}; shownBurn=-2; trapKey='?'; camT.set(NODES[0].x,0,NODES[0].z); camD=18; hudKey=''; camMode='follow'; hideInfo(); if(!V.prac)introStart();
 }
 function sync(dt){
   if(!V)return;
@@ -1998,17 +2106,6 @@ function drawLobby(){
   $('#lobbyNote').textContent=net.host?(n<2?'You need at least 2 players. Add a computer or wait for a friend.':''):(V.seats.includes(me)?`Map: ${(MAPS[V.map]||MAPS.island).name}, ${V.rounds} rounds. Waiting for the host to start.`:'This game is full.');
 }
 /* opening sequence: three camera shots of the map under a title card, then down to the start gate */
-let introEnd=0;
-function startIntro(){introT=5.6; introEnd=performance.now()+5600/SPEED; $('#titleName').textContent=(MAPS[V.map]||MAPS.island).name; $('#titleSub').textContent=`${V.rounds} rounds · ${V.p.length} players`;
-  $('#titleCard').hidden=false; $('#titleCard').style.opacity=0; $('#fade').hidden=false; $('#fade').style.opacity=1;}
-function introCam(dt){
-  introT=Math.max(0,(introEnd-performance.now())/1000*SPEED); const e=5.6-introT, a=MAPX.a, pt=cam.aspect<1, f=FXP.volc||FXP.wheel||{x:0,z:0}, n=NODES[0], bump=c=>Math.max(0,1-Math.abs(e-c)/.22);
-  if(e<2.5){const an=-.7+e*.26, r=a*(pt?2.2:1.6); cam.position.set(Math.sin(an)*r,a*.8,Math.cos(an)*r); cam.lookAt(0,0,0);}
-  else if(e<4.3){const an=1.1+(e-2.5)*.4, r=pt?13:10; cam.position.set(f.x+Math.sin(an)*r,6,f.z+Math.cos(an)*r); cam.lookAt(f.x,1.4,f.z);}
-  else{const k=Math.min(1,(e-4.3)/1.3), q=k*k*(3-2*k), d=34-16*q; cam.position.set(n.x,d*.84,n.z+d*.8); cam.lookAt(n.x,.3,n.z+.4);}
-  $('#fade').style.opacity=Math.max(0,1-e/.6,bump(2.5),bump(4.3)); $('#titleCard').style.opacity=e>.35&&e<4.1?1:0;
-  if(introT<=0){$('#titleCard').hidden=true; $('#fade').hidden=true;}
-}
 /* two things drawn over the board: what a pearl costs (on boards where that changes) and the Wheel of Wonder */
 const WH={n:-1,a:0,to:null}, PT={k:'',s:null};
 function boardUi(dt){
@@ -2066,7 +2163,7 @@ function fxFrame(dt){
   FXP.tong.forEach((t,i)=>{const goal=bs===i?1:0; t.scale.x+=(goal-t.scale.x)*Math.min(1,dt*1.6); t.scale.z=t.scale.x; t.visible=t.scale.x>.02; t.material.opacity=.8+Math.sin(T*5)*.12;});
   if(bs!==shownBurn){shownBurn=bs; const sec=bs>=0?MAPX.secs[bs]:null; NODES.forEach((n,i)=>{const hot=sec&&i<45&&((i-sec[0]+45)%45)<sec[1]; n.hot=!!hot; n.disc.material.color.setHex(hot?0x2a1e1e:n.col); if(!hot)n.disc.material.emissive.setHex(0);});}
   if(bs>=0)NODES.forEach(n=>{if(n.hot)n.disc.material.emissive.setRGB(.55+Math.sin(T*4+n.x)*.3,.14,0);});
-  if(FXP.flood){const up=st&&st.tide&&st.round<=st.tide; FXP.flood.position.y+=((up?.22:-.6)-FXP.flood.position.y)*Math.min(1,dt*1.2); FXP.flood.visible=FXP.flood.position.y>-.5; FXP.spans.visible=FXP.flood.position.y>.05; const wet=FXP.flood.position.y>-.1; if(wet!==FXP.wet){FXP.wet=wet; NODES.forEach(n=>{if(n.bridge&&n.ic)n.ic.visible=!wet;});}}
+  if(FXP.flood){const up=(st&&st.tide&&st.round<=st.tide)||INTRO.tide; FXP.flood.position.y+=((up?.22:-.6)-FXP.flood.position.y)*Math.min(1,dt*(INTRO.tide?3.4:1.2)); FXP.flood.visible=FXP.flood.position.y>-.5; FXP.spans.visible=FXP.flood.position.y>.05; const wet=FXP.flood.position.y>-.1; if(wet!==FXP.wet){FXP.wet=wet; NODES.forEach(n=>{if(n.bridge&&n.ic)n.ic.visible=!wet;});}}
   const tk=st?JSON.stringify(st.traps||{}):''; if(tk!==trapKey){trapKey=tk; while(trapG.children.length)trapG.remove(trapG.children[0]);
     if(st&&st.traps)for(const i in st.traps){const n=NODES[i],o=st.p[st.traps[i]]; if(!n||!o)continue; mesh(new THREE.CylinderGeometry(.03,.03,1.1,6),0xffffff,n.x+.55,.75+n.y,n.z-.45,trapG); mesh(new THREE.BoxGeometry(.4,.26,.03),CAST[o.i].hex,n.x+.75,1.15+n.y,n.z-.45,trapG);}}
 }
@@ -2138,7 +2235,7 @@ function frame(now){
     conf.geometry.attributes.position.needsUpdate=true; conf.material.opacity=Math.min(1,conf.life*1.5); if(conf.life<=0)conf.visible=false;}
   cam.up.set(0,1,0);
   const board=V&&V.phase==='board'&&pawns.length;
-  if(board&&introT>0)introCam(dt);
+  if(board&&introT>0)introFrame(dt);
   else if(!board){const a=T*.1,r=MAPX.a*(cam.aspect<1?2.4:1.7); cam.position.set(Math.sin(a)*r,r*.6,Math.cos(a)*r); cam.lookAt(0,0,0);}
   else if(mapView){if(mapBB.m!==curMap||mapBB.n!==NODES.length){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9; NODES.forEach(n=>{x0=Math.min(x0,n.x); x1=Math.max(x1,n.x); z0=Math.min(z0,n.z); z1=Math.max(z1,n.z);}); Object.assign(mapBB,{m:curMap,n:NODES.length,x:(x0+x1)/2,z:(z0+z1)/2,a:(x1-x0)/2,b:(z1-z0)/2});}
     const pt=cam.aspect<1, tv=Math.tan(cam.fov*Math.PI/360), u=pt?mapBB.a:mapBB.b, w=pt?mapBB.b:mapBB.a; const H=window.innerHeight, W=window.innerWidth, sr=$('#score').getBoundingClientRect(), pr=$('#panel').getBoundingClientRect(), pv=pr.width>0&&pr.height>0;
@@ -2154,7 +2251,7 @@ function frame(now){
     if(tq){camT.x+=(tq.x-camT.x)*kk; camT.z+=(tq.z-camT.z)*kk;} camD+=((cz&&camMode!=='free'?19:Math.max(12.5,Math.min(24,wide*1.1+7)))-camD)*(1-Math.exp(-dt*2.5));
     camGY+=(GY(camT.x,camT.z)-camGY)*kk; cam.position.set(camT.x,camGY+camD*.84,camT.z+camD*.8); cam.lookAt(camT.x,camGY+.3,camT.z+.4);}
   if(MS){if(MS.update)MS.update(dt*MSPEED); R.render(MS.scene,MS.cam);}
-  else if($('#mini').hidden)R.render(scene,cam);
+  else if($('#mini').hidden&&!(IN&&IN.vid&&IN.vid.cover))R.render(scene,cam);   /* nothing to draw while a film covers the screen */
 }
 
 /* ---------- online: a join-code room; the host publishes S, players answer through presence ---------- */
@@ -2174,6 +2271,7 @@ function onPeers(ch){
       if(pr.res&&S.mini&&pr.res.mid===S.mini.mid&&typeof pr.res.v==='number'){const gq=GAMES[S.mini.g]; if(!(gq&&gq.auth&&k in miniRes))miniRes[k]=gq&&gq.cap!=null?Math.min(pr.res.v,gq.cap):pr.res.v;}   /* the host will not accept a result better than the game allows */
       if(pr.vote&&S.mini&&pr.vote.mid===S.mini.mid&&pr.vote.i>=0&&pr.vote.i<3)votes[k]={i:pr.vote.i|0,lock:!!pr.vote.lock};
       if(pr.rdy&&S.mini&&pr.rdy===S.mini.mid)ready[k]=1;
+      if(pr.ir&&pr.ir===S.gid)introRdy[k]=1;
       if(pr.skip&&pr.skip===S.ui.ch)cardSkip=pr.skip;
       if(Array.isArray(pr.a)&&S.mini&&pr.am===S.mini.mid)avIn(k,pr.a);   /* positions carry the number of the mini game they belong to, so one left over from the last game is ignored */
     }
@@ -2454,7 +2552,7 @@ async function takeTurn(p){
   await sleep(1300);
 }
 async function gameLoop(){
-  S.ui.who=-1; say(MAPS[S.map].note||''); await sleep(MAPS[S.map].note?7400:5900);
+  S.ui.who=-1; say(MAPS[S.map].note||''); await introWait();   /* every phone shows its introduction, then says it is ready */
   while(S.round<=S.rounds){
     if(MAPS[S.map].rush&&S.rush==null&&S.rounds-S.round<Math.min(5,Math.ceil(S.rounds/2))){S.rush=Math.random()<.5?1:0;   /* Golden Rush: in the last rounds there is an even chance the summit price falls to 5 for the rest of the game */
       if(S.rush){S.price=5; S.ui.sp++; S.ui.spT='Golden Rush'; S.ui.who=-1; S.ui.follow=-1; fx('rush'); say('Golden Rush! The summit merchant sells pearls for 5 tickets until the game ends.'); await sleep(3600);}}
@@ -2534,7 +2632,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=73; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=74; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -4666,6 +4764,9 @@ $('#fsBtn').onclick=()=>{const on=!fsOn(); fsWant=on; try{localStorage.setItem('
 document.addEventListener('fullscreenchange',()=>{fsLbl(); resize();}); document.addEventListener('webkitfullscreenchange',()=>{fsLbl(); resize();});
 ['#soloBtn','#hostBtn','#joinBtn','#startBtn'].forEach(q=>$(q).addEventListener('click',autoFull));
 const gfxLbl=()=>{$('#gfxBtn').textContent=SMOOTH?'Graphics: smooth':'Graphics: sharp';}; gfxLbl();
+$('#introBtn').onclick=()=>{const o=['full','quick','skip'], n=o[(o.indexOf(introPref())+1)%3]; try{localStorage.setItem('rumble-intro',n);}catch(e){} introLbl();}; introLbl();
+$('#ovBtn').onclick=()=>{if(!V||V.phase!=='board'||introT>0)return; $('#settings').hidden=true; introStart(true);}; $('#introSkip').onclick=introSkipNow;
+setInterval(()=>{const b=$('#ovBtn'); if(b)b.hidden=!(V&&V.phase==='board'&&!V.prac);},400);
 $('#gfxBtn').onclick=()=>{SMOOTH=!SMOOTH; try{localStorage.setItem('rumble-gfx',SMOOTH?'smooth':'sharp');}catch(e){} gfxLbl();
   toyShade(); if(MS&&MS.scene.sun)MS.scene.sun.castShadow=!SMOOTH; PR=Math.min(window.devicePixelRatio||1,SMOOTH?1.5:2); R.setPixelRatio(PR); resize(); R.shadowMap.needsUpdate=true;};
 $('#musBtn').onclick=()=>{musicOff=!musicOff; try{localStorage.setItem('pier-music',musicOff?'0':'1');}catch(e){} audioOn(); musLbl(); musicTick();};
