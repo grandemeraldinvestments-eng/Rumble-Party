@@ -54,7 +54,7 @@ Paste this before the list of things to draw, in the same ChatGPT thread ("Creat
 |---|---|---|
 | `assets/icons` | twin, magnet, kite, ticket, pearl, clam, mystery, shop, star, trophy | Item buttons, bags, shop, reveal cards; ticket and pearl counters in the HUD |
 | `assets/maps` | island, carnival, farm, volcano | Lobby map picker |
-| `assets/games` | g0 to g35, one per mini game in `GAMES` order | Practice list and vote buttons |
+| `assets/games` | g0 to g33, one per mini game in `GAMES` order | Practice list and vote buttons |
 | `assets/spaces` | one per special space letter in `SP`, plus S for start | Painted on the board spaces and on the reveal card |
 | `assets/tex` | sand, grass, planks, rock, carpet, ice, soil, stage, snow, nightsea, foam (lava and cobble made, not yet used) | Board ground, shoreline, mini game decks |
 | `assets/props` | 9 each for island, carnival, farm, volcano and sea, plus 3 theatre and 6 snow (54) | Standees on the boards, floating scenery round boards and mini game decks |

@@ -5,7 +5,7 @@ A 3D party board game for 2 to 6 players that runs in a web browser. Players run
 ## What's in it
 
 - Four maps: Island, Carnival, Farm and Volcano
-- Thirty-three mini games. Each round plays one of the shared-platform games or Drum Beater, picked at random
+- Thirty-four mini games. Each round plays one of the shared-platform games or Drum Beater, picked at random
 - Items, shop spaces, chance spaces and special spaces that differ on every map
 - Computer opponents
 

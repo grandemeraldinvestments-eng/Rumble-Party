@@ -436,10 +436,19 @@ Six races, the first batch from the 25-game brief. They share a way of describin
 - Nine new game icons (g27 to g35) from the same ChatGPT thread; the last three are for games still to come.
 - Tested: each race to the results screen with computer players, with 2, 4 and 6 players, landscape and portrait; every touch control with real touch events; three races online with three browsers in one room. Not tested: real phones, real controllers, and how the races feel in the hand.
 
+## Build 68
+- **Ghost Runner is replaced by Ghost Hot Potato.** A ghost possesses one player at a time. The possessed player is 13% faster and hands the ghost on by touching someone; the player who passed it cannot be tagged back for 1.6 seconds. Nobody is knocked out: possession time adds up for 40 seconds and the least wins. The host decides every tag from the positions it sees and keeps every player's clock, and its numbers are the result for everyone. A fence runs round the yard so nobody can fall off (and nobody can win by leaving).
+- **Crab Scramble is replaced by Cannonball Kickoff.** Creatures round a pitch wind up and kick footballs across it. A ball knocks you back and leaves you safe for a moment; being knocked off the pitch is what puts you out. Balls get faster and more frequent, and later ones bounce once off the far rim. Everyone still on the pitch at 45 seconds shares the win. The pitch grows with the number of players.
+- **Vacuum Escape.** Everyone runs down a bedroom floor by themselves and only steers. Toys are solid and every row has a way through, dust slows you, balls rolling across knock you back. The vacuum starts 10 m behind, never stops speeding up, and pulls harder the closer it is. First through the door wins; otherwise whoever got furthest.
+- Where the host keeps the score itself (Ghost Hot Potato), a phone's own report cannot overwrite it.
+- Game icons are renumbered now that two games are gone: g0 to g33.
+- The code for Crab Scramble and Ghost Runner is removed, not just hidden.
+- Tested: each of the three to the results screen with computer players, with 4 and 6 players. Ghost Hot Potato and Vacuum Escape online with three browsers. Not tested: real phones.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
-Crab Scramble, Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Crumble Deck, Stomp, Trap Doors, Ghost Runner, Slippery Slope, Conveyor Chaos, Lantern Match, Hot Bomba, Musical Chairs, Rail Riders, Tricycle Turbo, Marble Mayhem, Shortcut Circuit, Soapbox Surfers, Rapid Rafts.
+Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Crumble Deck, Stomp, Trap Doors, Slippery Slope, Conveyor Chaos, Lantern Match, Hot Bomba, Musical Chairs, Rail Riders, Tricycle Turbo, Marble Mayhem, Shortcut Circuit, Soapbox Surfers, Rapid Rafts, Ghost Hot Potato, Cannonball Kickoff, Vacuum Escape.
 
 **Own screen (everyone plays at the same time, separately)**
 Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon Pop, Crate Stack, Drum Beater.
