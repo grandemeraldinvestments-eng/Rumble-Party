@@ -1624,8 +1624,9 @@ MAPS.island.toy=true;
 THEME.island=function(m){
   toyMats(); const K=TOY.K=new Kit(), KG=TOY.KG=new Kit(), KT=TOY.KT=new Kit(), P=PLAT, N=NODES, rnd=rng32(4711);
   const plan=[], put=(kind,x,z,...a)=>{plan.push([kind,x,z,a]);}, SH={palm:[1.0,.3],hut:[2.1,.36],rock:[1.1,.3],bush:[.95,.3],umbrella:[1.25,.22],castle:[.9,.3],crate:[.6,.3],barrel:[.5,.3],lighthouse:[1.6,.4],surfboard:[.5,.25],ball:[.4,.3],sign:[.4,.25],torch:[.35,.25],towel:[.9,.12]};
-  /* a palm may not put its crown over a space as the camera sees it */
-  const crownOK=(x,z,h,lean,turn)=>{const cx=x+Math.cos(turn)*lean*h, cz=z-Math.sin(turn)*lean*h-h/1.035; return N.every(n=>Math.hypot(n.x-cx,n.z-cz)>2.55)&&N.every(n=>Math.hypot(n.x-x,n.z-z)>1.55);};
+  const spots=N.spots.map(i=>{const o=pearlSide(i); return[N[i].x+o[0],N[i].z+o[1],i];});
+  /* a palm may not put its crown over a space, or over a place the pearl stall can stand, as the camera sees it */
+  const crownOK=(x,z,h,lean,turn)=>{const cx=x+Math.cos(turn)*lean*h, cz=z-Math.sin(turn)*lean*h-h/1.035; return N.every(n=>Math.hypot(n.x-cx,n.z-cz)>2.55)&&N.every(n=>Math.hypot(n.x-x,n.z-z)>1.55)&&spots.every(q=>Math.hypot(q[0]-cx,q[1]-cz)>2.7&&Math.hypot(q[0]-x,q[1]-z)>1.6);};
   const palm=(x,z,h,lean,turn,s)=>{for(const hh of [h,h*.82,h*.66])if(crownOK(x,z,hh,lean,turn)){put('palm',x,z,hh,lean,turn,s); USED.push([x,z,.5]); return true;} return false;};
   /* --- the plan: where things stand --- */
   [[-19.4,4.6,3.9,.26,3.3],[-19.9,-1.6,3.4,.3,3.0],[-18.6,-7.4,3.8,.24,3.6],[-13.6,-12.6,3.6,.3,1.9],[-7.6,-13.6,3.2,.34,1.4],[19.4,2.4,3.8,.28,-.3],[19.8,-5.2,3.4,.3,.2],[17.6,-11.6,3.7,.26,.7],[12.6,-13.9,3.3,.32,1.2],
@@ -1639,7 +1640,6 @@ THEME.island=function(m){
   put('sign',-5.6,12.6,.5); put('crate',-6.5,12.9,.2,.85); put('barrel',-7.2,12.4,.85);
   [[-18.9,10.4,1.0,1],[-17.8,11.2,.6,2],[18.6,10.6,.9,3],[-21.2,-8.8,1.1,4],[20.9,-12.2,1.0,5],[-10.6,-14.8,.8,6],[9.6,-15.6,.9,7],[-12.9,.9,.7,8],[-8.2,-1.2,.6,9],[5.2,7.2,.75,10],[1.2,4.4,.55,11],[14.3,6.1,.5,12],[-3.2,-9.6,.9,13],[4.9,-11.2,.7,14],[-14.6,14.2,.7,15],[15.6,13.2,.6,16],[10.5,-3.9,.5,17]].forEach(q=>{if(TP.free(q[0],q[1],q[2]*.75)){put('rock',q[0],q[1],q[2],q[3]); USED.push([q[0],q[1],q[2]*.8]);}});
   [[-9.2,5.4,.9,1],[-11.6,4.9,.7,2],[-8.7,-3.3,.8,3],[-12.6,-1.2,.75,4],[3.5,4.6,.8,5],[6.4,6.4,.7,6],[.4,6.9,.65,7],[10.9,2.2,.7,8],[13.9,-1.9,.6,9],[-6.4,5.2,.6,10],[-1.1,3.6,.6,11],[8.9,-4.4,.6,12],[12.2,6.9,.6,13],[-13.2,-4.6,.6,14]].forEach(q=>{if(TP.free(q[0],q[1],.5)&&!TP.hides(q[0],q[1],.9,.6))put('bush',q[0],q[1],q[2],q[3]);});
-  const spots=N.spots.map(i=>{const o=pearlSide(i); return[N[i].x+o[0],N[i].z+o[1],i];});
   /* --- the ground --- */
   const T=TOY.T=toyGround(m,{tide:true,
     patch:[[P.x,P.z+.4,4.7],[7.4,14.0,4.6],[11.2,12.6,3.4],[-9.6,13.0,3.4],[-5.6,12.6,2.6],...spots.map(s=>[s[0],s[1],2.6])],
@@ -1772,7 +1772,7 @@ function introPref(){let p='full'; try{p=localStorage.getItem('rumble-intro')||'
 function introPose(shot,u,I){const pt=cam.aspect<1, a=MAPX.a;
   if(shot==='wide'){const az=-1.0+u*.8, r=a*(pt?2.7:1.95)*(1-.2*u), h=a*(1.3-.45*u); return{p:[Math.sin(az)*r,h,Math.cos(az)*r],l:[0,0,0]};}
   if(shot==='focus'){const f=I.focus, y=GY(f.x,f.z), az=(f.az==null?.95:f.az)+u*.5, r=(f.r||13)*(pt?1.3:1)-u*1.3; return{p:[f.x+Math.sin(az)*r,y+(f.h||9)-u*.7,f.z+Math.cos(az)*r],l:[f.x,y+1,f.z]};}
-  if(shot==='pearl'){const n=NODES[I.pearl], q={x:(pearl.tx+n.x)/2,z:(pearl.tz+n.z)/2}, y=GY(q.x,q.z), az=-.6+u*.5, r=(pt?11:8.8)-u*2.3; return{p:[q.x+Math.sin(az)*r,y+5.8-u*1.2,q.z+Math.cos(az)*r],l:[q.x,y+.6,q.z]};}
+  if(shot==='pearl'){const n=NODES[I.pearl], q={x:(pearl.tx+n.x)/2,z:(pearl.tz+n.z)/2}, y=GY(q.x,q.z), az=-.25+u*.35, r=(pt?9.2:7.4)-u*1.7; return{p:[q.x+Math.sin(az)*r,y+8.2-u*1.6,q.z+Math.cos(az)*r],l:[q.x,y+.6,q.z]};}   /* from the south and as steep as the game camera, the one direction scenery is placed never to block */
   if(shot==='back')return{p:[camT.x,camGY+camD*.84,camT.z+camD*.8],l:[camT.x,camGY+.3,camT.z+.4]};
   const n=NODES[0], gy=GY(n.x,n.z), d=18; return{p:[n.x,gy+d*.84,n.z+d*.8],l:[n.x,gy+.3,n.z+.4]};}
 function introStart(replay){
