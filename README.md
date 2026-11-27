@@ -17,6 +17,8 @@ A 3D party board game for 2 to 6 players that runs in a web browser. Players run
 
 The only outside dependency is three.js r128, loaded from cdnjs, plus two Google Fonts.
 
+The Island board is a 3D toy model built in code by the kit inside index.html (see ART-DIRECTION.md). The other boards will follow.
+
 ## Running it
 
 Serve the folder with any static web server and open it in a browser, for example:

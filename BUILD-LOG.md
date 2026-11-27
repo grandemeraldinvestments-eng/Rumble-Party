@@ -516,6 +516,49 @@ Not changed, and the biggest remaining cause: the room server is in the US West 
 
 Tested: full board games solo; an online game with two browsers (host and joiner agreed on the board and finished with the same scores); the walking model with three kinds of connection. Not tested: real phones.
 
+## Build 73
+A new look for the boards, starting with Island: a small 3D model of a place, not pictures stood on a flat plane.
+
+The standard
+- Scenery is solid: rounded shapes with thickness, soft plastic and painted wood, no dark outlines and no flat cut-outs. Navy outlines stay on the scoreboard, icons and the selection ring.
+- A warm low sun with soft shadows, a cool fill light, and every prop shaded darker where it meets the ground.
+- The ground has height. Pieces, the dice, markers, effects and the camera all stand on it.
+- Things move: palms and flags sway, the sea rolls in, boats and buoys bob, gulls circle, the pearl glows.
+
+The kit (in index.html between the TOY3D markers; any board can use it)
+- Shapes: rounded boxes, turned shapes, bent tubes, thick leaves, lumpy rocks, bevelled outlines.
+- Kit: gathers any number of coloured pieces into one mesh, so a whole board's scenery is two or three draws. It shades the foot of each prop and marks the parts that sway.
+- Materials: matte (wood, leaves, cloth), gloss (toy plastic with reflections from a small painted sky), land and sea.
+- Ground: worked out from the board's own path, so it fits any loop. Beaches of uneven width, a plateau that lifts parts of the path, flat-topped hills with rounded cliffs, and on tide boards a sandy channel cut from sea to sea. Sand, grass and rock are chosen per pixel, so the edge of the grass is a clean line.
+- Sea: one sheet coloured by the depth of the ground under it. Clear over the shallows, deep blue further out, foam riding in to every shore, bright lines drifting across.
+- Models from Blender can replace any prop: toyGLB() loads a .glb once and hands out copies. See ART-DIRECTION.md.
+
+Island
+- Sand rising out of the sea to a grassy plateau on the west side, a two-level hill with a hut on top, a cove behind with two huts on stilts and a pier, a wide beach at the front with the start deck, umbrellas, towels, surfboards and a sandcastle.
+- The path is a boardwalk that climbs and falls with the ground. The short cut runs down into a dry channel. When the tide comes in the channel fills with water from the sea and the main path crosses it on two rope bridges.
+- Spaces are glossy buttons set in white rings, with their colour and picture printed on the cap. Pearl spaces have a lavender ring.
+- Around it: seven small islands, a lighthouse, four sailing boats, buoys, gulls, shells and starfish on the sand, flowers on the grass, party flags.
+- Tall props are placed so that, as the game camera sees them, they never cover a space.
+
+Every board
+- The pearl stall is a big pink clam with a glowing lavender pearl. It breathes, opens wide when the camera visits or a pearl is bought, and when it moves it snaps shut, vanishes in sparkles and pops open at the new space.
+- The dice is a rounded die with pips. It bobs as it spins and lands with a bounce.
+- Pieces stretch as they leap, squash as they land and kick up dust. Tickets fly between a piece and its card on the scoreboard, and the card bumps when they arrive. The card of the player whose turn it is glows.
+- Tapping a space picks the one whose top the tap passes closest to, at any height, and the ring round it pulses.
+
+Speed
+- Island is about 150,000 triangles in under 100 draws. Shadows are drawn at half detail on phones. If the game is still slow at its lowest sharpness, real shadows switch off and the soft blobs come back.
+- Smoothing of edges is on for ordinary desktop screens.
+
+Not changed: rules, turns, dice, spaces, tickets, pearls, mini games, online play. The other six boards keep their old scenery for now, with the new clam, dice and effects.
+
+Limits
+- Colours are still drawn the old way (no gamma step), because changing it would alter every board and mini game at once.
+- All scenery is built in code. It is rounded and shaded, but hand-made models would be richer.
+- The sky is still the painted picture behind the scene.
+
+Tested: Island built and viewed on a desktop screen and a phone screen; full four-round solo game with no errors; the tide; the other boards and two mini games still run. Not tested: real phones.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

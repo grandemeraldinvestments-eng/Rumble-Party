@@ -48,6 +48,28 @@ Paste this before the list of things to draw, in the same ChatGPT thread ("Creat
 - **Shoreline:** a foam ribbon is built round every coast in `coast()` and drifts slowly.
 - **Sky:** each map shows `assets/sky/<map>.webp` behind the 3D view.
 
+## 3D boards: the toy model look (Build 73)
+Boards are being rebuilt as small 3D models. Island is done and is the reference. Painted art is still used for icons, the scoreboard, menus and the sky.
+
+What a finished board looks like
+- Solid, rounded scenery with thickness. Chunky proportions. No dark outlines, no flat pictures stood upright, no sharp-edged boxes.
+- Soft plastic and painted wood. Shine only on things meant to be shiny: spaces, the clam, the pearl, the dice.
+- A warm sun from the front left, soft shadows, a cool fill. Every prop darkens toward the ground.
+- Height: the path climbs and falls, with something to look at near the camera, in the middle and far away.
+- Movement: leaves, flags, water, things that float.
+- A tall prop may never cover a space as the game camera sees it (it looks from the south, about 46 degrees down). `TP.hides()` and the palm placer check this.
+
+How to convert a board (all in index.html, between the TOY3D markers)
+1. Put `toy:true` on its MAPS entry and write `THEME.<id>` the way `THEME.island` is written.
+2. Plan where props go, call `toyGround(m,{...})` with the board's patches, plateaus, hills and islets, then `T.bake()` and `GY=T.walk`.
+3. Build props with a `Kit`: `K.at(x,y,z,turn,size)` then `K.add(shape, placing, colour, options)`. Use `TP.*` for the ready-made props and add new ones beside them.
+4. `toyBoard(m)` lays the boardwalk, bridges, start deck and spaces. Nothing else in the game needs to change.
+
+Models from Blender
+- Export .glb, Y up, metres, origin at the feet, into `assets/models/`.
+- `const w=world; toyGLB('assets/models/hut.glb',make=>{if(world!==w)return; const m=make(); m.position.set(x,GY(x,z),z); world.add(m);});`
+- The file is fetched once. Add it to the list in sw.js so it works offline.
+
 ## What exists now
 
 | Group | Files | Used in |
