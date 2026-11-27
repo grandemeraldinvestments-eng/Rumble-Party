@@ -56,6 +56,7 @@ wss.on('connection', ws => {
       const r = rooms.get(ws.room); if (!r || !m.d || typeof m.d !== 'object' || Array.isArray(m.d)) return;
       Object.assign(ws.pres, m.d);   // a post changes only the parts it names
       for (const o of r.values()) if (o !== ws) send(o, { t: 'p', id: ws.id, d: m.d });
+    } else if (m.t === 'k') { send(ws, { t: 'k', n: m.n });   // a keep-awake from a phone: sent straight back, so the phone can time the round trip
     } else if (m.t === 'leave') leave(ws);
   });
   ws.on('close', () => leave(ws));

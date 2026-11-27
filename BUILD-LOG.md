@@ -497,6 +497,25 @@ Music and sound after leaving the browser and coming back.
 - Drum Beater and Limelight Shuffle keep time by the sound clock. If that clock stops in the middle of a song they carry on by the ordinary clock, so the game still ends.
 - Tested in a desktop browser with the faults made on purpose: leave and return (music back at once), six quick leave-and-returns, a sound system that refuses to resume (music back in 3 seconds), a stuck clock (back in 5 seconds, or at the next touch), and the sound system replaced in the middle of Drum Beater (the game finished). Not tested: a real iPhone or Android phone, where this fault actually happens.
 
+## Build 72
+The board when playing online on phones.
+
+What was measured first
+- On a laptop the game needs about 10 to 12 ms a frame, the same whether hosting, joined or playing solo. The slowness reported was on phones, on the board, in online games only.
+- On the board a joined phone shows what the host's phone tells it, through the room server. From New York, one message from one phone to another through the server (which is in the US West region) took 92 ms. A tap on a joined phone therefore took about a quarter of a second to show: there and back through the server, plus up to 90 ms that the host waited before sending, plus a pause the dice roll has built in.
+- Steps of a moving piece reached a joined phone unevenly, so the piece stopped and started. In a model with ordinary phone wifi, about half of all moves had at least one stop.
+
+What changed
+- The host sends each step of a move the moment it happens, sends at once after any phone's answer, and otherwise checks for changes every 45 ms, not every 90.
+- A joined phone waits a moment at the start of a walk to have a step in hand, then walks at the host's pace and only hurries if it falls behind. In the same model, moves with a stop fall from about half to about one in eight. The legs keep moving through a short wait when more steps are known to be coming.
+- Your own dice hit shows at once on a joined phone; the number follows when the host has rolled it.
+- Every phone in a room sends a tiny message about seven times a second when it has nothing else to say. A phone that sends nothing lets its radio doze and then hears from the host late. The server sends the message straight back, which gives the delay.
+- Settings now shows a line: frames a second, the slowest frame, and when online the delay to the server and back. It is there to tell a slow phone from a slow connection.
+
+Not changed, and the biggest remaining cause: the room server is in the US West region. Moving it to a region near the players would cut each message from about 92 ms to roughly 20.
+
+Tested: full board games solo; an online game with two browsers (host and joiner agreed on the board and finished with the same scores); the walking model with three kinds of connection. Not tested: real phones.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
