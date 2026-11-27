@@ -295,6 +295,20 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 #stunBtn{position:fixed; z-index:23; right:calc(max(20px,env(safe-area-inset-right,0px)) + 108px); bottom:calc(64px + env(safe-area-inset-bottom,0px)); width:76px; height:76px; border-radius:50%;
   border:4px solid var(--ink); background:#c7a3ff; font-weight:700; font-size:.95rem; box-shadow:0 6px 0 var(--ink); touch-action:none}
 #jumpBtn.off,#stunBtn.off{opacity:.45}
+.gctl{position:fixed; inset:0; z-index:23; pointer-events:none}
+.gctl>*{position:absolute; pointer-events:auto; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent}
+.gbtn{bottom:calc(46px + env(safe-area-inset-bottom,0px)); width:min(31vw,150px); height:min(31vw,128px); padding:0 4px; border:3px solid var(--ink); border-radius:24px; background:#ffc531; color:var(--ink); font:400 1.25rem var(--display); line-height:1.05; box-shadow:inset 0 -9px 0 rgba(0,0,0,.18); cursor:pointer}
+.gbtn.gL{left:max(14px,env(safe-area-inset-left,0px))} .gbtn.gR{right:max(14px,env(safe-area-inset-right,0px))}
+.gbtn.gL.ped,.gbtn.gL{background:#ff7a7a} .gbtn.gR{background:#6fb4ff} .gbtn.dn{transform:translateY(4px); box-shadow:inset 0 -2px 0 rgba(0,0,0,.18); filter:brightness(1.15)} .gbtn.off{opacity:.45}
+.lever{right:max(18px,env(safe-area-inset-right,0px)); bottom:calc(46px + env(safe-area-inset-bottom,0px)); width:96px; height:min(48vh,236px); border:3px solid var(--ink); border-radius:48px; background:rgba(255,255,255,.45)}
+.lever i{position:absolute; left:7px; right:7px; top:calc(50% - 36px); height:72px; border:3px solid var(--ink); border-radius:36px; background:#ffc531; box-shadow:inset 0 -7px 0 rgba(0,0,0,.18)}
+.lever b,.slider b{position:absolute; left:0; right:0; top:-22px; text-align:center; font:400 .8rem var(--display); color:#fff; text-shadow:0 2px 0 var(--ink),2px 0 0 var(--ink),-2px 0 0 var(--ink),0 -2px 0 var(--ink)}
+.slider{left:max(16px,env(safe-area-inset-left,0px)); bottom:calc(52px + env(safe-area-inset-bottom,0px)); width:min(54vw,300px); height:78px; border:3px solid var(--ink); border-radius:39px; background:rgba(255,255,255,.45)}
+.slider i{position:absolute; top:6px; left:calc(50% - 33px); width:66px; height:60px; border:3px solid var(--ink); border-radius:30px; background:#ffc531; box-shadow:inset 0 -7px 0 rgba(0,0,0,.18)}
+.gauge{position:relative; width:min(62vw,260px); height:18px; border:3px solid var(--ink); border-radius:10px; background:rgba(255,255,255,.7); pointer-events:none}
+.gauge i{display:block; height:100%; border-radius:6px; background:#35c98a; transform-origin:left; transform:scaleX(0)} .gauge b{position:absolute; top:-5px; bottom:-5px; width:5px; margin-left:-2px; border-radius:3px; background:#ff4d4d; border:1px solid var(--ink)}
+#rdyPanel .ctl{margin:0 0 8px; padding:6px 10px; max-width:none; border:2px solid var(--ink); border-radius:10px; background:#fff3c4; color:var(--ink); font-weight:700; font-size:.92rem; line-height:1.25; text-align:center}
+@media (orientation:landscape) and (max-height:560px){.gbtn{width:min(20vw,150px); height:min(34vh,120px); bottom:calc(30px + env(safe-area-inset-bottom,0px))} .lever{height:min(60vh,220px); bottom:calc(30px + env(safe-area-inset-bottom,0px))} .slider{width:min(40vw,300px); bottom:calc(34px + env(safe-area-inset-bottom,0px))}}
 .mhud .sub.hot{background:var(--coral); color:#fff; font-size:1.2rem; padding:4px 16px; animation:hotP .5s ease-in-out infinite alternate}
 @keyframes hotP{to{transform:scale(1.07)}}
 #flash{position:fixed; inset:0; z-index:39; background:#fff; opacity:0; pointer-events:none}
@@ -1375,7 +1389,7 @@ function gpPoll(dt){
   if(gp.on){
     gp.idle=any?0:gp.idle+dt;
     if(chanceSkip&&[0,1,2,3].some(hit))chanceSkip();   /* any face button closes a card that is showing */
-    if(gpLanes){cur.hidden=true; [[14,4,6],[15,12,13],[2,3],[1,0,5,7]].forEach((bs,l)=>{if(bs.some(hit))gpLanes(l);});}   // Drum Beater: d-pad left and right are lanes 1 and 2, X and B are lanes 3 and 4 (the shoulder buttons, up, down, Y and A work too)
+    if(gpLanes){cur.hidden=true; [[14,4,6],[15,12,13],[2,3],[1,0,5,7]].forEach((bs,l)=>{if(bs.some(hit))gpLanes(l);}); if(gpLanes&&gpLanes.pad)gpLanes.pad(ax,b(6)||b(7));}   // Drum Beater: d-pad left and right are lanes 1 and 2, X and B are lanes 3 and 4 (the shoulder buttons, up, down, Y and A work too)
     else if(joy.on&&joy.split){cur.hidden=true; const rx=dz(p.axes[2]||0), ry=dz(p.axes[3]||0); joy.gturn=ax; if(joy.id===null&&(rx||ry||dx||dy||gp.steer)){joy.x=rx||dx; joy.y=ry||dy; gp.steer=!!(rx||ry||dx||dy);}}   // right stick moves, left stick turns the view
     else if(joy.on){cur.hidden=true; if(joy.id===null&&(ax||ay||dx||dy||gp.steer)){joy.x=ax||dx; joy.y=ay||dy; gp.steer=!!(ax||ay||dx||dy);} if($('#stunBtn').hidden){if(hit(0)||hit(1)||hit(2)||hit(3))joy.jump=true;} else{if(hit(0)||hit(1))joy.jump=true; if(hit(2)||hit(3))joy.act=true;}}
     else{
@@ -1463,7 +1477,7 @@ function onPeers(ch){
       if(S.phase==='lobby'&&!S.seats.includes(p.peer)){const f=S.seats.indexOf(null); if(f>0)S.seats[f]=p.peer;}
       const k=S.p.findIndex(q=>q.seat===p.peer); if(k<0)continue;
       if(pr.ans&&pend&&pr.ans.id===pend.id&&pend.k===k)pend.res(pr.ans.i|0);
-      if(pr.res&&S.mini&&pr.res.mid===S.mini.mid&&typeof pr.res.v==='number')miniRes[k]=pr.res.v;
+      if(pr.res&&S.mini&&pr.res.mid===S.mini.mid&&typeof pr.res.v==='number'){const gq=GAMES[S.mini.g]; miniRes[k]=gq&&gq.cap!=null?Math.min(pr.res.v,gq.cap):pr.res.v;}   /* the host will not accept a result better than the game allows */
       if(pr.vote&&S.mini&&pr.vote.mid===S.mini.mid&&pr.vote.i>=0&&pr.vote.i<3)votes[k]={i:pr.vote.i|0,lock:!!pr.vote.lock};
       if(pr.rdy&&S.mini&&pr.rdy===S.mini.mid)ready[k]=1;
       if(pr.skip&&pr.skip===S.ui.ch)cardSkip=pr.skip;
@@ -1763,7 +1777,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=66; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=67; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -1815,7 +1829,7 @@ function miniSync(){
   if(m.phase==='intro'){$('#mgSub').textContent=m.prac?'Practice':m.note?'Duel':m.fz?`Mini Game Frenzy: game ${m.fz} of 3`:'This round\'s game';
     // the ready screen: a live preview of the game played by computer players, the written rules behind a button, and the Ready button
     const can=myK()>=0&&(!m.only||m.only.includes(myK())), extra=`${m.note?`<p><b>${m.note}</b></p>`:''}${m.fz?'<p class="sub"><b>Mini Game Frenzy.</b> Whoever wins the most of the three games takes a pearl and no tickets. Everyone else keeps all the tickets they win in the three games.</p>':''}${m.note||m.prac?'':'<p class="sub">Everyone plays at the same time. 1st wins 10 tickets, 2nd wins 5, 3rd wins 2. With five or six players the prizes are 10, 6, 4, 2 and 1.</p>'}${g.arena&&!g.alone&&!g.still?'<p class="sub">Fall off the edge and you are out. Walk into other players to shove them.</p>':''}`;
-    const panel=`<div id="rdyPanel">${g.arena?'<span class="pvTag">Preview</span>':''}${m.note?`<p class="rnote"><b>${m.note}</b></p>`:''}<div class="rdy" id="rdyRow"></div><div class="rbtns"><button class="btn ghost" id="rulesBtn">Rules</button>${can?'<button class="btn" id="rdyBtn">Ready</button>':''}</div><p class="sub" id="rdyNote"></p>
+    const panel=`<div id="rdyPanel">${g.arena?'<span class="pvTag">Preview</span>':''}${m.note?`<p class="rnote"><b>${m.note}</b></p>`:''}${g.ctl?`<p class="ctl">${g.ctl}</p>`:''}<div class="rdy" id="rdyRow"></div><div class="rbtns"><button class="btn ghost" id="rulesBtn">Rules</button>${can?'<button class="btn" id="rdyBtn">Ready</button>':''}</div><p class="sub" id="rdyNote"></p>
       <div id="rulesPop" hidden><div class="box"><h3>${g.name}</h3><p>${g.how}</p>${extra}<button class="btn" id="rulesX">Close</button></div></div></div>`;
     stopDemo(); if(g.arena){stage.innerHTML=''; runDemo(m,g); stage.insertAdjacentHTML('beforeend',panel);} else stage.innerHTML=`<p>${g.how}</p>${extra}${panel}`;
     const rb=$('#rdyBtn'); if(rb)rb.onclick=()=>{rb.disabled=true; rb.textContent='Ready!'; setReady(m.mid);};
@@ -1886,7 +1900,7 @@ function miniStage(hint,pos,look){
   m.on=(type,fn)=>{const h=e=>{e.preventDefault(); fn(e);}; el.addEventListener(type,h); m.offs.push(()=>el.removeEventListener(type,h));};
   m.ray=e=>{ndc.set(e.clientX/window.innerWidth*2-1,-(e.clientY/window.innerHeight)*2+1); ray.setFromCamera(ndc,c); return ray;};
   m.run=fn=>new Promise(res=>{m.update=dt=>{const r=fn(dt); if(r!==undefined){m.update=null; res(r);}};});
-  m.end=()=>{m.offs.forEach(f=>f()); if(MS===m)MS=null; el.classList.remove('gl'); chars.forEach(ch=>{if(ch.sc===sc)chars.delete(ch);});
+  m.end=()=>{m.offs.forEach(f=>f()); if(m.ctl){m.ctl.end(); m.ctl=null;} if(MS===m)MS=null; el.classList.remove('gl'); chars.forEach(ch=>{if(ch.sc===sc)chars.delete(ch);});
     freeScene(sc);};
   MS=m; return m;
 }
@@ -2666,7 +2680,362 @@ const DRUM={LEN:40,FALL:1.5,STEP:.25,COL:['#ff4d4d','#ffc531','#35c98a','#2f8fff
     on=false; gpLanes=null; window.removeEventListener('keydown',kd); duck(false); await sleep(500); m.end(); return out;
   }};
 
-const TRK={'Hot Bomba':1,'Drum Beater':2,'Musical Chairs':3,'Conveyor Chaos':1,'Lantern Match':2,'Crab Scramble':1,'Boom Hop':1,'Hot Planks':1,'Coconut Drop':1,'Crumble Deck':1,'Slippery Slope':1,'Ticket Grab':2,'Spotlight':2,'Sumo Shove':2,'Hedge Maze':2,'Paint Fight':2,'Stomp':2,'Trap Doors':2,'Ghost Runner':1};
+/* ---------- Build 67: six races. They share a way of describing a course and a camera; each has its own way of moving ---------- */
+const GEO={box:new THREE.BoxGeometry(1,1,1),cyl:new THREE.CylinderGeometry(.5,.5,1,14),sph:new THREE.SphereGeometry(.5,14,10),cone:new THREE.ConeGeometry(.5,1,10),tor:new THREE.TorusGeometry(.5,.16,8,22)};
+let VCM=null;
+/* weld a list of simple parts into one mesh, colour stored per corner: [shape, colour, x,y,z, turn, sx,sy,sz, tiltX, tiltZ] */
+function solid(parts,par){const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), e=new THREE.Euler(), P=new THREE.Vector3(), S=new THREE.Vector3(), col=new THREE.Color(), A=[], N=[], C=[]; let len=0;
+  for(const p of parts){const g=p[0].index?p[0].toNonIndexed():p[0].clone(); q.setFromEuler(e.set(p[9]||0,p[5]||0,p[10]||0)); m4.compose(P.set(p[2]||0,p[3]||0,p[4]||0),q,S.set(p[6]||1,p[7]||1,p[8]||1)); g.applyMatrix4(m4);
+    const a=g.attributes.position.array, c=new Float32Array(a.length); col.set(p[1]); for(let i=0;i<a.length;i+=3){c[i]=col.r; c[i+1]=col.g; c[i+2]=col.b;} A.push(a); N.push(g.attributes.normal.array); C.push(c); len+=a.length;}
+  const cat=L=>{const o=new Float32Array(len); let at=0; L.forEach(x=>{o.set(x,at); at+=x.length;}); return o;}, G=new THREE.BufferGeometry();
+  G.setAttribute('position',new THREE.BufferAttribute(cat(A),3)); G.setAttribute('normal',new THREE.BufferAttribute(cat(N),3)); G.setAttribute('color',new THREE.BufferAttribute(cat(C),3));
+  if(!VCM){VCM=new THREE.MeshLambertMaterial({vertexColors:true}); VCM.keep=true;} const o=new THREE.Mesh(G,VCM); o.castShadow=true; if(par)par.add(o); return o;}
+/* a course: a smooth line through the given points. A place on it is s, the distance along, and d, the distance to the right of the middle */
+function mkTrack(pts,closed){
+  const n=pts.length, at=i=>closed?pts[((i%n)+n)%n]:pts[Math.max(0,Math.min(n-1,i))], cr=(a,b,c,d,t)=>.5*(2*b+(c-a)*t+(2*a-5*b+4*c-d)*t*t+(3*b-a-3*c+d)*t*t*t), P=[], SUB=8;
+  for(let i=0;i<(closed?n:n-1);i++)for(let j=0;j<SUB;j++){const t=j/SUB; P.push({x:cr(at(i-1)[0],at(i)[0],at(i+1)[0],at(i+2)[0],t),z:cr(at(i-1)[1],at(i)[1],at(i+1)[1],at(i+2)[1],t),y:0});}
+  if(!closed)P.push({x:pts[n-1][0],z:pts[n-1][1],y:0});
+  const m=P.length, ix=i=>closed?((i%m)+m)%m:Math.max(0,Math.min(m-1,i)); let s=0;
+  for(let i=0;i<m;i++){P[i].s=s; if(i<m-1||closed)s+=Math.hypot(P[ix(i+1)].x-P[i].x,P[ix(i+1)].z-P[i].z);}
+  for(let i=0;i<m;i++){const a=P[ix(i-1)], b=P[ix(i+1)], q=P[i], tx=b.x-a.x, tz=b.z-a.z, l=Math.hypot(tx,tz)||1; q.tx=tx/l; q.tz=tz/l; q.nx=-q.tz; q.nz=q.tx; q.h=Math.atan2(q.tx,q.tz);}
+  for(let i=0;i<m;i++){const a=P[ix(i-1)], b=P[ix(i+1)]; let ds=b.s-a.s; if(ds<=0)ds+=s; P[i].k=-wrapA(b.h-a.h)/(ds||1);}   /* how sharply it bends: positive is a right-hand bend */
+  const T={P,len:s,closed:!!closed,m};
+  T.at=q=>{if(closed)q=((q%s)+s)%s; else q=Math.max(0,Math.min(s,q)); let lo=0, hi=m-1; while(hi-lo>1){const md=(lo+hi)>>1; if(P[md].s<=q)lo=md; else hi=md;} if(P[hi].s<=q)lo=hi;
+    const a=P[lo], b=P[closed?(lo+1)%m:Math.min(m-1,lo+1)], bs=closed&&lo===m-1?s:b.s, u=bs>a.s?(q-a.s)/(bs-a.s):0, h=a.h+wrapA(b.h-a.h)*u;
+    return{x:a.x+(b.x-a.x)*u,z:a.z+(b.z-a.z)*u,y:a.y+(b.y-a.y)*u,tx:Math.sin(h),tz:Math.cos(h),nx:-Math.cos(h),nz:Math.sin(h),h,k:a.k+(b.k-a.k)*u,i:lo};};
+  T.near=(x,z,hint)=>{let bi=0, bd=1e9; const scan=(i0,i1)=>{for(let i=i0;i<=i1;i++){const j=ix(i), q=P[j], d=(x-q.x)*(x-q.x)+(z-q.z)*(z-q.z); if(d<bd){bd=d; bi=j;}}}; if(hint==null||hint<0)scan(0,m-1); else scan(hint-10,hint+22);
+    const q=P[bi]; return{i:bi,s:q.s+(x-q.x)*q.tx+(z-q.z)*q.tz,d:(x-q.x)*q.nx+(z-q.z)*q.nz};};
+  return T;}
+/* a flat strip laid along a course. hw is its half width (a number, or a function of s) */
+function ribbon(T,hw,mt,par,o){o=o||{}; const P=T.P, m=T.m, pos=[], uv=[], idx=[], W=typeof hw==='function'?hw:()=>hw, off=o.off||(()=>0), y=o.y||0, us=o.us||4, ur=o.ur||1, i0=o.from||0, i1=o.to!=null?o.to:m-1+(T.closed?1:0); let c=0;
+  for(let i=i0;i<=i1;i++){const q=P[i%m], s=i>=m?T.len:q.s, w=W(s), f=off(s); pos.push(q.x+q.nx*(f-w),q.y+y,q.z+q.nz*(f-w),q.x+q.nx*(f+w),q.y+y,q.z+q.nz*(f+w)); uv.push(0,s/us,ur,s/us); if(c){const a=c*2-2; idx.push(a,a+1,a+2,a+1,a+3,a+2);} c++;}
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx); g.computeVertexNormals();
+  const q=mesh(g,mt,0,0,0,par); q.castShadow=false; q.receiveShadow=true; return q;}
+/* the camera rides behind and above, turning smoothly with the course; it sits further back when the phone is upright */
+function chaseCam(cam,x,y,z,h,dt,o){const pf=window.innerWidth<window.innerHeight?1.3:1; cam.ch=cam.ch==null?h:cam.ch+wrapA(h-cam.ch)*Math.min(1,dt*(o.turn||3)); const sx=Math.sin(cam.ch), sz=Math.cos(cam.ch);
+  cam.position.set(x-sx*o.back*pf,y+o.up*pf,z-sz*o.back*pf); cam.lookAt(x+sx*o.ahead,y+(o.ly||0),z+sz*o.ahead);}
+/* extra touch controls for one game: big buttons, a lever or a slider, with keys and a controller mapping. end() removes all of it */
+function gameCtl(html){const d=document.createElement('div'); d.className='gctl'; d.innerHTML=html; $('#mini').appendChild(d); const offs=[];
+  const C={el:d,q:s=>d.querySelector(s),
+    on(el,type,f){const h=e=>{e.preventDefault(); e.stopPropagation(); f(e);}; el.addEventListener(type,h); offs.push(()=>el.removeEventListener(type,h));},
+    btn(sel,dn,up,mv){const b=d.querySelector(sel); C.on(b,'pointerdown',e=>{b.classList.add('dn'); try{b.setPointerCapture(e.pointerId);}catch(x){} if(dn)dn(e);}); const u=e=>{b.classList.remove('dn'); if(up)up(e);}; C.on(b,'pointerup',u); C.on(b,'pointercancel',u); if(mv)C.on(b,'pointermove',mv); return b;},
+    key(f){const dn=e=>{if(!e.repeat)f((e.key||'').toLowerCase(),true);}, up=e=>f((e.key||'').toLowerCase(),false); window.addEventListener('keydown',dn); window.addEventListener('keyup',up); offs.push(()=>{window.removeEventListener('keydown',dn); window.removeEventListener('keyup',up);});},
+    pad(f,g){gpLanes=f; gpLanes.pad=g||null;},
+    end(){d.remove(); offs.forEach(f=>f()); gpLanes=null;}};
+  return C;}
+/* what every race shares: place in the race, the finish, what is sent to the other phones, the chequered line */
+const RACE={
+  ex:a=>[r2(a.hd||0),a.fx|0,r2(a.pr||0)], sub(av,a){av.hd=a[5]||0; av.fx=a[6]|0; av.pr=a[7]||0;},
+  ord:n=>n+(n===1?'st':n===2?'nd':n===3?'rd':'th'), grid:(k,n,gap)=>(k-(n-1)/2)*gap,
+  pre(G,st,t,dt){st.dt=dt; st.t=t; const me=st.avs.find(a=>a.mine); if(DEMO&&!st.dend&&st.avs.every(a=>a.done||!a.alive)){st.dend=1; st.max=t+1.5;}   /* a preview starts again once everyone is home */
+    if(!DEMO){if(G.noJoy){joy.id=-1; $('#joy').hidden=true;} if(me&&!st.ui&&MS&&G.ui){st.ui=1; MS.ctl=G.ui(st,me);}} return me;},
+  say(st,me,tx,hot){if(!me||DEMO||me.done||!me.alive)return; let p=1; for(const o of st.avs)if(o!==me&&(o.pr||0)>(me.pr||0))p++; const h=RACE.ord(p)+' of '+st.avs.length+(tx?' · '+tx:''), el=$('#hint'); if(el.textContent!==h)el.textContent=h; el.classList.toggle('hot',!!hot);},
+  win(G,av,t){av.pr=1; av.score=Math.max(.1,Math.round((G.max-t)*10)/10); return'win';},
+  final(me,st){st.avs.forEach(a=>{if(!a.done)a.score=Math.round(Math.max(0,Math.min(.99,a.pr||0))*9)/100;}); const h=$('#hint'); if(h)h.classList.remove('hot');},   /* anyone who did not finish is ranked by how far they got */
+  veh(st,av,make){let v=st.veh[av.k]; if(!v){v=st.veh[av.k]=make(av,st); st.sc.add(v);} return v;},
+  chk(){const t=tex((g,s)=>{for(let i=0;i<8;i++)for(let j=0;j<8;j++){g.fillStyle=(i+j)&1?'#ffffff':'#17304d'; g.fillRect(i*s/8,j*s/8,s/8,s/8);}}); t.wrapS=t.wrapT=THREE.RepeatWrapping; return new THREE.MeshLambertMaterial({map:t});},
+  gate(sc,T,s,hw,parts,col){const p=T.at(s), i=p.i; ribbon(T,hw,RACE.chk(),sc,{y:.05,from:Math.max(0,i-1),to:Math.min(T.m-1,i+1),us:hw*2});
+    for(const sd of [-1,1])parts.push([GEO.cyl,col||0xff4d4d,p.x+p.nx*sd*(hw+.35),p.y+1.7,p.z+p.nz*sd*(hw+.35),0,.3,3.4,.3]); parts.push([GEO.box,0x17304d,p.x,p.y+3.5,p.z,p.h,hw*2+1.2,.6,.22]);},
+  ground(sc,name,col,rep,y){const g=flatM(mesh(new THREE.CircleGeometry(260,40),gmat(name,col,rep||70),0,y==null?-.07:y,0,sc)); return g;}};
+
+/* Rail Riders: a handcar on rails. There is no steering at all. Pumping the lever up and down builds speed, the brake sheds it,
+   and every bend has a top speed: take it faster and the car leaves the rails */
+const RAIL={hint:'Pump the lever',max:75,left:true,noEdge:true,noDeck:true,noJoy:true,zs:[],fit:6,deck:{k:'s',h:900},VMAX:13,J:1.05,AL:24,GAP:1.6,
+  start(k,n,st){const p=st.T.at(3), d=RACE.grid(k,n,RAIL.GAP); return[p.x+p.nx*d,p.z+p.nz*d];},
+  init(sc,rng,sh,n){
+    const pts=[[0,8],[0,-10]]; let x=0, z=-10, dir=rng()<.5?-1:1;   /* up the screen in S-bends that alternate gentle and tight */
+    for(let i=0;i<11;i++){const tight=i%2===1; x+=dir*(tight?6+rng()*2:5+rng()*4); z-=tight?4.5+rng()*1.5:11+rng()*5; pts.push([x,z]); z-=tight?7+rng()*4:9+rng()*6; pts.push([x,z]); dir=-dir;} pts.push([x,z-16]);
+    const T=mkTrack(pts), P=T.P, W=n*RAIL.GAP/2, parts=[];
+    P.forEach((q,i)=>{let k=0; for(let j=-2;j<=2;j++)k=Math.max(k,Math.abs(P[Math.max(0,Math.min(T.m-1,i+j))].k)); q.vs=Math.min(99,Math.sqrt(RAIL.AL/Math.max(k,.001)));});   /* the top speed each stretch can be taken at */
+    RACE.ground(sc,'snow',0xdfeaf5,60);
+    const rt=tex((g,s)=>{g.fillStyle='#b7a48c'; g.fillRect(0,0,s,s); g.fillStyle='#8a5a2b'; g.fillRect(s*.08,s*.28,s*.84,s*.44); g.fillStyle='#4a5568'; g.fillRect(s*.25,0,s*.1,s); g.fillRect(s*.65,0,s*.1,s);}); rt.wrapS=rt.wrapT=THREE.RepeatWrapping;
+    ribbon(T,W,new THREE.MeshLambertMaterial({map:rt}),sc,{y:.02,us:1.1,ur:n});   /* one strip carries every player's rails and sleepers */
+    // tight bends are painted red and signposted a little way ahead
+    const red=new THREE.MeshBasicMaterial({color:0xff4d4d,transparent:true,opacity:.42,depthWrite:false}); let a=-1;
+    for(let i=0;i<T.m;i++){const hot=P[i].vs<RAIL.VMAX*.88; if(hot&&a<0)a=i; if((!hot||i===T.m-1)&&a>=0){ribbon(T,W+.3,red,sc,{y:.05,from:Math.max(0,a-1),to:i});
+        const p=T.at(Math.max(0,P[a].s-7)); for(const sd of [-1,1]){const px=p.x+p.nx*sd*(W+1.1), pz=p.z+p.nz*sd*(W+1.1); parts.push([GEO.cyl,0x17304d,px,.8,pz,0,.14,1.6,.14],[GEO.cone,0xffc531,px,2,pz,p.h,1.1,1,.25]);} a=-1;}}
+    for(let i=0;i<46;i++){const p=T.at(rng()*T.len), sd=rng()<.5?-1:1, o=W+2+rng()*9, px=p.x+p.nx*sd*o, pz=p.z+p.nz*sd*o, h=1.6+rng()*1.6; parts.push([GEO.cyl,0x8a5a2b,px,.4,pz,0,.3,.8,.3],[GEO.cone,0x2f9e6b,px,.9+h*.35,pz,0,1.7,h*.7,1.7],[GEO.cone,0x35c98a,px,.9+h*.75,pz,0,1.2,h*.6,1.2],[GEO.cone,0xffffff,px,.9+h*1.02,pz,0,.6,h*.3,.6]);}
+    RACE.gate(sc,T,T.len-1.5,W+.3,parts); RACE.gate(sc,T,5,W+.3,parts,0x2f8fff); solid(parts,sc);
+    return{T,W,n,sc,veh:[],h0:T.at(3).h};},
+  ahead(st,av){const T=st.T, look=3+av.v*av.v/26; let lim=99; for(let s=av.s;s<av.s+look;s+=.8)lim=Math.min(lim,T.P[T.at(Math.min(T.len,s)).i].vs); return lim;},   /* the slowest bend within stopping distance */
+  car(av){const g=new THREE.Group(), w=[.5,-.5]; solid([[GEO.box,av.col,0,.36,0,0,1.15,.14,1.6],[GEO.box,0x17304d,0,.22,0,0,.9,.16,1.3],[GEO.box,0x8a5a2b,0,.75,.1,0,.14,.7,.14],...w.flatMap(x=>w.map(z=>[GEO.cyl,0x4a5568,x,.2,z*1.1,0,.4,.12,.4,0,Math.PI/2]))],g);
+    const lv=new THREE.Group(); lv.position.set(0,1.1,.1); g.add(lv); solid([[GEO.box,0xffc531,0,0,0,0,.1,.1,1.4],[GEO.cyl,0x17304d,0,0,.66,0,.1,.5,.1,0,Math.PI/2],[GEO.cyl,0x17304d,0,0,-.66,0,.1,.5,.1,0,Math.PI/2]],lv); g.lever=lv; return g;},
+  move(av,st){const I=av.in||(av.in={pump:0,brake:false}), dt=st.dt, T=st.T; if(av.s==null){av.s=3; av.v=0; av.der=0; av.lv=0;}
+    if(av.der>0){av.der-=dt; av.v=0; I.pump=0; if(av.der<=0){av.fx=0; av.inv=1;}}   /* off the rails: a tumble, then back on with no speed */
+    else{if(I.pump>0){av.v=Math.min(RAIL.VMAX,av.v+I.pump*RAIL.J); I.pump=0; av.lv++;} if(I.brake)av.v=Math.max(0,av.v-17*dt); av.v=Math.max(0,av.v-(.3+av.v*.2)*dt);
+      av.s=Math.min(T.len,av.s+av.v*dt); if(av.v>T.P[T.at(av.s).i].vs*1.06){av.ot=(av.ot||0)+dt; if(av.ot>.18){av.der=1.7; av.ot=0; av.fx=1; if(av.mine)SFX.loss();}} else av.ot=0;}
+    const p=T.at(av.s), d=RACE.grid(av.k,st.n,RAIL.GAP); av.x=p.x+p.nx*d; av.z=p.z+p.nz*d; av.hd=av.face=p.h; av.moving=false; av.vx=av.vz=av.kx=av.kz=0;},
+  check(av,st,t,local){return local&&av.s>=st.T.len-1.5?RACE.win(RAIL,av,t):0;},
+  step(st,t,dt){const me=RACE.pre(RAIL,st,t,dt); st.avs.forEach(a=>{if(a.mine||a.cpu)a.pr=Math.min(1,(a.s||0)/st.T.len);});
+    if(me&&me.s!=null&&!DEMO){const lim=RAIL.ahead(st,me), over=me.v>lim; RACE.say(st,me,me.der>0?'Off the rails!':over?'Too fast for the bend: brake!':lim<RAIL.VMAX?'Bend ahead':'Pump!',over&&!(me.der>0));
+      if(st.gF){st.gF.style.transform=`scaleX(${Math.min(1,me.v/(RAIL.VMAX*1.1)).toFixed(3)})`; st.gF.style.background=over?'#ff4d4d':'#35c98a'; st.gM.style.left=Math.min(100,lim/(RAIL.VMAX*1.1)*100).toFixed(1)+'%';}}},
+  view(cam,me,dt,st){st.avs.forEach(a=>{const v=RACE.veh(st,a,RAIL.car), h=a.hd==null?st.h0:a.hd; v.position.set(a.x,0,a.z); v.rotation.y=h; v.visible=a.ch.visible&&a.alive; v.lever.rotation.x+=(((a.lv||0)%2?.42:-.42)-v.lever.rotation.x)*Math.min(1,(st.dt||.016)*14);
+      const tum=a.fx===1; v.rotation.z=tum?Math.sin((st.t||0)*13)*.55:0; if(a.alive)a.ch.position.y=.43+(tum?Math.abs(Math.sin((st.t||0)*9))*.5:0);});
+    chaseCam(cam,me.x,0,me.z,me.hd==null?st.h0:me.hd,dt,{back:7.5,up:6.6,ahead:5});},
+  // a computer player pumps in its own rhythm and brakes for bends; each has its own nerve, and the bold ones sometimes come off
+  ai(av,st,t,dt){const ai=av.ai, I=av.in||(av.in={pump:0,brake:false}); ai.dx=ai.dz=0; if(av.s==null||av.der>0)return; if(ai.sk==null){ai.sk=.84+Math.random()*.22; ai.cad=.24+Math.random()*.1; ai.pt=Math.random()*.4;}
+    const want=Math.min(RAIL.VMAX,RAIL.ahead(st,av)*ai.sk); I.brake=av.v>want+.4; ai.pt-=dt; if(!I.brake&&av.v<want-.2&&ai.pt<=0){ai.pt=ai.cad*(.85+Math.random()*.3); I.pump+=.8+Math.random()*.45;}},
+  ui(st,me){const C=gameCtl('<div class="lever"><i></i><b>PUMP</b></div><button class="gbtn gL">Brake</button>'), I=me.in||(me.in={pump:0,brake:false}), lv=C.q('.lever'), kn=lv.firstElementChild; let px=0, cx=0, dir=0, tx=0, ld=0, y0=0, bt=false, bk=false, lk='', kt=0;
+    $('.mhud').insertAdjacentHTML('beforeend','<div class="gauge"><i></i><b></b></div>'); st.gF=$('.gauge i'); st.gM=$('.gauge b');
+    // one stroke is a full swing of the lever. A long, even swing is worth more than a short jerk, and a steady rhythm is worth more again
+    const stroke=(amp,dur)=>{let q=Math.max(.4,Math.min(1,amp/60)); if(dur<.08)q*=.5; if(ld&&Math.abs(dur-ld)<ld*.3)q*=1.25; ld=dur; I.pump+=q; tone(300+q*160,.05,'triangle',.04);};
+    C.on(lv,'pointerdown',e=>{try{lv.setPointerCapture(e.pointerId);}catch(x){} px=cx=y0=e.clientY; dir=0; tx=performance.now();});
+    C.on(lv,'pointermove',e=>{const y=e.clientY, now=performance.now(); kn.style.transform=`translateY(${Math.max(-62,Math.min(62,y-y0))}px)`;
+      if(dir===0){if(Math.abs(y-px)>14){dir=Math.sign(y-px); cx=y;}} else if((y-cx)*dir>0)cx=y; else if((cx-y)*dir>14){stroke(Math.abs(cx-px),(now-tx)/1000); px=cx; tx=now; dir=-dir; cx=y;}});
+    C.on(lv,'pointerup',()=>{kn.style.transform=''; dir=0;});
+    C.btn('.gL',()=>{bt=true; I.brake=true;},()=>{bt=false; I.brake=bk;});
+    const alt=k=>{if(k===lk)return; const now=performance.now(); stroke(60,(now-kt)/1000); lk=k; kt=now;};
+    C.key((k,dn)=>{if(k===' '||k==='b'){bk=dn; I.brake=bt||bk;} else if(dn&&(k==='arrowup'||k==='w'))alt('u'); else if(dn&&(k==='arrowdown'||k==='s'))alt('d');});
+    C.pad(l=>alt(l<2?'u':'d'),(ax,held)=>{I.brake=bt||bk||held;}); return C;},
+  ex:RACE.ex, sub:RACE.sub, steer:()=>[0,0], final:RACE.final};
+
+/* Tricycle Turbo: two pedals that only work in turn, and a handlebar. Speed comes from an even left, right, left, right;
+   the faster you go the less you can turn before the wheels skid, and toy blocks lie in the road */
+const TRIKE={hint:'Left, right, left, right',max:75,left:true,noEdge:true,noDeck:true,noJoy:true,zs:[],fit:6,deck:{k:'s',h:900},VMAX:9.5,J:.62,G:17,
+  hw:(st,s)=>st.W+Math.max(0,1-s/16)*st.n*.4,
+  start(k,n,st){const p=st.T.at(2.5), d=RACE.grid(k,n,1.5); return[p.x+p.nx*d,p.z+p.nz*d];},
+  init(sc,rng,sh,n){const pts=[[0,8],[0,-9]]; let x=0, z=-9, dir=rng()<.5?-1:1;
+    for(let i=0;i<10;i++){x+=dir*(5+rng()*7); z-=8+rng()*6; pts.push([x,z]); if(rng()<.75)dir=-dir;} pts.push([x,z-9],[x,z-18]);
+    const T=mkTrack(pts), st={T,n,sc,veh:[],W:2.9+Math.max(0,n-4)*.35,blocks:[],h0:T.at(2.5).h}, parts=[], COL=[0xff4d4d,0xffc531,0x35c98a,0x2f8fff,0xff5fa8,0xc9a6ff];
+    RACE.ground(sc,'carpet',0x7b4fc9,50);
+    const rt=tex((g,s)=>{g.fillStyle='#fdf6e3'; g.fillRect(0,0,s,s); g.fillStyle='#ff4d4d'; g.fillRect(0,0,s*.06,s*.5); g.fillRect(s*.94,0,s*.06,s*.5); g.fillStyle='#17304d'; g.fillRect(0,s*.5,s*.06,s*.5); g.fillRect(s*.94,s*.5,s*.06,s*.5); g.fillStyle='#ffc531'; g.fillRect(s*.48,s*.1,s*.04,s*.45);}); rt.wrapS=rt.wrapT=THREE.RepeatWrapping;
+    ribbon(T,s=>TRIKE.hw(st,s),new THREE.MeshLambertMaterial({map:rt}),sc,{y:.02,us:3});
+    // toy blocks in the road: one or two at a time, always with room to pass
+    for(let s=20;s<T.len-14;s+=9+rng()*5){const p=T.at(s), w=st.W-.8, d1=(rng()*2-1)*w, two=rng()<.45, add=d=>{st.blocks.push({x:p.x+p.nx*d,z:p.z+p.nz*d,r:.62,s,d}); parts.push([GEO.box,COL[Math.floor(rng()*6)],p.x+p.nx*d,.5,p.z+p.nz*d,rng()*3,1,1,1]);}; add(d1); if(two){const d2=d1>0?d1-2.6-rng()*.6:d1+2.6+rng()*.6; if(Math.abs(d2)<w)add(d2);}}
+    for(let i=0;i<40;i++){const p=T.at(rng()*T.len), sd=rng()<.5?-1:1, o=st.W+3+rng()*9, px=p.x+p.nx*sd*o, pz=p.z+p.nz*sd*o, c=COL[i%6], k=i%3; if(k===0)parts.push([GEO.box,c,px,.7,pz,rng()*3,1.4,1.4,1.4],[GEO.box,COL[(i+2)%6],px,1.9,pz,rng()*3,1,1,1]); else if(k===1)parts.push([GEO.sph,c,px,.8,pz,0,1.6,1.6,1.6]); else for(let j=0;j<4;j++)parts.push([GEO.tor,COL[(i+j)%6],px,.2+j*.3,pz,0,1.6-j*.3,1.6-j*.3,1.6,Math.PI/2]);}
+    RACE.gate(sc,T,T.len-1.2,st.W,parts); RACE.gate(sc,T,4.5,TRIKE.hw(st,4.5),parts,0x2f8fff); solid(parts,sc); return st;},
+  bike(av){const g=new THREE.Group(), wl=(x,z,r)=>[GEO.cyl,0x17304d,x,r,z,0,r*2,.16,r*2,0,Math.PI/2]; solid([wl(0,.62,.34),wl(-.36,-.45,.26),wl(.36,-.45,.26),[GEO.box,av.col,0,.5,.05,0,.16,.14,1.1],[GEO.box,av.col,0,.44,-.45,0,.8,.12,.14],[GEO.box,0xfdf6e3,0,.66,-.22,0,.5,.12,.5],[GEO.box,0x17304d,0,.84,.55,0,.1,.6,.1,.25],[GEO.box,0xffc531,0,1.1,.5,0,.8,.1,.1]],g); return g;},
+  move(av,st){const I=av.in||(av.in={ped:0,steer:0}), dt=st.dt, T=st.T; if(av.hd==null){av.hd=st.h0; av.v=0; av.ti=-1; av.qx=av.x; av.qz=av.z;} av.x=av.qx; av.z=av.qz;
+    if(I.ped){if(I.ped!==av.lp){const iv=st.t-(av.pt==null?-9:av.pt); let j=iv<.09?.45:1; if(av.piv&&Math.abs(iv-av.piv)<av.piv*.3)j*=1.3; av.v=Math.min(TRIKE.VMAX,av.v+TRIKE.J*j); av.piv=iv; av.pt=st.t; av.lp=I.ped; av.cr=(av.cr||0)+1;} else av.same=.6; I.ped=0;}   /* the same pedal twice does nothing; an even rhythm is worth 30% more */
+    av.same=(av.same||0)-dt; av.v=Math.max(0,av.v-(.4+av.v*.26)*dt);
+    let w=Math.max(-1,Math.min(1,I.steer))*2.7*Math.min(1,av.v/1.5); const la=Math.abs(w*av.v); av.skid=la>TRIKE.G; if(av.skid){w*=TRIKE.G/la; av.v=Math.max(0,av.v-((la-TRIKE.G)*.5+2.2)*dt);}   /* turn too hard for the speed and the wheels let go: it runs wide and slows */
+    av.hd-=w*dt; av.x+=Math.sin(av.hd)*av.v*dt; av.z+=Math.cos(av.hd)*av.v*dt;
+    const q=T.near(av.x,av.z,av.ti), hw=TRIKE.hw(st,q.s), ad=Math.abs(q.d); av.ti=q.i; av.s=q.s;
+    if(ad>hw){av.v=Math.max(0,av.v-av.v*2.4*dt); if(ad>hw+2.2){const p=T.P[q.i], o=(ad-hw-2.2)*Math.sign(q.d); av.x-=p.nx*o; av.z-=p.nz*o;}}   /* the carpet beside the road drags */
+    for(const b of st.blocks){const dx=av.x-b.x, dz=av.z-b.z, d=Math.hypot(dx,dz)||.01; if(d<b.r+.55){av.x=b.x+dx/d*(b.r+.56); av.z=b.z+dz/d*(b.r+.56); if(!(av.hitT>0)){av.v*=.3; av.hitT=.5; av.fx=2; if(av.mine)SFX.bump();}}}
+    av.hitT=(av.hitT||0)-dt; if(av.hitT<=0&&av.fx===2)av.fx=0;
+    for(const o of st.avs){if(o===av||!o.alive||o.done)continue; const dx=av.x-o.x, dz=av.z-o.z, d=Math.hypot(dx,dz); if(d<.95&&d>.01){av.x+=dx/d*(.95-d)*.5; av.z+=dz/d*(.95-d)*.5; av.v*=1-.7*dt;}}
+    av.qx=av.x; av.qz=av.z; av.face=av.hd; av.moving=false; av.vx=av.vz=av.kx=av.kz=0;},
+  check(av,st,t,local){return local&&av.s>=st.T.len-1.2?RACE.win(TRIKE,av,t):0;},
+  step(st,t,dt){const me=RACE.pre(TRIKE,st,t,dt); st.avs.forEach(a=>{if(a.mine||a.cpu)a.pr=Math.max(0,Math.min(1,(a.s||0)/st.T.len));});
+    if(me&&me.hd!=null)RACE.say(st,me,me.same>0?'Other pedal!':me.skid?'Skidding: ease off the turn':me.v<2?'Left, right, left, right':'',me.same>0||me.skid);},
+  view(cam,me,dt,st){st.avs.forEach(a=>{const v=RACE.veh(st,a,TRIKE.bike), h=a.hd==null?st.h0:a.hd; v.position.set(a.x,0,a.z); v.rotation.y=h; v.rotation.z=a.fx===2?Math.sin((st.t||0)*30)*.25:0; v.visible=a.ch.visible&&a.alive; if(a.alive)a.ch.position.y=.34;});
+    chaseCam(cam,me.x,0,me.z,me.hd==null?st.h0:me.hd,dt,{back:6.6,up:5.4,ahead:5,turn:4});},
+  // a computer player pedals in its own rhythm, picks a side to pass each block on, and eases off the pedals when the turn is too tight for its speed
+  ai(av,st,t,dt){const ai=av.ai, I=av.in||(av.in={ped:0,steer:0}); ai.dx=ai.dz=0; if(av.hd==null)return; if(ai.cad==null){ai.cad=.2+Math.random()*.07; ai.sk=.72+Math.random()*.28; ai.pt=Math.random()*.3; ai.side=1; ai.off=0;}
+    const T=st.T, tp=T.at(Math.min(T.len,av.s+3.5+av.v*.45)); ai.t-=dt;
+    if(ai.t<=0){ai.t=.14+Math.random()*.16; let off=0; const q=T.near(av.x,av.z,av.ti); for(const b of st.blocks){const ds=b.s-av.s; if(ds>0&&ds<9&&Math.abs(b.d-q.d)<1.6){off=b.d>0?b.d-1.75:b.d+1.75; break;}} ai.off=Math.random()<ai.sk?off:ai.off;}
+    const gx=tp.x+tp.nx*ai.off, gz=tp.z+tp.nz*ai.off, err=wrapA(Math.atan2(gx-av.x,gz-av.z)-av.hd); I.steer=Math.max(-1,Math.min(1,-err*2.4));
+    ai.pt-=dt; if(ai.pt<=0&&!(Math.abs(err)>.6||av.v*av.v*Math.abs(tp.k)>TRIKE.G*(.8+ai.sk*.3))){ai.pt=ai.cad*(.82+Math.random()*.36*(1.7-ai.sk)); ai.side=3-ai.side; I.ped=ai.side;}},
+  ui(st,me){const C=gameCtl('<button class="gbtn gL ped">Left</button><button class="gbtn gR ped">Right</button>'), I=me.in||(me.in={ped:0,steer:0}), S=[0,0]; let ks=0, gs=0; const up=()=>{I.steer=Math.max(-1,Math.min(1,S[0]+S[1]+ks+gs));};
+    // each pedal is also half of the handlebar: slide the thumb sideways while it is down to steer
+    [['.gL',1],['.gR',2]].forEach(([sel,p],i)=>{let x0=0; C.btn(sel,e=>{I.ped=p; x0=e.clientX; tone(p===1?330:392,.04,'square',.03);},()=>{S[i]=0; up();},e=>{if(e.buttons||e.pointerType!=='mouse'){S[i]=Math.max(-1,Math.min(1,(e.clientX-x0)/48)); up();}});});
+    const K={}; C.key((k,dn)=>{K[k]=dn; if(dn&&(k==='f'||k==='z'))I.ped=1; if(dn&&(k==='j'||k==='x'))I.ped=2; ks=(K.arrowright||K.d?1:0)-(K.arrowleft||K.a?1:0); up();});
+    C.pad(l=>{I.ped=l<2?1:2;},ax=>{gs=ax; up();}); return C;},
+  ex:RACE.ex, sub:RACE.sub, steer:()=>[0,0], final:RACE.final};
+
+/* Marble Mayhem: balancing on a heavy glass marble on a raised track with no rails. The stick only pushes; the marble keeps
+   whatever speed it has, runs away downhill, and takes room to stop. Roll off the edge and it is back to the last flag */
+const MARBLE={set:'factory',hint:'Roll to the finish',max:85,left:true,noEdge:true,noDeck:true,zs:[],fit:6,deck:{k:'s',h:900},A:15,VMAX:11.5,R:.6,
+  hw(st,s){for(const b of st.nar){if(s>b[0]-3&&s<b[1]+3){const e=Math.min(1,Math.max(0,Math.min(s-(b[0]-3),b[1]+3-s)/3)); return st.W+(b[2]-st.W)*e;}} return st.W+Math.max(0,1-s/12)*st.n*.3;},
+  start(k,n,st){const p=st.T.at(1.5), d=RACE.grid(k,n,1.35); return[p.x+p.nx*d,p.z+p.nz*d];},
+  init(sc,rng,sh,n){const pts=[[0,6],[0,-10]]; let x=0, z=-10, dir=rng()<.5?-1:1;
+    for(let i=0;i<9;i++){x+=dir*(5+rng()*6); z-=9+rng()*6; pts.push([x,z]); if(rng()<.7)dir=-dir;} pts.push([x,z-10],[x,z-18]);
+    const T=mkTrack(pts), P=T.P, st={T,n,sc,veh:[],W:2.2+Math.max(0,n-4)*.3,nar:[],bars:[],cps:[1.5],h0:T.at(1.5).h}, parts=[];
+    // downhill overall, in steps: flat, a gentle slope, a steep one. Heights are set from the finish backwards
+    {let y=0, sl=0, left=0; for(let i=T.m-1;i>=0;i--){const ds=i<T.m-1?P[i+1].s-P[i].s:0; if(left<=0){const r=rng(); sl=P[i].s>T.len-16||P[i].s<10?0:r<.3?0:r<.7?.1:r<.9?.24:-.07; left=12+rng()*10;} left-=ds; y+=sl*ds; P[i].y=y;} for(let i=0;i<T.m;i++)P[i].sl=(P[Math.min(T.m-1,i+1)].y-P[Math.max(0,i-1)].y)/((P[Math.min(T.m-1,i+1)].s-P[Math.max(0,i-1)].s)||1);}
+    // narrow bridges, each followed by a wide stretch for overtaking; a moving bar on some of the stretches between; a flag every so often
+    for(let s=24;s<T.len-26;s+=26+rng()*8){st.nar.push([s,s+8+rng()*3,1.1]); st.nar.push([s+17,s+24,st.W+1.3]); st.cps.push(s-5); if(rng()<.8)st.bars.push({s:s-7,sp:1.1+rng()*.9,ph:rng()*6,w:.9,amp:st.W-.9}); st.cps.push(s+14);}
+    const edge=new THREE.MeshLambertMaterial({color:0xfff6e0}), hwf=s=>MARBLE.hw(st,s);
+    ribbon(T,hwf,gmat('planks',0xc98f55,1,1),sc,{us:5}); for(const sd of [-1,1])ribbon(T,.09,edge,sc,{y:.02,off:s=>sd*(hwf(s)-.1)});
+    for(let s=6;s<T.len;s+=9){const p=T.at(s); parts.push([GEO.cyl,0x7a5a3a,p.x,(p.y-1.4)/2-.05,p.z,0,.5,p.y+1.4,.5]);}
+    st.cps.forEach((s,i)=>{if(!i)return; const p=T.at(s), o=hwf(s)+.3; parts.push([GEO.cyl,0x17304d,p.x+p.nx*o,p.y+1,p.z+p.nz*o,0,.12,2,.12],[GEO.box,0x35c98a,p.x+p.nx*(o+.4),p.y+1.7,p.z+p.nz*(o+.4),p.h+Math.PI/2,.8,.5,.06]);});
+    st.bars.forEach(b=>{b.m=mesh(new THREE.BoxGeometry(b.w*2,.9,.8),new THREE.MeshLambertMaterial({color:0xff4d4d}),0,0,0,sc); b.p=T.at(b.s); b.m.rotation.y=b.p.h;});
+    RACE.gate(sc,T,T.len-1,hwf(T.len-1),parts); solid(parts,sc); return st;},
+  ball(av){const g=new THREE.Group(), b=solid([[GEO.sph,av.col,0,0,0,0,1.2,1.2,1.2],[GEO.tor,0xffffff,0,0,0,0,1.2,1.2,1.2],[GEO.tor,0xffffff,0,0,0,0,1.2,1.2,1.2,Math.PI/2],[GEO.sph,0x17304d,.5,.25,.2,0,.3,.3,.3],[GEO.sph,0x17304d,-.45,-.2,-.35,0,.3,.3,.3]],g); g.ball=b; return g;},
+  move(av,st){const I=av.in||(av.in={x:0,z:0}), dt=st.dt, T=st.T, R=MARBLE.R; if(av.mx==null){av.mx=av.mz=0; av.ti=-1; av.ci=0; av.fall=0; av.s=1.5; av.qx=av.x; av.qz=av.z;} av.x=av.qx; av.z=av.qz;
+    if(av.fall>0){av.fall-=dt; if(av.fall<=0){const p=T.at(st.cps[av.ci]); av.x=p.x; av.z=p.z; av.mx=av.mz=0; av.inv=1.2; av.fx=0; av.ti=-1; av.s=st.cps[av.ci];} av.qx=av.x; av.qz=av.z; av.moving=false; av.vx=av.vz=av.kx=av.kz=0; return;}
+    const q0=T.near(av.x,av.z,av.ti), p0=T.P[q0.i], sl=p0.sl||0;
+    av.mx+=(I.x*MARBLE.A-p0.tx*sl*13)*dt; av.mz+=(I.z*MARBLE.A-p0.tz*sl*13)*dt;   /* the push from the stick, plus the slope */
+    {const f=Math.exp(-dt*.5), sp=Math.hypot(av.mx,av.mz)*f, c=sp>MARBLE.VMAX?MARBLE.VMAX/sp:1; av.mx*=f*c; av.mz*=f*c;}
+    av.x+=av.mx*dt; av.z+=av.mz*dt;
+    for(const b of st.bars){const q=T.near(av.x,av.z,q0.i), bd=Math.sin(st.t*b.sp+b.ph)*b.amp, gap=.4+R-Math.abs(q.s-b.s); if(gap>0&&Math.abs(q.d-bd)<b.w+R*.8){const side=q.s<b.s?-1:1, vt=av.mx*b.p.tx+av.mz*b.p.tz; if(vt*side<0){av.mx-=b.p.tx*vt*1.5; av.mz-=b.p.tz*vt*1.5; if(av.mine&&Math.abs(vt)>2)SFX.bump();} av.x+=b.p.tx*gap*side; av.z+=b.p.tz*gap*side;}}
+    for(const o of st.avs){if(o===av||!o.alive||o.done||o.fall>0||o.fx===1)continue; const dx=av.x-o.x, dz=av.z-o.z, d=Math.hypot(dx,dz); if(d<R*2&&d>.01){const nx=dx/d, nz=dz/d, vr=(av.mx-(o.evx||0))*nx+(av.mz-(o.evz||0))*nz; av.x+=nx*(R*2-d)*.5; av.z+=nz*(R*2-d)*.5; if(vr<0){av.mx-=nx*vr*.9; av.mz-=nz*vr*.9; if(av.mine&&vr<-2)SFX.bump();}}}   /* marbles knock each other like marbles */
+    const q=T.near(av.x,av.z,q0.i); av.ti=q.i; av.s=q.s; while(st.cps[av.ci+1]!=null&&q.s>=st.cps[av.ci+1])av.ci++;
+    if(Math.abs(q.d)>MARBLE.hw(st,q.s)+.15||q.s<-1.2){av.fall=1.3; av.fx=1; av.ft=st.t; if(av.mine){SFX.loss(); $('#hint').textContent='Over the edge! Back to the flag';}}
+    const sp=Math.hypot(av.mx,av.mz); if(sp>.5)av.hd=Math.atan2(av.mx,av.mz); av.face=av.hd==null?st.h0:av.hd; av.moving=sp>.8; av.qx=av.x; av.qz=av.z; av.vx=av.vz=av.kx=av.kz=0;},
+  check(av,st,t,local){return local&&av.fall<=0&&av.s>=st.T.len-1?RACE.win(MARBLE,av,t):0;},
+  step(st,t,dt){const me=RACE.pre(MARBLE,st,t,dt), T=st.T; st.avs.forEach(a=>{if(a.mine||a.cpu){a.pr=Math.max(0,Math.min(1,(a.s||0)/T.len)); a.evx=a.mx||0; a.evz=a.mz||0;} else{const k=Math.min(1,dt*8); a.evx=(a.evx||0)+(((a.x-(a.lx==null?a.x:a.lx))/Math.max(dt,.001))-(a.evx||0))*k; a.evz=(a.evz||0)+(((a.z-(a.lz==null?a.z:a.lz))/Math.max(dt,.001))-(a.evz||0))*k; a.lx=a.x; a.lz=a.z;}});
+    st.bars.forEach(b=>{const bd=Math.sin(t*b.sp+b.ph)*b.amp; b.m.position.set(b.p.x+b.p.nx*bd,b.p.y+.45,b.p.z+b.p.nz*bd);});
+    if(me&&me.mx!=null&&!(me.fall>0)){const sl=T.P[Math.max(0,me.ti)].sl||0, nw=MARBLE.hw(st,me.s+5)<1.5; RACE.say(st,me,nw?'Narrow bridge: slow down':sl>.15?'Steep: it will run away':'',nw&&Math.hypot(me.mx,me.mz)>7);}},
+  view(cam,me,dt,st){const T=st.T, R=MARBLE.R; st.avs.forEach(a=>{const v=RACE.veh(st,a,MARBLE.ball), q=T.near(a.x,a.z,a.vi==null?-1:a.vi); a.vi=q.i; let y=T.P[q.i].y; const fl=a.fx===1; if(fl)y-=Math.min(9,((st.t||0)-(a.ft==null?(a.ft=st.t||0):a.ft))*((st.t||0)-a.ft)*9); else a.ft=null;
+      const dx=a.x-(v.lx==null?a.x:v.lx), dz=a.z-(v.lz==null?a.z:v.lz), d=Math.hypot(dx,dz); if(d>.001&&d<2)v.ball.rotateOnWorldAxis(MARBLE.ax.set(dz/d,0,-dx/d),d/R); v.lx=a.x; v.lz=a.z;
+      v.position.set(a.x,y+R,a.z); v.visible=a.ch.visible&&a.alive; if(a.alive){a.ch.position.y=y+R*2-.05; a.ch.run=d>.012?1:0;}});
+    const mi=Math.max(0,me.vi||0); chaseCam(cam,me.x,T.P[mi].y,me.z,T.P[mi].h,dt,{back:7.4,up:7.2,ahead:4.5,turn:2.5}); me.cam=cam.ch;},
+  ax:new THREE.Vector3(),
+  steer(av,ix,iz){const c=av.cam==null?Math.PI:av.cam, I=av.in||(av.in={x:0,z:0}); I.x=Math.sin(c)*-iz-Math.cos(c)*ix; I.z=Math.cos(c)*-iz+Math.sin(c)*ix; return[0,0];},   /* up on the stick is away from the camera */
+  // a computer player aims a little ahead along the middle, slows right down for bridges and waits for a bar to clear
+  ai(av,st,t,dt){const ai=av.ai, I=av.in||(av.in={x:0,z:0}); ai.dx=ai.dz=0; if(av.mx==null||av.fall>0){I.x=I.z=0; return;} if(ai.sk==null){ai.sk=.65+Math.random()*.35; ai.w=(Math.random()-.5)*.8;}
+    const T=st.T, sp=Math.hypot(av.mx,av.mz), la=MARBLE.hw(st,av.s+2)<1.5?1.3+sp*.2:2.2+sp*.42, tp=T.at(Math.min(T.len,av.s+la)), nw=MARBLE.hw(st,av.s+la)<1.5||MARBLE.hw(st,av.s+1)<1.5, sl=T.P[Math.max(0,av.ti)].sl||0;
+    let cruise=nw?3.3+ai.sk*1.7:7+ai.sk*4, off=nw?0:ai.w*(MARBLE.hw(st,av.s+la)-1)*.5; if(sl>.15)cruise=Math.min(cruise,6+ai.sk*3);
+    for(const b of st.bars){const ds=b.s-av.s; if(ds>0&&ds<5){const bd=Math.sin((t+ds/Math.max(2,sp))*b.sp+b.ph)*b.amp; off=bd>0?-(b.amp-.1):(b.amp-.1); if(Math.abs(bd)<1.1)cruise=Math.min(cruise,2.5);}}
+    const gx=tp.x+tp.nx*off-av.x, gz=tp.z+tp.nz*off-av.z, gl=Math.hypot(gx,gz)||1; const qd=nw?T.near(av.x,av.z,av.ti):null, pc=qd?T.P[qd.i]:null, cx=qd?-pc.nx*qd.d*.7:0, cz=qd?-pc.nz*qd.d*.7:0; let fx=(gx/gl*cruise-av.mx)*.34+cx+(Math.random()-.5)*(1-ai.sk)*.5, fz=(gz/gl*cruise-av.mz)*.34+cz+(Math.random()-.5)*(1-ai.sk)*.5; const l=Math.hypot(fx,fz); if(l>1){fx/=l; fz/=l;} I.x=fx; I.z=fz;},
+  ex:RACE.ex, sub:RACE.sub, final:RACE.final};
+
+/* Soapbox Surfers: a bar of soap down a wet slide. It never stops going forward; you only lean. The soap answers late, bends throw it
+   to the outside, and a bubble's burst of speed makes it answer later still */
+const SOAP={hint:'Drag left and right to lean',max:70,left:true,noEdge:true,noDeck:true,zs:[],fit:6,deck:{k:'s',h:900},V0:9,VB:13.5,
+  hw(st,s){for(const b of st.nar)if(s>b[0]-4&&s<b[1]+4){const e=Math.min(1,Math.max(0,Math.min(s-(b[0]-4),b[1]+4-s)/4)); return st.W+(b[2]-st.W)*e;} return st.W;},
+  start(k,n,st){const p=st.T.at(2), d=RACE.grid(k,n,Math.min(1.3,(st.W*2-1.4)/Math.max(1,n-1))); return[p.x+p.nx*d,p.z+p.nz*d];},
+  init(sc,rng,sh,n){const pts=[[0,8],[0,-10]]; let x=0, z=-10, dir=rng()<.5?-1:1;
+    for(let i=0;i<17;i++){x+=dir*(5+rng()*8); z-=10+rng()*7; pts.push([x,z]); if(rng()<.8)dir=-dir;} pts.push([x,z-12],[x,z-22]);
+    const T=mkTrack(pts), st={T,n,sc,veh:[],W:2.8+Math.max(0,n-4)*.4,nar:[],ducks:[],bubs:[],h0:T.at(2).h}, parts=[];
+    for(let s=60;s<T.len-40;s+=62+rng()*20)st.nar.push([s,s+10,1.75]);
+    const hwf=s=>SOAP.hw(st,s), inNar=s=>st.nar.some(b=>s>b[0]-5&&s<b[1]+5);
+    ribbon(T,hwf,gmat('planks',0xc98f55,1,1),sc,{us:5}); ribbon(T,hwf,new THREE.MeshBasicMaterial({color:0x9fe3ff,transparent:true,opacity:.42,depthWrite:false}),sc,{y:.03});
+    const rim=new THREE.MeshLambertMaterial({color:0xffffff}); for(const sd of [-1,1])ribbon(T,.2,rim,sc,{y:.3,off:s=>sd*(hwf(s)+.15)});
+    // rubber ducks: one or two across, never without a way through
+    for(let s=24;s<T.len-16;s+=9+rng()*6){if(inNar(s))continue; const p=T.at(s), w=hwf(s)-.8, d1=(rng()*2-1)*w, add=d=>{st.ducks.push({s,d}); const px=p.x+p.nx*d, pz=p.z+p.nz*d; parts.push([GEO.sph,0xffc531,px,.4,pz,0,.9,.7,1.1],[GEO.sph,0xffc531,px,.85,pz+.25,0,.55,.55,.55],[GEO.cone,0xff8a1a,px,.82,pz+.58,0,.2,.3,.2,Math.PI/2]);}; add(d1); if(rng()<.4){const d2=d1>0?d1-2.5:d1+2.5; if(Math.abs(d2)<w)add(d2);}}
+    const bm=new THREE.MeshBasicMaterial({color:0xff9fd0,transparent:true,opacity:.75}), bg=new THREE.SphereGeometry(.5,12,9);
+    for(let s=34;s<T.len-20;s+=22+rng()*12){const p=T.at(s), d=(rng()*2-1)*(hwf(s)-1), m=mesh(bg,bm,p.x+p.nx*d,.75,p.z+p.nz*d,sc); m.castShadow=false; st.bubs.push({s,d,m,off:0});}
+    for(let s=3;s<T.len;s+=3.2)for(const sd of [-1,1]){const p=T.at(s), o=hwf(s)+.2+rng()*.3, r=.3+rng()*.35; parts.push([GEO.sph,0xffffff,p.x+p.nx*sd*o,.35,p.z+p.nz*sd*o,0,r,r,r]);}
+    RACE.gate(sc,T,T.len-1.2,hwf(T.len-1.2),parts); solid(parts,sc); return st;},
+  bar(av){const g=new THREE.Group(); solid([[GEO.box,av.col,0,.16,0,0,.95,.26,1.6],[GEO.box,0xffffff,0,.3,0,0,.6,.04,1.1],[GEO.sph,0xffffff,.4,.3,-.7,0,.3,.3,.3],[GEO.sph,0xffffff,-.35,.28,-.85,0,.24,.24,.24]],g); return g;},
+  move(av,st){const I=av.in||(av.in={steer:0}), dt=st.dt, T=st.T; if(av.s==null){const q=T.near(av.x,av.z,-1); av.s=2; av.d=q.d; av.u=0; av.v=4; av.sl=0; av.bt=0; av.sp=0;}
+    const p=T.at(av.s), boost=av.bt>0, spin=av.sp>0; av.bt-=dt; av.sp-=dt; av.hit=(av.hit||0)-dt;
+    av.v+=((boost?SOAP.VB:SOAP.V0)*(spin?.45:1)-av.v)*Math.min(1,dt*(boost?3:1.3));
+    av.sl+=((spin?0:Math.max(-1,Math.min(1,I.steer)))-av.sl)*Math.min(1,dt*(boost?2:4.2));   /* the lean takes hold late, and later still at speed */
+    av.u+=(av.sl*(boost?9:15)-p.k*av.v*av.v*.42)*dt; av.u*=Math.exp(-dt*1.1); av.d+=av.u*dt;   /* a right-hand bend throws you left */
+    const w=SOAP.hw(st,av.s)-.5; if(Math.abs(av.d)>w){av.d=Math.sign(av.d)*w; if(Math.abs(av.u)>1.2){av.v*=.8; if(av.mine)SFX.bump();} av.u*=-.45;}
+    av.s=Math.min(T.len,av.s+av.v*dt);
+    if(av.hit<=0)for(const k of st.ducks)if(Math.abs(k.s-av.s)<.75&&Math.abs(k.d-av.d)<.8){av.sp=.9; av.v*=.5; av.hit=1.6; av.bt=0; if(av.mine)SFX.loss(); break;}   /* a duck spins you round */
+    for(const b of st.bubs)if(Math.abs(b.s-av.s)<.9&&Math.abs(b.d-av.d)<.9&&(av.mine?b.off<=0:true)&&!(av.bub===b&&av.bt>0)){av.bt=1.5; av.bub=b; if(av.mine){b.off=2.5; SFX.gain();}}
+    for(const o of st.avs){if(o===av||!o.alive||o.done||o.ns==null)continue; const ds=o.ns-av.s, dd=av.d-o.nd; if(Math.abs(ds)<1.1&&Math.abs(dd)<.9){av.u+=(dd>=0?1:-1)*9*dt; }}
+    const q=T.at(av.s); av.x=q.x+q.nx*av.d; av.z=q.z+q.nz*av.d; av.hd=q.h-Math.atan2(av.u,av.v)*.7; av.face=av.hd+.9; av.fx=av.sp>0?1:boost?3:0; av.moving=false; av.vx=av.vz=av.kx=av.kz=0;},
+  check(av,st,t,local){return local&&av.s>=st.T.len-1.2?RACE.win(SOAP,av,t):0;},
+  step(st,t,dt){const me=RACE.pre(SOAP,st,t,dt), T=st.T; st.avs.forEach(a=>{if(a.mine||a.cpu){a.pr=Math.min(1,(a.s||0)/T.len); a.ns=a.s; a.nd=a.d;} else{const q=T.near(a.x,a.z,a.vi==null?-1:a.vi); a.vi=q.i; a.ns=q.s; a.nd=q.d;}});
+    st.bubs.forEach(b=>{b.off-=dt; b.m.visible=b.off<=0; b.m.position.y=.75+Math.sin(t*3+b.s)*.12;});
+    if(me&&me.s!=null)RACE.say(st,me,me.sp>0?'Quack! Spinning':me.bt>0?'Bubble boost: hold on':SOAP.hw(st,me.s+9)<2.2?'Narrow ahead':'',me.sp>0);},
+  view(cam,me,dt,st){st.avs.forEach(a=>{const v=RACE.veh(st,a,SOAP.bar), h=a.hd==null?st.h0:a.hd; v.position.set(a.x,.04,a.z); v.rotation.y=a.fx===1?h+(st.t||0)*15:h; v.visible=a.ch.visible&&a.alive; if(a.alive)a.ch.position.y=.3; if(a.fx===1)a.face=h+(st.t||0)*15;});
+    const q=st.T.at(me.s==null?2:me.s); chaseCam(cam,me.x,0,me.z,me.mine||me.cpu?q.h:(me.hd==null?st.h0:me.hd),dt,{back:7,up:5.6,ahead:6,turn:2.6});},
+  steer(av,ix){(av.in||(av.in={steer:0})).steer=ix; return[0,0];},
+  // a computer player hugs the inside of bends, steers round ducks a little ahead of time and goes for bubbles when it is confident
+  ai(av,st,t,dt){const ai=av.ai, I=av.in||(av.in={steer:0}); ai.dx=ai.dz=0; if(av.s==null)return; if(ai.sk==null){ai.sk=.6+Math.random()*.4; ai.tg=av.d;} ai.t-=dt;
+    if(ai.t<=0){ai.t=.12+Math.random()*.14*(1.6-ai.sk); const T=st.T, p=T.at(av.s+5), w=SOAP.hw(st,av.s+6)-1; let tg=-Math.sign(p.k)*Math.min(w,Math.abs(p.k)*14);
+      if(ai.sk>.7)for(const b of st.bubs){const ds=b.s-av.s; if(ds>2&&ds<12&&b.m.visible){tg=b.d; break;}}
+      for(const k of st.ducks){const ds=k.s-av.s; if(ds>0&&ds<4+av.v*.9&&Math.abs(k.d-tg)<1.25){tg=k.d+(k.d>tg||(k.d===tg&&k.d<0)?-1.7:1.7); if(Math.abs(tg)>w)tg=k.d+(tg>k.d?-1.7:1.7); break;}}
+      ai.tg=Math.max(-w,Math.min(w,tg));}
+    I.steer=Math.max(-1,Math.min(1,(ai.tg-av.d)*.9-av.u*.42));},
+  ex:RACE.ex, sub:RACE.sub, final:RACE.final};
+
+/* Shortcut Circuit: toy cars on a tabletop, three laps. The cars drive themselves forward; you steer, and they slide. The long way
+   round is safe. A ruler bridge and a jump each cut a corner, and each drops you off the table if you get it wrong */
+const CIRC={hint:'Steer. Three laps',max:85,left:true,noEdge:true,noDeck:true,noJoy:true,zs:[],fit:6,deck:{k:'s',h:900},LAPS:3,V:11,VB:15.5,
+  MAIN:[[0,4],[0,-14],[3,-22],[10,-26],[18,-24],[22,-32],[30,-34],[36,-28],[34,-20],[27,-18],[26,-10],[30,-2],[34,6],[30,16],[16,18],[6,14]],
+  hw:(st,s)=>s<16||s>st.T.len-4?Math.max(st.W,(st.n-1)*.75+1.3):st.W,
+  start(k,n,st){const p=st.T.at(5), d=RACE.grid(k,n,1.5); return[p.x+p.nx*d,p.z+p.nz*d];},
+  init(sc,rng,sh,n){const mir=rng()<.5?-1:1, fl=L=>L.map(q=>[q[0]*mir,q[1]]), T=mkTrack(fl(CIRC.MAIN),true), B=mkTrack(fl([[18,-24],[21,-22],[24,-20],[27,-18]])), J=mkTrack(fl([[26,-10],[21,-4],[16,2],[11,8],[6,14]]));
+    const st={T,B,J,n,sc,veh:[],W:2.6+Math.max(0,n-4)*.3,h0:T.at(5).h,mir}, parts=[], sOf=(x,z)=>T.near(x*mir,z,-1).s;
+    st.sB0=sOf(18,-24); st.sB1=sOf(27,-18); st.sJ0=sOf(26,-10); st.sJ1=sOf(6,14); st.g1=st.sB1+3; st.g2=(st.sJ1+3)%T.len;
+    RACE.ground(sc,'planks',0xc98f55,34);
+    const rt=tex((g,s)=>{g.fillStyle='#4a5568'; g.fillRect(0,0,s,s); g.fillStyle='#ffffff'; g.fillRect(0,0,s*.05,s); g.fillRect(s*.95,0,s*.05,s); g.fillStyle='#ffc531'; g.fillRect(s*.48,s*.15,s*.04,s*.45);}); rt.wrapS=rt.wrapT=THREE.RepeatWrapping;
+    ribbon(T,s=>CIRC.hw(st,s),new THREE.MeshLambertMaterial({map:rt}),sc,{y:.03,us:3});
+    const pit=new THREE.MeshLambertMaterial({color:0x17304d}), ru=tex((g,s)=>{g.fillStyle='#ffc531'; g.fillRect(0,0,s,s); g.fillStyle='#17304d'; for(let i=0;i<8;i++)g.fillRect(0,i*s/8,i%4?s*.2:s*.4,s*.03);}); ru.wrapS=ru.wrapT=THREE.RepeatWrapping;
+    const bi=s=>B.at(s).i, ji=s=>J.at(s).i;
+    ribbon(B,3.4,pit,sc,{y:.035,from:bi(2.5),to:bi(B.len-2.5)}); ribbon(B,.95,new THREE.MeshLambertMaterial({map:ru}),sc,{y:.09,us:2});   /* the ruler bridge over the gap */
+    ribbon(J,2,new THREE.MeshLambertMaterial({color:0xd9a066}),sc,{y:.04,to:ji(9)}); ribbon(J,3.4,pit,sc,{y:.035,from:ji(10),to:ji(20)}); ribbon(J,2,new THREE.MeshLambertMaterial({color:0xd9a066}),sc,{y:.04,from:ji(20)});
+    {const p=J.at(8.6); parts.push([GEO.box,0xff4d4d,p.x,.32,p.z,p.h,3.6,.14,2.4,-.28]); const q=J.at(21.2); parts.push([GEO.box,0x35c98a,q.x,.2,q.z,q.h,3.6,.12,2,.2]);}   /* the ramp up and the ramp down */
+    for(let i=0;i<34;i++){const a=rng()*6.283, r=8+rng()*40, px=14*mir+Math.sin(a)*r*1.1, pz=-8+Math.cos(a)*r, q=T.near(px,pz,-1); if(Math.abs(q.d)<CIRC.hw(st,q.s)+2.2||Math.abs(B.near(px,pz,-1).d)<5||Math.abs(J.near(px,pz,-1).d)<5)continue; const c=[0xff4d4d,0x2f8fff,0x35c98a,0xff5fa8,0xc9a6ff][i%5], k=i%4;
+      if(k===0)parts.push([GEO.box,c,px,.4,pz,rng()*3,3,.8,2.2],[GEO.box,0xfdf6e3,px,.4,pz,0,2.8,.6,2.3]); else if(k===1)parts.push([GEO.cyl,c,px,.9,pz,0,1.4,1.8,1.4]); else if(k===2)parts.push([GEO.box,0xffffff,px,.5,pz,rng()*3,1,1,1]); else parts.push([GEO.cyl,0xffc531,px,.12,pz,rng()*3,.24,3.4,.24,0,Math.PI/2]);}
+    RACE.gate(sc,T,2,CIRC.hw(st,2),parts); solid(parts,sc); return st;},
+  car(av){const g=new THREE.Group(), w=[.42,-.42]; solid([[GEO.box,av.col,0,.34,0,0,.9,.3,1.7],[GEO.box,0xfdf6e3,0,.56,-.2,0,.74,.2,.7],[GEO.box,0x17304d,0,.62,-.78,0,.9,.08,.2],...w.flatMap(x=>[.55,-.55].map(z=>[GEO.cyl,0x17304d,x,.22,z,0,.44,.2,.44,0,Math.PI/2]))],g); return g;},
+  move(av,st){const I=av.in||(av.in={steer:0,boost:false}), dt=st.dt, T=st.T; if(av.vd==null){av.hd=av.vd=st.h0; av.v=0; av.ti=-1; av.lap=0; av.cp=0; av.bz=3; av.bo=0; av.rec=0; av.ms=5; av.qx=av.x; av.qz=av.z;} av.x=av.qx; av.z=av.qz;
+    if(av.rec>0){av.rec-=dt; av.v=0; if(av.rec<=0){const p=T.at(av.rs); av.x=p.x; av.z=p.z; av.hd=av.vd=p.h; av.fx=0; av.inv=1; av.ti=-1; av.ms=av.rs;} av.qx=av.x; av.qz=av.z; av.moving=false; av.vx=av.vz=av.kx=av.kz=0; return;}   /* off the table: lifted back to where the shortcut began */
+    if(I.boost){I.boost=false; if(av.bz>0&&av.bo<=0){av.bz--; av.bo=1.3; if(av.mine)SFX.fly();}} av.bo-=dt;
+    let q=T.near(av.x,av.z,av.ti); if(Math.abs(q.d)>CIRC.hw(st,q.s)+3||av.ti<0)q=T.near(av.x,av.z,-1); av.ti=q.i;
+    const air=av.y>.05, onM=Math.abs(q.d)<CIRC.hw(st,q.s), b=st.B.near(av.x,av.z,-1), j=st.J.near(av.x,av.z,-1), inB=b.s>0&&b.s<st.B.len, inJ=j.s>0&&j.s<st.J.len, onB=inB&&Math.abs(b.d)<.98, onJ=inJ&&Math.abs(j.d)<2&&(j.s<10||j.s>20);
+    const vm=(av.bo>0?CIRC.VB:CIRC.V)*(onM||onB||onJ||air?1:.5); av.v+=Math.max(-9*dt,Math.min((av.bo>0?16:7)*dt,vm-av.v));
+    if(!air){av.hd-=Math.max(-1,Math.min(1,I.steer))*2.6*Math.min(1,av.v/3)*dt; const sl=wrapA(av.hd-av.vd); av.vd+=sl*Math.min(1,dt*(av.bo>0?3.2:4.6)); av.v=Math.max(0,av.v-Math.abs(sl)*av.v*.9*dt); av.slip=Math.abs(sl);}   /* the nose turns at once; the way it is travelling catches up, and sliding scrubs speed */
+    av.x+=Math.sin(av.vd)*av.v*dt; av.z+=Math.cos(av.vd)*av.v*dt;
+    if(inJ&&!air&&Math.abs(j.d)<1.9&&(av.js||0)<9&&j.s>=9&&j.s<10.5&&av.v>=9.6){av.vy=9*11.5/av.v; if(av.mine)SFX.hop();} av.js=inJ?j.s:0;   /* fast enough at the ramp and it flies the gap */
+    const pitB=inB&&b.s>2.5&&b.s<st.B.len-2.5&&Math.abs(b.d)<3.4&&!onB, pitJ=inJ&&j.s>10.2&&j.s<19.8&&Math.abs(j.d)<3.4;
+    if(!onM&&!air&&(pitB||pitJ)){av.rec=1.7; av.fx=1; av.ft=st.t; av.rs=(pitB?st.sB0:st.sJ0)-2.5; if(av.mine){SFX.loss(); $('#hint').textContent='Off the table!';}}
+    for(const o of st.avs){if(o===av||!o.alive||o.done||o.fx===1)continue; const dx=av.x-o.x, dz=av.z-o.z, d=Math.hypot(dx,dz); if(d<1.1&&d>.01&&Math.abs(av.y-o.y)<.5){av.x+=dx/d*(1.1-d)*.5; av.z+=dz/d*(1.1-d)*.5; av.v*=1-.8*dt;}}
+    // the lap only counts if both gates were passed in order, so the course cannot be cut anywhere but at the two shortcuts
+    const ms=av.ms, s=q.s, near=Math.abs(q.d)<CIRC.hw(st,q.s)+1.5, pass=g=>ms<g&&s>=g&&s-ms<9; if(near){if(av.cp===0&&pass(st.g1))av.cp=1; else if(av.cp===1&&pass(st.g2))av.cp=2; else if(av.cp===2&&ms>T.len-9&&s<9){av.cp=0; av.lap++; if(av.mine&&av.lap<CIRC.LAPS){SFX.gain(); bigPop('Lap '+(av.lap+1));}} av.ms=s;}
+    av.s=s; av.qx=av.x; av.qz=av.z; av.face=av.hd; av.moving=false; av.vx=av.vz=av.kx=av.kz=0;},
+  check(av,st,t,local){return local&&av.lap>=CIRC.LAPS?RACE.win(CIRC,av,t):0;},
+  step(st,t,dt){const me=RACE.pre(CIRC,st,t,dt); st.avs.forEach(a=>{if(a.mine||a.cpu)a.pr=Math.max(0,Math.min(.999,((a.lap||0)+(a.s||0)/st.T.len)/CIRC.LAPS));});
+    if(me&&me.vd!=null&&!(me.rec>0)){RACE.say(st,me,'Lap '+Math.min(CIRC.LAPS,(me.lap||0)+1)+' of '+CIRC.LAPS+(me.slip>.5?' · sliding':''),false); if(st.bb){const tx='Boost '+me.bz; if(st.bb.textContent!==tx)st.bb.textContent=tx; st.bb.classList.toggle('off',!(me.bz>0)||me.bo>0);}}},
+  view(cam,me,dt,st){st.avs.forEach(a=>{const v=RACE.veh(st,a,CIRC.car), h=a.hd==null?st.h0:a.hd, fl=a.fx===1; if(!fl)a.ft=null; const dy=fl?-Math.min(8,Math.pow((st.t||0)-(a.ft==null?(a.ft=st.t||0):a.ft),2)*9):0; v.position.set(a.x,a.y+dy,a.z); v.rotation.y=h; v.rotation.x=fl?((st.t||0)-a.ft)*5:a.y>.05?-.2:0; v.visible=a.ch.visible&&a.alive; if(a.alive)a.ch.position.y=a.y+dy+.3;});
+    chaseCam(cam,me.x,0,me.z,me.hd==null?st.h0:me.hd,dt,{back:7.4,up:5.6,ahead:5,turn:3.4});},
+  // a computer player follows the road a little ahead of itself. Each lap it decides whether to try each shortcut; the better drivers try more often and wobble less on the ruler
+  ai(av,st,t,dt){const ai=av.ai, I=av.in||(av.in={steer:0,boost:false}); ai.dx=ai.dz=0; if(av.vd==null)return; if(ai.sk==null){ai.sk=.6+Math.random()*.4; ai.pl=-1; ai.mode=0;} if(av.rec>0){ai.mode=0; return;}
+    if(ai.pl!==av.lap){ai.pl=av.lap; ai.tb=Math.random()<ai.sk*.8; ai.tj=Math.random()<ai.sk*.65;}
+    const T=st.T, s=av.s||0, b=st.B.near(av.x,av.z,-1), j=st.J.near(av.x,av.z,-1), by=(g,span)=>{const d=g-s; return d>-1.5&&d<span;}; let tp=T.at(s+4+av.v*.35), wob=(1-ai.sk)*.5;
+    if(ai.mode===0){if(ai.tb&&by(st.sB0,7)){ai.mode=1; ai.tb=false;} else if(ai.tj&&by(st.sJ0,7)){ai.mode=2; ai.tj=false;}}
+    if(ai.mode===1){if(b.s>st.B.len-1)ai.mode=0; else{tp=st.B.at(Math.min(st.B.len,Math.max(0,b.s)+3.2)); wob*=.35;}}
+    else if(ai.mode===2){if(j.s>st.J.len-1.5)ai.mode=0; else{tp=st.J.at(Math.min(st.J.len,Math.max(0,j.s)+4)); wob*=.3; if(j.s>1&&j.s<8&&av.v<10.8)I.boost=true;}}
+    else if(av.bz>1&&Math.abs(T.at(s+8).k)<.03&&Math.abs(T.at(s+3).k)<.03&&Math.random()<dt*.5*ai.sk)I.boost=true;
+    ai.n=(ai.n||0)+((Math.random()-.5)*wob*2-(ai.n||0))*Math.min(1,dt*3); const err=wrapA(Math.atan2(tp.x-av.x,tp.z-av.z)-av.hd); I.steer=Math.max(-1,Math.min(1,-err*2.2+ai.n));},
+  ui(st,me){const C=gameCtl('<div class="slider"><i></i><b>STEER</b></div><button class="gbtn gR">Boost 3</button>'), I=me.in||(me.in={steer:0,boost:false}), sl=C.q('.slider'), kn=sl.firstElementChild, K={}; let ts=0, ks=0, gs=0; st.bb=C.q('.gR');
+    const up=()=>{I.steer=Math.max(-1,Math.min(1,ts+ks+gs)); kn.style.transform=`translateX(${(I.steer*(sl.clientWidth/2-38)).toFixed(0)}px)`;}, at=e=>{const r=sl.getBoundingClientRect(); ts=Math.max(-1,Math.min(1,(e.clientX-r.left-r.width/2)/(r.width/2-30))); up();};
+    C.on(sl,'pointerdown',e=>{try{sl.setPointerCapture(e.pointerId);}catch(x){} sl.on=1; at(e);}); C.on(sl,'pointermove',e=>{if(sl.on)at(e);}); const rel=()=>{sl.on=0; ts=0; up();}; C.on(sl,'pointerup',rel); C.on(sl,'pointercancel',rel);
+    C.btn('.gR',()=>{I.boost=true;});
+    C.key((k,dn)=>{K[k]=dn; if(dn&&(k===' '||k==='arrowup'||k==='w'))I.boost=true; ks=(K.arrowright||K.d?1:0)-(K.arrowleft||K.a?1:0); up();}); C.pad(()=>{I.boost=true;},ax=>{gs=ax; up();}); return C;},
+  ex:RACE.ex, sub:RACE.sub, steer:()=>[0,0], final:RACE.final};
+
+/* Rapid Rafts: a raft on a river, with a paddle on each side. A stroke on the left pushes forward and swings the nose right, so
+   left, right, left, right goes straight and two on one side turns. The river has a fast channel with rocks in it, and whirlpools */
+const RAFT={hint:'Paddle left, right, left, right',max:80,left:true,noEdge:true,noDeck:true,noJoy:true,zs:[],fit:6,deck:{k:'s',h:900},F:1.2,
+  dc:(st,s)=>Math.sin(s*.075+st.ph)*(st.W-1.7),   /* where the fast water runs */
+  start(k,n,st){const p=st.T.at(3), d=RACE.grid(k,n,Math.min(1.7,(st.W*2-1.8)/Math.max(1,n-1))); return[p.x+p.nx*d,p.z+p.nz*d];},
+  init(sc,rng,sh,n){const pts=[[0,10],[0,-10]]; let x=0, z=-10, dir=rng()<.5?-1:1;
+    for(let i=0;i<9;i++){x+=dir*(6+rng()*8); z-=12+rng()*6; pts.push([x,z]); if(rng()<.8)dir=-dir;} pts.push([x,z-12],[x,z-24]);
+    const T=mkTrack(pts), st={T,n,sc,veh:[],W:4.3+Math.max(0,n-4)*.45,ph:rng()*6,rocks:[],wps:[],h0:T.at(3).h}, parts=[];
+    RACE.ground(sc,'grass',0x86d86f,70);
+    const wt=tex((g,s)=>{g.fillStyle='#2fb4e6'; g.fillRect(0,0,s,s); g.strokeStyle='rgba(255,255,255,.5)'; g.lineWidth=1.6; g.lineCap='round'; const R=rng32(5); for(let i=0;i<16;i++){const x=R()*s, y=R()*s, l=5+R()*9; for(const dy of [-s,0,s]){g.beginPath(); g.moveTo(x,y+dy); g.lineTo(x+(R()-.5)*2,y+dy+l); g.stroke();}}}); wt.wrapS=wt.wrapT=THREE.RepeatWrapping; st.wt=wt;
+    ribbon(T,st.W+.5,new THREE.MeshLambertMaterial({color:0xe9d8a6}),sc,{y:.0}); ribbon(T,st.W,new THREE.MeshLambertMaterial({map:wt}),sc,{y:.03,us:6,ur:2});
+    ribbon(T,.95,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.3,depthWrite:false}),sc,{y:.05,off:s=>RAFT.dc(st,s)});   /* the fast channel shows as a pale streak */
+    for(let s=22;s<T.len-16;s+=9+rng()*7){const p=T.at(s), c=RAFT.dc(st,s), d=Math.max(-(st.W-1),Math.min(st.W-1,rng()<.6?c+(rng()<.5?-1:1)*(.3+rng()*1.3):(rng()*2-1)*(st.W-1))), r=.75+rng()*.4, px=p.x+p.nx*d, pz=p.z+p.nz*d; st.rocks.push({x:px,z:pz,r,s,d}); parts.push([GEO.sph,0x8d99ae,px,.15,pz,rng()*3,r*2.1,r*1.5,r*1.9],[GEO.sph,0xa9b4c6,px+r*.3,.5,pz-r*.2,0,r,r*.8,r]);}
+    const wm=new THREE.MeshBasicMaterial({map:tex((g,s)=>{g.strokeStyle='#ffffff'; g.lineWidth=3; g.lineCap='round'; g.beginPath(); for(let a=0;a<19;a+=.2){const r=a*1.55; g.lineTo(s/2+Math.cos(a)*r,s/2+Math.sin(a)*r);} g.stroke();}),transparent:true,opacity:.8,depthWrite:false});
+    for(let s=50;s<T.len-34;s+=48+rng()*22){const p=T.at(s), c=RAFT.dc(st,s), d=Math.max(-(st.W-2.4),Math.min(st.W-2.4,c+(c>0?-2.9:2.9))), x=p.x+p.nx*d, z=p.z+p.nz*d; if(st.rocks.some(r=>Math.hypot(r.x-x,r.z-z)<3.6))continue; const m=flatM(mesh(new THREE.CircleGeometry(2.6,24),wm,x,.06,z,sc)); st.wps.push({x,z,R:2.6,s,d,m});}
+    for(let i=0;i<60;i++){const p=T.at(rng()*T.len), sd=rng()<.5?-1:1, o=st.W+2+rng()*11, px=p.x+p.nx*sd*o, pz=p.z+p.nz*sd*o, h=2+rng()*2; parts.push([GEO.cyl,0x8a5a2b,px,h/2,pz,0,.4,h,.4],[GEO.sph,0x2f9e6b,px,h+.5,pz,0,2.4,1.9,2.4],[GEO.sph,0x35c98a,px+.5,h+1.2,pz+.3,0,1.5,1.3,1.5]);}
+    RACE.gate(sc,T,T.len-1.5,st.W,parts); solid(parts,sc); return st;},
+  boat(av){const g=new THREE.Group(); solid([[GEO.tor,av.col,0,.24,0,0,1.25,1.65,1.4,Math.PI/2],[GEO.box,0xfdf6e3,0,.12,0,0,.9,.1,1.3]],g);
+    g.pd=[-1,1].map(sd=>{const h=new THREE.Group(); h.position.set(sd*.62,.5,0); g.add(h); solid([[GEO.cyl,0x8a5a2b,sd*.45,-.1,0,0,.08,1.1,.08,0,sd*1.1],[GEO.box,0xffc531,sd*.95,-.36,0,0,.12,.4,.3,0,sd*1.1]],h); return h;}); return g;},
+  move(av,st){const I=av.in||(av.in={l:0,r:0}), dt=st.dt, T=st.T; if(av.w==null){av.hd=st.h0; av.mx=av.mz=0; av.w=0; av.ti=-1; av.last=0; av.cd=0; av.qx=av.x; av.qz=av.z; av.pa=[0,0];} av.x=av.qx; av.z=av.qz;
+    av.cd-=dt; const L=I.l, Rr=I.r; I.l=I.r=0; const thr=f=>{av.mx+=Math.sin(av.hd)*RAFT.F*f; av.mz+=Math.cos(av.hd)*RAFT.F*f;};
+    if(av.cd<=0&&(L||Rr)){av.cd=.13; if(L&&Rr){thr(1.5); av.last=0; av.pa=[.3,.3];} else if(L){thr(av.last===2?1:.7); av.w-=1.15; av.last=1; av.pa[0]=.3;} else{thr(av.last===1?1:.7); av.w+=1.15; av.last=2; av.pa[1]=.3;}}   /* a stroke after one on the other side is worth more, and the two swings cancel */
+    const q0=T.near(av.x,av.z,av.ti), p=T.P[q0.i], c=3+3*Math.exp(-Math.pow((q0.d-RAFT.dc(st,q0.s))/1.3,2)); let fx=p.tx*c, fz=p.tz*c; av.wp=0;
+    for(const wp of st.wps){const dx=av.x-wp.x, dz=av.z-wp.z, d=Math.hypot(dx,dz); if(d<wp.R&&d>.01){const k=1-d/wp.R; fx+=-dz/d*4.2*k-dx/d*3*k-p.tx*c*k; fz+=dx/d*4.2*k-dz/d*3*k-p.tz*c*k; av.w+=1.6*k*dt; av.wp=1;}}   /* a whirlpool drags the raft round and in */
+    av.mx+=(fx-av.mx)*Math.min(1,dt*1.05); av.mz+=(fz-av.mz)*Math.min(1,dt*1.05);
+    {const rx=-Math.cos(av.hd), rz=Math.sin(av.hd), rs=(av.mx-fx)*rx+(av.mz-fz)*rz, k=Math.min(1,dt*1.6); av.mx-=rx*rs*k; av.mz-=rz*rs*k;}   /* a raft slips forward more easily than sideways */
+    av.hd+=av.w*dt; av.w*=Math.exp(-dt*2.6); av.x+=av.mx*dt; av.z+=av.mz*dt; av.hitT=(av.hitT||0)-dt;
+    for(const r of st.rocks){const dx=av.x-r.x, dz=av.z-r.z, d=Math.hypot(dx,dz)||.01; if(d<r.r+.75){const nx=dx/d, nz=dz/d, vn=av.mx*nx+av.mz*nz; av.x=r.x+nx*(r.r+.76); av.z=r.z+nz*(r.r+.76); if(vn<0){av.mx-=nx*vn*1.35; av.mz-=nz*vn*1.35; av.mx*=.55; av.mz*=.55; av.w+=(Math.random()-.5)*3; if(av.hitT<=0){av.hitT=.6; av.fx=2; if(av.mine)SFX.bump();}}}}
+    if(av.hitT<=0&&av.fx===2)av.fx=0;
+    for(const o of st.avs){if(o===av||!o.alive||o.done)continue; const dx=av.x-o.x, dz=av.z-o.z, d=Math.hypot(dx,dz); if(d<1.5&&d>.01){av.x+=dx/d*(1.5-d)*.5; av.z+=dz/d*(1.5-d)*.5; av.mx+=dx/d*2*dt; av.mz+=dz/d*2*dt;}}
+    const q=T.near(av.x,av.z,q0.i), lim=st.W-.75; av.ti=q.i; av.s=q.s; if(Math.abs(q.d)>lim){const pp=T.P[q.i], o=(Math.abs(q.d)-lim)*Math.sign(q.d), vn=av.mx*pp.nx+av.mz*pp.nz; av.x-=pp.nx*o; av.z-=pp.nz*o; if(vn*Math.sign(q.d)>0){av.mx-=pp.nx*vn; av.mz-=pp.nz*vn; av.mx*=.8; av.mz*=.8;}}   /* the bank */
+    if(q.s<-2){av.x=T.P[0].x; av.z=T.P[0].z;} av.qx=av.x; av.qz=av.z; av.face=av.hd; av.moving=false; av.vx=av.vz=av.kx=av.kz=0;},
+  check(av,st,t,local){return local&&av.s>=st.T.len-1.5?RACE.win(RAFT,av,t):0;},
+  step(st,t,dt){const me=RACE.pre(RAFT,st,t,dt); st.avs.forEach(a=>{if(a.mine||a.cpu)a.pr=Math.max(0,Math.min(1,(a.s||0)/st.T.len));}); st.wt.offset.y-=dt*.55; st.wps.forEach(w=>{w.m.rotation.z+=dt*2.4;});
+    if(me&&me.w!=null)RACE.say(st,me,me.wp?'Whirlpool! Paddle out':me.fx===2?'Rock!':'',me.wp);},
+  view(cam,me,dt,st){const tt=st.t||0; st.avs.forEach(a=>{const v=RACE.veh(st,a,RAFT.boat), h=a.hd==null?st.h0:a.hd; v.position.set(a.x,.06+Math.sin(tt*3+a.k)*.04,a.z); v.rotation.y=h; v.rotation.z=Math.sin(tt*2.2+a.k*2)*.05+(a.fx===2?Math.sin(tt*30)*.12:0); v.visible=a.ch.visible&&a.alive; if(a.alive)a.ch.position.y=.2;
+      const pa=a.pa||(a.pa=[0,0]); if(!(a.mine||a.cpu)){const sp=Math.hypot(a.x-(a.lx==null?a.x:a.lx),a.z-(a.lz==null?a.z:a.lz)); a.lx=a.x; a.lz=a.z; if(sp>.01&&Math.floor(tt*4)!==a.pt4){a.pt4=Math.floor(tt*4); pa[a.pt4%2]=.3;}} v.pd.forEach((pd,i)=>{pa[i]=Math.max(0,pa[i]-(st.dt||.016)); pd.rotation.x=Math.sin((.3-pa[i])/.3*Math.PI)*-1.1*(pa[i]>0?1:0);});});
+    const mi=me.ti!=null&&me.ti>=0?me.ti:(me.vi=st.T.near(me.x,me.z,me.vi==null?-1:me.vi).i); chaseCam(cam,me.x,0,me.z,st.T.P[mi].h,dt,{back:8,up:8,ahead:5,turn:2.4});},
+  // a computer player works towards a line down the river: the confident ones ride the fast channel, the careful ones stay nearer the middle. Two strokes on one side when it needs to turn
+  ai(av,st,t,dt){const ai=av.ai, I=av.in||(av.in={l:0,r:0}); ai.dx=ai.dz=0; if(av.w==null)return; if(ai.sk==null){ai.sk=.55+Math.random()*.45; ai.cad=.17+Math.random()*.08; ai.pt=Math.random()*.3; ai.sd=1; ai.td=0;} ai.t-=dt;
+    const T=st.T, s=av.s||0;
+    if(ai.t<=0){ai.t=.2+Math.random()*.2; const c=RAFT.dc(st,s+6); let td=c*(ai.sk>.75?1:.45); for(const r of st.rocks){const ds=r.s-s; if(ds>0&&ds<8&&Math.abs(r.d-td)<r.r+1.3){td=r.d+(td>=r.d?1:-1)*(r.r+1.7); if(Math.abs(td)>st.W-1.2)td=r.d-(td>=r.d?1:-1)*(r.r+1.7); break;}}
+      for(const w of st.wps){const ds=w.s-s; if(ds>-2&&ds<9&&Math.abs(w.d-td)<w.R+.6)td=w.d+(td>=w.d?1:-1)*(w.R+1.1);} ai.td=Math.max(-(st.W-1.2),Math.min(st.W-1.2,td));}
+    const tp=T.at(Math.min(T.len,s+5.5)), err=wrapA(Math.atan2(tp.x+tp.nx*ai.td-av.x,tp.z+tp.nz*ai.td-av.z)-av.hd); ai.pt-=dt;
+    if(ai.pt<=0){ai.pt=ai.cad*(.8+Math.random()*.4*(1.6-ai.sk)); const th=.22+(1-ai.sk)*.2; if(err>th)ai.sd=2; else if(err<-th)ai.sd=1; else ai.sd=3-ai.sd; if(ai.sd===1)I.l=1; else I.r=1;}},
+  ui(st,me){const C=gameCtl('<button class="gbtn gL">Left paddle</button><button class="gbtn gR">Right paddle</button>'), I=me.in||(me.in={l:0,r:0});
+    C.btn('.gL',()=>{I.l=1; tone(260,.05,'triangle',.04);}); C.btn('.gR',()=>{I.r=1; tone(310,.05,'triangle',.04);});
+    C.key((k,dn)=>{if(!dn)return; if(k==='arrowleft'||k==='a'||k==='f')I.l=1; if(k==='arrowright'||k==='d'||k==='j')I.r=1;}); C.pad(l=>{if(l<2)I.l=1; else I.r=1;}); return C;},
+  ex:RACE.ex, sub:RACE.sub, steer:()=>[0,0], final:RACE.final};
+
+const TRK={'Rail Riders':1,'Tricycle Turbo':2,'Marble Mayhem':3,'Shortcut Circuit':1,'Soapbox Surfers':2,'Rapid Rafts':3,'Hot Bomba':1,'Drum Beater':2,'Musical Chairs':3,'Conveyor Chaos':1,'Lantern Match':2,'Crab Scramble':1,'Boom Hop':1,'Hot Planks':1,'Coconut Drop':1,'Crumble Deck':1,'Slippery Slope':1,'Ticket Grab':2,'Spotlight':2,'Sumo Shove':2,'Hedge Maze':2,'Paint Fight':2,'Stomp':2,'Trap Doors':2,'Ghost Runner':1};
 const GAMES=[
  {name:'Crab Scramble',unit:'sec',surv:true,arena:true,max:51,how:'Everyone shares one small island. Drag to run and dodge the crabs, which keep getting faster. You have 3 lives. Whoever lasts longest wins.',cpu:()=>rand(100,400)/10,play:arena(CRAB)},
  {name:'Boom Hop',unit:'sec',surv:true,arena:true,max:46,how:'Everyone shares one round deck. Tap Jump to clear the swinging boom. It keeps speeding up, and it flashes yellow just before it swings back the other way.',cpu:()=>rand(50,300)/10,play:arena(BOOM)},
@@ -2830,6 +3199,12 @@ const GAMES=[
  {name:'Hot Bomba',unit:'sec',surv:true,arena:true,still:true,max:112,how:'Hot potato with a bomb. Everyone stands in a ring and one player holds a lit bomb. Tap the screen, or the Pass button, to hand it to the next player clockwise. You have to hold it for a moment before you can pass it. The bomb goes off after 5 to 15 seconds, at a moment nobody can see coming; the ticking gets faster as time goes by but never tells you exactly when. Whoever is holding it is out. The ring closes up and a new bomb is lit, until one player is left.',cpu:()=>rand(100,700)/10,play:arena(BOMBA)},
  {name:'Drum Beater',unit:'pts',rot:true,max:54,how:'Forty seconds at the drum kit. Notes come down four lanes. Tap the button under a lane as its note reaches the white line: Perfect is worth 100, Good is worth 50, and a miss ends your run. Every 10 notes in a row makes each note worth a quarter more, up to double. Everyone gets the same notes. It starts easy and gets busier. Keyboard: D, F, J and K. Controller: left and right on the d-pad, then X and B.',cpu:()=>DRUM.cpu(V&&V.mini?V.mini.seed:1),play:DRUM.play},
  {name:'Musical Chairs',unit:'sec',surv:true,arena:true,max:120,how:'Chairs stand in the middle, always one fewer than the players left. While the music plays everyone is carried round the outside of the red line; you can speed up, slow down and move in or out. Cross the red line or touch a chair while the music is playing, even if someone shoves you over, and you are out straight away. The music stops after 4 to 10 seconds: the sound cuts out, the screen flashes and SIT! appears. Then run for a chair. One player per chair, and the first to reach it has it. Whoever is left standing is out. One chair goes and the next round starts, until one player is left.',cpu:()=>rand(100,700)/10,play:arena(CHAIRS)},
+ {name:'Rail Riders',unit:'sec left',arena:true,still:true,max:81,cap:RAIL.max-10,ctl:'Swipe the lever up and down to pump · hold Brake before the red bends',how:'A handcar race on rails. There is no steering. Swipe the lever up and down to pump: each full swing adds speed, long even swings add the most, and a steady rhythm adds more again. Every bend has a top speed. The tight ones are painted red and have a warning sign before them, and the bar at the top shows your speed against the limit of the bend ahead. Take a bend too fast and the car leaves the rails: you tumble, lose all your speed and start again from where you came off. Hold Brake to slow down. First across the line wins. Keyboard: up and down arrows, Space to brake.',cpu:()=>rand(100,400)/10,play:arena(RAIL)},
+ {name:'Tricycle Turbo',unit:'sec left',arena:true,still:true,max:81,cap:TRIKE.max-10,ctl:'Tap Left, Right, Left, Right to pedal · slide either thumb sideways to steer',how:'A tricycle race through the playroom. The two pedals only work in turn: left, right, left, right. Pressing the same one twice does nothing, and an even rhythm is worth more than frantic tapping. To steer, slide either thumb sideways while it is on its pedal. The faster you go, the less you can turn before the wheels skid, run wide and slow you down. Toy blocks in the road stop you almost dead, and the carpet beside the road drags. First across the line wins. Keyboard: F and J to pedal, arrows to steer.',cpu:()=>rand(100,400)/10,play:arena(TRIKE)},
+ {name:'Marble Mayhem',unit:'sec left',arena:true,still:true,max:91,cap:MARBLE.max-10,ctl:'Drag to push the marble · it is heavy, so start slowing early',how:'Everyone balances on a heavy glass marble on a raised wooden track with no rails. Dragging only pushes the marble; it keeps the speed it has, so it takes room to turn and to stop, and it runs away downhill. The track has narrow bridges, wide stretches where you can overtake, and red bars that slide across it. Marbles knock each other like marbles, so you can bump a rival off. Roll over the edge and you are put back at the last green flag you passed. First across the line wins.',cpu:()=>rand(100,400)/10,play:arena(MARBLE)},
+ {name:'Shortcut Circuit',unit:'sec left',arena:true,still:true,max:91,cap:CIRC.max-14,ctl:'Slide the bar to steer · Boost three times · the ruler and the ramp are shortcuts',how:'Toy cars on a tabletop, three laps. The cars drive themselves forward; you steer with the bar, and they slide if you turn hard, which costs speed. You have three boosts. The road is the long, safe way round. There are two shortcuts. The yellow ruler is a narrow bridge across a gap: it cuts off a whole loop of road, but come off the side and you fall. The red ramp jumps a second gap: hit it fast enough, which usually takes a boost, and you fly across; too slow and you drop in. Falling costs a couple of seconds and puts you back where the shortcut began. A lap only counts if you pass both checkpoints. Keyboard: arrows to steer, Space to boost.',cpu:()=>rand(100,400)/10,play:arena(CIRC)},
+ {name:'Soapbox Surfers',unit:'sec left',arena:true,still:true,max:76,cap:SOAP.max-12,ctl:'Drag left and right to lean · the soap answers late, so lean early',how:'Everyone rides a bar of soap down a long wet slide. You never stop moving forward; you can only lean left and right. Soap is slippery: it answers late, it keeps sliding the way it was going, and every bend throws you towards the outside wall. Hitting a wall costs speed. Rubber ducks spin you round and cost more. Pink bubbles give a burst of speed, during which the soap is even slower to answer. The slide narrows in places. First to the bottom wins.',cpu:()=>rand(100,400)/10,play:arena(SOAP)},
+ {name:'Rapid Rafts',unit:'sec left',arena:true,still:true,max:86,cap:RAFT.max-12,ctl:'Tap Left paddle and Right paddle in turn to go straight · twice on one side to turn',how:'A raft race down a river. Each tap is one paddle stroke. A stroke on the left pushes you forward and swings the nose to the right; a stroke on the right swings it left. So left, right, left, right goes straight, and is worth more than paddling on one side, and two strokes on the same side turn the raft. The river carries you along. The pale streak is the fast water, and most of the rocks are in it. Hitting a rock stops you and knocks the raft round. A whirlpool drags the raft round in circles until you paddle out of it. First to the finish wins. Keyboard: left and right arrows.',cpu:()=>rand(100,400)/10,play:arena(RAFT)},
 ];
 GAMES.forEach(g=>{g.trk=TRK[g.name]||3;});
 

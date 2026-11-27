@@ -419,10 +419,27 @@ Speed. Measured on a laptop with built-in Intel graphics, a board frame took abo
 - The automatic resolution drop now starts when the frame rate falls below about 52 a second, not 42.
 - Draw calls in the opening view of a board: Island 138 to 95, Carnival 152 to 117, Farm 152 to 128, Volcano 151 to 125.
 
+## Build 67
+Six races, the first batch from the 25-game brief. They share a way of describing a course (a smooth line, with every position measured as distance along and distance to the side) and a chase camera. Each has its own way of moving; none of them uses the walk-around movement of the older games.
+- **Rail Riders.** No steering. Swipe a lever up and down; each full swing adds speed, long even swings and a steady rhythm add more. Every bend has a top speed worked out from how sharply it curves. Tight bends are painted red and signposted, and a bar shows your speed against the limit ahead. Too fast for 0.18 seconds and the car leaves the rails: 1.7 seconds lost and all speed gone.
+- **Tricycle Turbo.** Two pedals that only count in turn; an even rhythm is worth 30% more. Steering is by sliding either thumb sideways on its pedal. Turn harder than the speed allows and the wheels skid: it runs wide and slows. Toy blocks in the road, always with a way past.
+- **Marble Mayhem.** The stick is a push, not a direction. The marble keeps its speed, takes room to turn and stop, and gains speed on slopes. Narrow bridges, wide overtaking stretches, sliding bars, and marbles that knock each other. Over the edge means back to the last flag.
+- **Shortcut Circuit.** Three laps of a closed tabletop circuit. The cars accelerate by themselves; steering makes the nose turn at once while the direction of travel catches up, and the slide costs speed. Three boosts. A narrow ruler bridge cuts off a loop of road and a jump cuts a corner; both drop you off the table if you miss. Two checkpoints make sure a lap can only be cut at the shortcuts.
+- **Soapbox Surfers.** Forward speed is automatic. Leaning takes hold late, sideways speed carries on, and bends throw you outwards. Ducks spin you; bubbles give a burst of speed during which the soap answers even later.
+- **Rapid Rafts.** One tap is one stroke. A stroke pushes forward and swings the nose away from that side, so alternating goes straight and is worth more. The river has a fast channel with most of the rocks in it, and whirlpools that drag the raft round.
+- **Computer players use the same controls.** They produce lever swings, pedal presses, steering and paddle strokes, and the same physics turns those into movement. Each has its own skill, and the bold ones derail, skid, fall and hit rocks.
+- **Any number of players from 2 to 6.** Start lines and course widths grow with the number of players. A finished vehicle no longer blocks anyone still racing.
+- **Controls.** New on-screen controls for these games (lever, pedals, steering bar, paddle buttons), each with keys and a controller mapping. They appear only when the countdown ends and are removed when the game ends, however it ends.
+- The ready screen shows one line on the controls for games that have their own.
+- The host will not accept a reported result better than the game allows.
+- Anyone who has not finished when the game ends is ranked by how far they got.
+- Nine new game icons (g27 to g35) from the same ChatGPT thread; the last three are for games still to come.
+- Tested: each race to the results screen with computer players, with 2, 4 and 6 players, landscape and portrait; every touch control with real touch events; three races online with three browsers in one room. Not tested: real phones, real controllers, and how the races feel in the hand.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
-Crab Scramble, Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Crumble Deck, Stomp, Trap Doors, Ghost Runner, Slippery Slope, Conveyor Chaos, Lantern Match, Hot Bomba, Musical Chairs.
+Crab Scramble, Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Hedge Maze, Paint Fight, Crumble Deck, Stomp, Trap Doors, Ghost Runner, Slippery Slope, Conveyor Chaos, Lantern Match, Hot Bomba, Musical Chairs, Rail Riders, Tricycle Turbo, Marble Mayhem, Shortcut Circuit, Soapbox Surfers, Rapid Rafts.
 
 **Own screen (everyone plays at the same time, separately)**
 Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon Pop, Crate Stack, Drum Beater.
