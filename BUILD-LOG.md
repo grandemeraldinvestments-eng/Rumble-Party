@@ -445,6 +445,19 @@ Six races, the first batch from the 25-game brief. They share a way of describin
 - The code for Crab Scramble and Ghost Runner is removed, not just hidden.
 - Tested: each of the three to the results screen with computer players, with 4 and 6 players. Ghost Hot Potato and Vacuum Escape online with three browsers. Not tested: real phones.
 
+## Build 69
+Three new boards. Each keeps the 60-space layout (a 45-space loop and a 15-space short cut) so every existing rule, item and computer player still works, and adds its own economy and spaces.
+
+- **Melody Mansion.** The price of a pearl is 5, then 10, 20, 30, then 5 again; it moves on one step every time a pearl is bought. The Golden Note (the pearl stall) does not move after a sale. Only the Metronome space moves it, and that also changes the price. Piano Express and Brass Blast carry you across the room, Musical Mischief drops you on a blue or a red space. The short cut runs across the keys.
+- **Pinball Paradise.** The classic rules: a pearl costs 20 and moves after each sale. Wheel of Wonder: bet 5, 10 or 15 tickets, press STOP, and the host draws the wedge (lose, half back, keep, x2, x3, x5). The Launcher fires you 6 to 16 spaces on, or onto the ramp, the Jackpot Zone or the Doom Zone. Flipper Frenzy moves you 5 on and bats nearby rivals onto the ramp. The ramp is the short cut and holds the Jackpot Zone (20 tickets, an item and 10, or a pearl) and the Doom Zone (lose tickets, an item, or a pearl).
+- **Temple of the Golden Titan.** The pearl merchant stays on the summit for the whole game and sells as many pearls as you can pay for in one visit: buy 1, buy 2, or buy the most you can afford. Barrel Barrage knocks every rival on the climb back 5 spaces, the Jungle Vine swings you 7 up, Crumbling Steps slide you 6 back, the Ancient Lift takes you near the top for 3 tickets. In the last rounds there is an even chance of a Golden Rush, which drops the price to 5 for the rest of the game.
+- The price is shown on a chip at the top of the screen and on a marker above the stall whenever it is not the usual 20.
+- Computer players know the boards: they wait when the Golden Note costs 30 if they are ahead, take the ramp when they are behind, save for the summit and buy the most they can afford.
+- The map picker shows all seven boards with a line about the one chosen. Each new board opens with a sentence on its rules.
+- Art: 14 space icons, 24 scenery pieces, 3 map badges and 3 backdrops, all drawn for these boards. The metronome, pop bumpers, flippers and barrels are built in code so that they can move.
+- Tested: full games with computer players on each new board with 2, 4 and 6 players and no errors; the wheel, the bulk purchase, the barrels and the metronome one at a time. Not tested: these boards on real phones, or online with more than one phone (the host sends its whole state, price and wheel included, so the phones draw what the host decided).
+- Known limits: the boards are flat, so the temple climb is a route across the island, not a real height change. The new boards share the existing board music.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
@@ -457,7 +470,7 @@ Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon
 
 Tests run in a headless browser with no graphics chip:
 - Every mini game is played to the end with random input.
-- A full game with computer players is played on each of the four maps.
+- A full game with computer players is played on each of the seven maps.
 - A two-device game is simulated in one browser and the final scores on both sides are compared.
 - Controller input is checked with a simulated gamepad.
 - Screenshots are taken of new visuals.

@@ -453,6 +453,14 @@ img.ic{display:block; width:22px; height:22px; object-fit:contain}
 #mapSeg button[aria-pressed="true"]::before{transform:scale(1.08) rotate(-4deg)}
 #mapSeg #mIsland::before{background-image:url(assets/maps/island.webp)} #mapSeg #mCarnival::before{background-image:url(assets/maps/carnival.webp)}
 #mapSeg #mFarm::before{background-image:url(assets/maps/farm.webp)} #mapSeg #mVolcano::before{background-image:url(assets/maps/volcano.webp)}
+#mapSeg #mMelody::before{background-image:url(assets/maps/melody.webp)} #mapSeg #mPinball::before{background-image:url(assets/maps/pinball.webp)} #mapSeg #mTemple::before{background-image:url(assets/maps/temple.webp)}
+#mapNote{margin:6px 0 0; min-height:0; font-size:.86rem; line-height:1.3} #mapNote:empty{display:none}
+#ptag{position:fixed; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top,0px) + 58px); z-index:12; padding:3px 12px; border:3px solid var(--ink); border-radius:999px; background:#fff3c4; color:var(--ink); font:400 .95rem var(--display); pointer-events:none; white-space:nowrap}
+#ptag.cheap{background:#35c98a; color:#fff} #ptag.dear{background:#ff4d4d; color:#fff}
+#whl{position:fixed; left:50%; top:44%; transform:translate(-50%,-50%); z-index:21; width:min(60vw,50vh,320px); aspect-ratio:1; pointer-events:none}
+#whl canvas{width:100%; height:100%; border-radius:50%; border:5px solid var(--ink); box-shadow:0 8px 0 rgba(0,0,0,.25); box-sizing:border-box}
+#whl .whp{position:absolute; left:50%; top:-16px; z-index:2; margin-left:-16px; border:16px solid transparent; border-top:30px solid #ff4d4d; filter:drop-shadow(0 3px 0 var(--ink))}
+#whl b{position:absolute; left:-30%; right:-30%; bottom:-40px; text-align:center; font:400 1.15rem var(--display); color:#fff; text-shadow:0 2px 0 var(--ink),2px 0 0 var(--ink),-2px 0 0 var(--ink),0 -2px 0 var(--ink)}
 /* mini game icons (assets/games) */
 img.gi{display:block; width:44px; height:44px; object-fit:contain; flex:none}
 .pgrid button{display:flex; flex-direction:column; align-items:center; gap:3px; font-size:.86rem; line-height:1.1}
@@ -518,7 +526,7 @@ img.gi{display:block; width:44px; height:44px; object-fit:contain; flex:none}
     <div class="slots" id="slots"></div>
     <div class="stack" id="hostCtl">
       <div class="label">Map</div>
-      <div class="seg" id="mapSeg"><button id="mIsland" data-m="island">Island</button><button id="mCarnival" data-m="carnival">Carnival</button><button id="mFarm" data-m="farm">Farm</button><button id="mVolcano" data-m="volcano">Volcano</button></div>
+      <div class="seg" id="mapSeg"><button id="mIsland" data-m="island">Island</button><button id="mCarnival" data-m="carnival">Carnival</button><button id="mFarm" data-m="farm">Farm</button><button id="mVolcano" data-m="volcano">Volcano</button><button id="mMelody" data-m="melody">Melody</button><button id="mPinball" data-m="pinball">Pinball</button><button id="mTemple" data-m="temple">Temple</button></div><p class="sub" id="mapNote"></p>
       <div class="label">Computer players</div>
       <div class="seg" id="cpuSeg"></div>
       <div class="label">Rounds</div>
@@ -648,6 +656,25 @@ const SP={
   U:['Pearl shuffle','The pearl stall jumps to a new space.','#e0409f','!']
 };
 const CAT={K:'pvp',D:'pvp',P:'pvp',X:'pvp',C:'mov',G:'mov',M:'mov',L:'mov',J:'risk',R:'risk',B:'risk',Q:'risk',W:'evt',Y:'evt',U:'evt'};
+/* the special spaces of Melody Mansion (N O A Z), Pinball Paradise (1 to 5) and the Temple of the Golden Titan (6 to 0). Their icons are assets/spaces/<key>.webp */
+Object.assign(SP,{
+  N:['Metronome','The giant metronome moves the Golden Note to a new space and changes the price of a pearl.','#e0409f','!'],
+  O:['Piano Express','The keys light up and fling you to the other piano key, across the room.','#18b7c9','>>'],
+  A:['Brass Blast','The trumpet blows you across the room to its landing spot.','#18b7c9','>>'],
+  Z:['Musical Mischief','The conductor spins his roulette and drops you on a blue space or a red one.','#ff8c1a','$'],
+  1:['Wheel of Wonder','Bet up to 15 tickets and stop the wheel: win up to five times your bet, or lose it.','#ff8c1a','$'],
+  2:['Launcher','The spring fires you off the bumpers to a new space. It might be the ramp, the Jackpot Zone or the Doom Zone.','#18b7c9','>>'],
+  3:['Flipper Frenzy','The flipper bats you 5 spaces on, and knocks any rival within 3 spaces of you onto the ramp.','#17304d','VS'],
+  4:['Jackpot Zone','20 tickets, or an item and 10 tickets, or a free pearl.','#e09a00','$'],
+  5:['Doom Zone','Lose half your tickets, or an item, or even a pearl.','#6a3fb5','!'],
+  6:['Barrel Barrage','Barrels roll down the statue. Every rival on the climb is knocked back 5 spaces.','#17304d','VS'],
+  7:['Jungle vine','Swing 7 spaces up the statue.','#18b7c9','>>'],
+  8:['Crumbling steps','The steps give way and you slide back 6 spaces.','#18b7c9','>>'],
+  9:['Ancient lift','Pay 3 tickets to ride the stone lift to the upper statue.','#18b7c9','>>'],
+  0:['Golden idol','A cache of temple gold: +8 tickets.','#ff8c1a','$']});
+Object.assign(CAT,{N:'evt',O:'mov',A:'mov',Z:'risk',1:'risk',2:'mov',3:'pvp',4:'risk',5:'evt',6:'pvp',7:'mov',8:'mov',9:'mov',0:'risk'});
+/* the Wheel of Wonder: [what the bet is multiplied by, label, share of the wheel, colour]. A wedge's share of the wheel is its chance */
+const WSEG=[[0,'Lose','.1','#17304d'],[2,'x2',.09,'#35c98a'],[.5,'Half',.1,'#c9a6ff'],[1,'Keep',.1,'#2f8fff'],[0,'Lose',.1,'#17304d'],[3,'x3',.08,'#ff5fa8'],[.5,'Half',.1,'#c9a6ff'],[2,'x2',.09,'#35c98a'],[1,'Keep',.1,'#2f8fff'],[0,'Lose',.1,'#17304d'],[5,'x5',.04,'#ffc531']].map(q=>[q[0],q[1],+q[2],q[3]]);
 const CATCOL={pvp:0x17304d,mov:0x18b7c9,risk:0xff8c1a,evt:0xe0409f};
 /* pixel-art faces: used on the 3D heads and as the player icons */
 function drawFace(i,full){
@@ -693,6 +720,12 @@ const MAPS={
   island:{name:'Island',pts:[[1,10.5],[-8,10.5],[-15,7],[-16.5,0],[-13.5,-8],[-8.5,-10],[-5,-4.5],[1,-1.5],[6.5,-4.5],[9.5,-10],[14,-9],[16.5,-2],[14.5,6],[8,10]],fork:2,join:30,amp:3.2,seed:11,sky:['#58c4f6','#c8f0ff'],path:0xc98f55,bridge:0xe5745f,sp:['T','K','W','C','J','W','T','K','W','C','J','W']},
   carnival:{name:'Carnival',pts:[[-1,10.5],[-9,10],[-15,5.5],[-16.5,-2],[-12.5,-9],[-4,-11],[5,-10.5],[12.5,-9.5],[15.5,-5],[9,-2.5],[3.5,0],[9,3],[15.5,5.5],[13,9.5],[6,10.5]],via:[[-10,3],[-8,-4],[-1,-5]],fork:3,join:31,amp:-3,seed:23,sky:['#6a4fc0','#ffb98a'],path:0xe0566b,bridge:0xffc531,sp:['F','D','Y','G','R','Y','F','D','Y','G','R','Y']},
   farm:{name:'Farm',pts:[[0,5.5],[-6,9.5],[-13,10],[-16.5,4],[-15,-5],[-9,-10],[-3,-7.5],[0,-3.5],[4,-7],[10,-10.5],[16,-6],[16.5,2],[12,9],[5,9.5]],fork:4,join:28,amp:3.4,seed:37,sky:['#7fd0ff','#e6f7ff'],path:0xb98a5a,bridge:0x8a5a2b,sp:['V','P','U','M','B','U','V','P','U','M','B','U']},
+  melody:{name:'Melody Mansion',pts:[[0,8],[-6,11],[-13,10],[-16,3],[-13,-6],[-6,-10],[0,-7],[6,-10],[13,-6],[16,3],[13,10],[6,11]],via:[[-8,1],[0,-1],[8,1]],fork:11,join:34,amp:3,seed:71,sky:['#ffd0b0','#fff1dc'],path:0xfdf6e3,bridge:0x2b3350,sp:['N','O','A','Z','Q','N','O','A','Z','K','N','Y'],
+    cycle:[5,10,20,30],blast:[25,3],forkN:['Round the room','Across the keys'],note:'A pearl costs 5, then 10, 20, 30, then 5 again: the price moves on each time one is bought. The Golden Note stays where it is until the metronome moves it.'},
+  pinball:{name:'Pinball Paradise',pts:[[0,11],[-10,11],[-16,7],[-16.5,-3],[-12,-10],[-3,-11.5],[6,-11],[13,-9],[16.5,-3],[16,6],[10,11]],via:[[-6,4],[0,-2],[7,-5]],fork:5,join:27,amp:3,seed:83,sky:['#1c1f5a','#6a3fb5'],path:0x2fb4e6,bridge:0xffc531,sp:['1','2','3','G','J','1','2','3','G','X','Q','D'],
+    bri:{4:'4',10:'5'},pockets:true,forkN:['Outer lane','Centre ramp'],forkTip:' The ramp holds the Jackpot Zone and the Doom Zone.',note:'High risk, high reward. The centre ramp is a short cut with the Jackpot Zone and the Doom Zone on it, and you can bet tickets on the Wheel of Wonder.'},
+  temple:{name:'Temple of the Golden Titan',pts:[[0,11.5],[-7,11],[-13.5,8.5],[-15.5,2.5],[-11,-1.5],[-14,-6.5],[-9,-11],[0,-12.5],[8,-11],[13,-7],[15.5,-1],[14,6],[8,10.5]],via:[[-3,7.5],[1.5,-.5],[-3.5,-7]],fork:3,join:22,amp:3,seed:97,sky:['#7fd6c2','#e6fff4'],path:0xb7b09c,bridge:0x58b368,sp:['0','7','6','8','9','6','G','0','B','G','Q','K'],
+    top:[0,-12.5],fixed:true,bulk:true,rush:true,forkN:['Stone stairs','Vine path'],note:'The pearl merchant never leaves the summit, and sells as many pearls as you can pay for in one visit. Save up, climb, and watch for barrels. Late in the game the price may drop to 5.'},
   volcano:{name:'Volcano',pts:[[-9.0,-0.9],[-8.7,4.6],[-11.5,7.8],[-14.3,4.6],[-14.7,-1.8],[-11.5,-8.3],[-3.7,-11.0],[3.7,-11.0],[11.5,-8.3],[14.7,-1.8],[14.3,4.6],[11.5,7.8],[8.7,4.6],[9.0,-0.9],[6.4,-5.5],[0.0,-7.4],[-6.4,-5.5]],core:[0,-1.5],via:[[-8.5,12.6],[-1,15.6],[7,12.8]],fork:4,join:30,amp:4,seed:53,sky:['#3b2a55','#ff9a6a'],path:0x6a5a5a,bridge:0x9a3a2a,sp:['E','X','W','L','Q','E','X','L','W','Q','X','Q'],secs:[[32,4],[37,7],[15,6,1]]}
 };
 let NODES=[];
@@ -724,6 +757,8 @@ function buildGraph(m){
   const plus=[]; for(let i=1;i<45;i++)if(N[i].t==='+'&&i!==m.fork&&i!==join)plus.push(i);
   m.sp.forEach((t,k)=>{N[plus[Math.floor((k+.5)*plus.length/m.sp.length)]].t=t;});
   N.spots=[9,19,31,40,55].map(i=>i===m.fork||i===join?i+1:i);   // the 5 fixed places the pearl stall can stand
+  if(m.bri)for(const k in m.bri)N[45+ +k].t=m.bri[k];   /* a map can name particular spaces on its short cut */
+  if(m.top){let b=1; for(let i=1;i<45;i++)if(Math.hypot(N[i].x-m.top[0],N[i].z-m.top[1])<Math.hypot(N[b].x-m.top[0],N[b].z-m.top[1]))b=i; if(N[b].t==='H'||b===m.fork||b===join)b++; N[b].t='+'; N.spots=[b];}   /* a map can pin the stall to one place: the summit */
   // centre the whole board on the origin; a and b are its half-width and half-depth, used to size the scenery and the camera
   const xs=N.map(n=>n.x),zs=N.map(n=>n.z),cx=(Math.min(...xs)+Math.max(...xs))/2,cz=(Math.min(...zs)+Math.max(...zs))/2;
   N.forEach(n=>{n.x-=cx; n.z-=cz;}); m.a=Math.max(...xs)-cx; m.b=Math.max(...zs)-cz; N.join=join; N.gap=best.gap; if(m.core)N.core=[m.core[0]-cx,m.core[1]-cz];
@@ -1000,6 +1035,32 @@ const PROP={
   fence(x,z,rot){const g=grp(x,0,z); g.rotation.y=rot; [-.8,.8].forEach(px=>mesh(new THREE.BoxGeometry(.1,.7,.1),0xfdf6e3,px,.35,0,g)); [.25,.55].forEach(py=>mesh(new THREE.BoxGeometry(1.9,.08,.06),0xfdf6e3,0,py,0,g));}
 };
 const THEME={
+  /* Melody Mansion: a music room seen from the floor. A rug under the board, a metronome that really swings, instruments all round */
+  melody(m){const box=new THREE.BoxGeometry(1,1,1), fl=mesh(new THREE.CircleGeometry(170,48),gmat('planks',0xc98f55,44,44),0,-.72,0); fl.rotation.x=-Math.PI/2; fl.castShadow=false; fl.receiveShadow=true;
+    flat(box,0x7a2f52,0,-.42,0,m.a*2.86,.74,m.b*2.96); flat(box,gmat('carpet',0xd9486e,Math.round(m.a*2.7/6),Math.round(m.b*2.8/6)),0,-.38,0,m.a*2.7,.8,m.b*2.8);
+    const q=spot([[0,m.b*.5],[0,-m.b*.5],[m.a*.5,0],[-m.a*.5,0]],2.3)||[0,m.b*.45], g=grp(q[0],0,q[1]); g.noBake=true; USED.push([q[0],q[1],2.3]);
+    solid([[GEO.cone,0x8a5a2b,0,2,0,0,3,4,3],[GEO.box,0xfdf6e3,0,1.7,.86,0,.5,2.4,.1,-.36],[GEO.box,0x17304d,0,.15,0,0,2.7,.3,2.7]],g);
+    const arm=new THREE.Group(); arm.position.set(0,.75,1.2); g.add(arm); solid([[GEO.box,0xffc531,0,1.5,0,0,.12,3,.08],[GEO.box,0xff4d4d,0,2.2,0,0,.46,.38,.16]],arm); FXP.metro={x:q[0],z:q[1],arm,t:0,ph:0,lk:0};
+    scatter([['piano',3.6],['drumkit',2.8],['xylophone',2.3],['speaker',2.6],['guitar',2.8],['trumpet',2.4]],[['notes',1.9],['speaker',2.2],['guitar',2.5],['notes',1.9],['trumpet',2.3],['xylophone',2.1],['notes',1.9],['drumkit',2.4]]);
+  },
+  /* Pinball Paradise: a dark playfield inside a red rail, pop bumpers that flash, and two flippers that really swing at the bottom of the table */
+  pinball(m){const box=new THREE.BoxGeometry(1,1,1), fl=mesh(new THREE.CircleGeometry(170,48),0x141845,0,-.72,0); fl.rotation.x=-Math.PI/2; fl.castShadow=false; fl.receiveShadow=true;
+    flat(box,0xff4d4d,0,-.42,0,m.a*2.9,.74,m.b*3); flat(box,0x2b3288,0,-.38,0,m.a*2.76,.8,m.b*2.86);
+    [[0,0,m.b*.62,0x35e0ff],[0,0,m.b*.3,0xff5fa8],[-m.a*.62,m.b*.1,m.b*.36,0xffc531],[m.a*.62,-m.b*.1,m.b*.36,0x35c98a]].forEach(([x,z,r,c])=>{const q=mesh(new THREE.RingGeometry(r-.12,r+.12,56),new THREE.MeshBasicMaterial({color:c}),x,.025,z); q.rotation.x=-Math.PI/2; q.castShadow=false;});   /* neon rings painted on the playfield */
+    FXP.bump=[]; [[-m.a*.32,-m.b*.3],[m.a*.08,m.b*.4],[m.a*.42,m.b*.22],[-m.a*.48,m.b*.42],[m.a*.5,-m.b*.45]].forEach(([x,z],i)=>{if(!clearOf(x,z,1.6))return; USED.push([x,z,1.6]); const g=grp(x,0,z); g.noBake=true;
+      solid([[GEO.cyl,0xfdf6e3,0,.45,0,0,2,.9,2],[GEO.cyl,[0xff4d4d,0xffc531,0x35c98a,0xff5fa8,0xc9a6ff][i],0,1,0,0,2.6,.3,2.6],[GEO.sph,0xffffff,0,1.2,0,0,1.1,.5,1.1]],g); FXP.bump.push({g,t:0}); const q=mesh(new THREE.RingGeometry(1.5,1.72,40),new THREE.MeshBasicMaterial({color:0xffffff}),x,.03,z); q.rotation.x=-Math.PI/2; q.castShadow=false;});
+    FXP.flip=[-1,1].map(sd=>{const g=grp(sd*5.6,0,m.b+6.4); g.noBake=true; solid([[GEO.box,0xff4d4d,-sd*1.5,.4,0,0,3.4,.5,.8],[GEO.cyl,0xfdf6e3,0,.4,0,0,1.1,.7,1.1]],g); g.rotation.y=sd*.45; return{g,sd,t:0};});
+    const jz=NODES.findIndex(n=>n.t==='4'), dz=NODES.findIndex(n=>n.t==='5'); if(jz>=0){stand('jackpotsign',NODES[jz].x+1.7,NODES[jz].z-1.3,3); USED.push([NODES[jz].x+1.7,NODES[jz].z-1.3,1]);} if(dz>=0){stand('robot',NODES[dz].x-1.8,NODES[dz].z-1.2,2.8); USED.push([NODES[dz].x-1.8,NODES[dz].z-1.2,1]);}
+    scatter([['prizewheel',2.8],['ramp',2.4],['chromeball',1.6],['plunger',2.8],['bumper',2.1]],[['neonarrow',1.9],['chromeball',1.5],['plunger',2.6],['neonarrow',1.9],['bumper',2],['jackpotsign',2.4],['neonarrow',1.9],['chromeball',1.5]]);
+  },
+  /* Temple of the Golden Titan: a jungle island. The loop climbs the left of the statue to the summit at the top and comes down the right; the titan's head looks out from behind the summit */
+  temple(m){const box=new THREE.BoxGeometry(1,1,1); PROP.sea(); coast(0xbdeee0,0xe2d3a1,0x58b368,'sand','grass'); const top=NODES[NODES.spots[0]];
+    flat(box,gmat('rock',0xb7b09c,6,4),0,.015,-m.b*.5,m.a*1.7,.05,m.b*1.05); flat(box,gmat('rock',0xd8c98a,3,2),top.x,.03,top.z+1.4,7.5,.06,5.5);
+    stand('stonehead',top.x,top.z-4.8,8.5); stand('torch',top.x-4.4,top.z-1.8,2.8); stand('torch',top.x+4.4,top.z-1.8,2.8); stand('treasure',top.x+2.3,top.z-2.4,1.7); stand('gate',top.x-2.3,top.z-2.5,2.6); USED.push([top.x,top.z-3.6,4.6]);
+    FXP.brl=[0,1,2].map(i=>{const g=grp(0,0,0); g.noBake=true; g.visible=false; solid([[GEO.cyl,0x8a5a2b,0,.6,0,0,1.2,1.5,1.2,0,Math.PI/2],[GEO.cyl,0x4a5568,-.45,.6,0,0,1.26,.12,1.26,0,Math.PI/2],[GEO.cyl,0x4a5568,.45,.6,0,0,1.26,.12,1.26,0,Math.PI/2]],g); return{g,i};}); FXP.brlT=0;
+    NODES.forEach((n,i)=>{if(i>=45)return; const nm={6:'barrels',7:'vines',8:'column'}[n.t]; if(!nm)return; const o=outN(i), x=n.x+o[0]*2.15, z=n.z+o[1]*2.15; if(clearOf(x,z,.5)){USED.push([x,z,.8]); stand(nm,x,z,nm==='vines'?2.6:2);}});
+    scatter([['waterfall',2.8],['column',2.3],['vines',2.6],['treasure',1.5],['palm',3]],[['palm',3],['vines',2.4],['torch',2.4],['palm',2.8],['column',2.2],['waterfall',2.6],['palm',3],['torch',2.4]]); PROP.skyAndBoats(m,true);
+  },
   island(m){
     const cyl=new THREE.CylinderGeometry(1,1,1,64); PROP.sea(); coast(0xc6f4f4,0xf6dc9a,0x86d86f,'sand','grass');
     if(MODELS){let q;   // a small beach village; the rides and striped tents belong to the Carnival map
@@ -1219,7 +1280,7 @@ function spaceInfo(i){
   if(!t&&SP[n.t]){t=`${SP[n.t][0]}: ${SP[n.t][1]}`; if(n.t==='J'&&V.pot!=null)t+=` The pot holds ${V.pot}.`; if(n.t==='V'&&V.harv!=null)t+=` Worth ${V.harv} tickets now.`;}
   if(n.hot)t='Scorched by lava for now: lose 3 tickets. '+(t||'');
   if(n.bridge)t+=' On the bridge shortcut.'; if(n.next.length>1)t+=' The path forks here.';
-  if(i===V.pearlAt)t+=' The pearl stall is here.'; else if(NODES.spots.includes(i))t+=' The pearl stall can appear here.';
+  if(i===V.pearlAt)t+=' The pearl stall is here'+(MAPS[V.map]&&(MAPS[V.map].cycle||MAPS[V.map].bulk)?': a pearl costs '+(V.price!=null?V.price:COST)+' tickets.':'.'); else if(NODES.spots.includes(i))t+=' The pearl stall can appear here.';
   if(me){const d=dist(me.pos,i); t+=d===0?' You are here.':d>40?'':` ${d} space${d===1?'':'s'} from you.`;}
   $('#spInfo').textContent=t; $('#spInfo').hidden=false; mark.position.set(n.x,.34,n.z); mark.visible=true;
 }
@@ -1337,7 +1398,7 @@ function drawLobby(){
   const free=V.seats.filter(s=>!s).length;
   $('#cpuSeg').innerHTML=[0,1,2,3,4,5].filter(v=>v<=free).map(v=>`<button data-c="${v}" id="c${v}" aria-pressed="${Math.min(V.ncpu,free)===v}">${v}</button>`).join('');
   for(const x of $('#rounds').children)x.setAttribute('aria-pressed',+x.dataset.r===V.rounds);
-  for(const x of $('#mapSeg').children)x.setAttribute('aria-pressed',x.dataset.m===V.map);
+  for(const x of $('#mapSeg').children)x.setAttribute('aria-pressed',x.dataset.m===V.map); {const mn=$('#mapNote'), tx=(MAPS[V.map]&&MAPS[V.map].note)||''; if(mn.textContent!==tx)mn.textContent=tx;}
   $('#lobbyNote').textContent=net.host?(n<2?'You need at least 2 players. Add a computer or wait for a friend.':''):(V.seats.includes(me)?`Map: ${(MAPS[V.map]||MAPS.island).name}, ${V.rounds} rounds. Waiting for the host to start.`:'This game is full.');
 }
 /* opening sequence: three camera shots of the map under a title card, then down to the start gate */
@@ -1352,12 +1413,49 @@ function introCam(dt){
   $('#fade').style.opacity=Math.max(0,1-e/.6,bump(2.5),bump(4.3)); $('#titleCard').style.opacity=e>.35&&e<4.1?1:0;
   if(introT<=0){$('#titleCard').hidden=true; $('#fade').hidden=true;}
 }
+/* two things drawn over the board: what a pearl costs (on boards where that changes) and the Wheel of Wonder */
+const WH={n:-1,a:0,to:null}, PT={k:'',s:null};
+function boardUi(dt){
+  const on=!!V&&V.phase==='board'&&!!V.ui, M=on?MAPS[V.map]:null, pr=on?(V.price!=null?V.price:COST):0, show=!!M&&!!(M.cycle||M.bulk); let tag=$('#ptag');
+  if(show){if(!tag){tag=document.createElement('div'); tag.id='ptag'; document.body.appendChild(tag);} const tx=(M.bulk?'Summit pearls: ':'Pearl: ')+pr+' tickets'; if(tag.textContent!==tx)tag.textContent=tx; tag.className=pr<=5?'cheap':pr>=30?'dear':''; tag.hidden=false;
+    if(PT.k!==String(pr)){PT.k=String(pr); if(!PT.s){PT.s=new THREE.Sprite(new THREE.SpriteMaterial({depthTest:false})); PT.s.scale.set(2.3,2.3,1); PT.s.renderOrder=5; scene.add(PT.s);} if(PT.s.material.map)PT.s.material.map.dispose();
+      PT.s.material.map=tex((g,s)=>{g.fillStyle=pr<=5?'#35c98a':pr>=30?'#ff4d4d':'#ffc531'; g.strokeStyle='#17304d'; g.lineWidth=4; g.beginPath(); g.arc(s/2,s/2,s*.4,0,7); g.fill(); g.stroke(); g.fillStyle=pr<=5||pr>=30?'#fff':'#17304d'; g.font=`800 ${pr>9?30:36}px ${FONT}`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(pr,s/2,s/2+2);}); PT.s.material.needsUpdate=true;}
+    PT.s.visible=true; PT.s.position.set(pearl.position.x,4.6+Math.sin(T*2.5)*.12,pearl.position.z);
+    if(M.cycle&&!PT.note){PT.note=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.TextureLoader().load('assets/spaces/note.webp')})); PT.note.scale.set(1.9,1.9,1); scene.add(PT.note);} if(PT.note){PT.note.visible=!!M.cycle; PT.note.position.set(pearl.position.x-1.5,3.1+Math.sin(T*2)*.2,pearl.position.z);}}
+  else{if(tag&&!tag.hidden)tag.hidden=true; if(PT.s)PT.s.visible=false; if(PT.note)PT.note.visible=false;}
+  const w=on?V.ui.wh:null; let el=$('#whl'); if(!w||!w.on){if(el&&!el.hidden)el.hidden=true; return;}
+  if(!el){el=document.createElement('div'); el.id='whl'; el.innerHTML='<div class="whp"></div><canvas width="520" height="520"></canvas><b></b>'; document.body.appendChild(el); const g=el.querySelector('canvas').getContext('2d'); let a=0;
+    WSEG.forEach(q=>{const b=a+q[2]*6.2832; g.beginPath(); g.moveTo(260,260); g.arc(260,260,250,a,b); g.closePath(); g.fillStyle=q[3]; g.fill(); g.lineWidth=5; g.strokeStyle='#17304d'; g.stroke(); g.save(); g.translate(260,260); g.rotate((a+b)/2); g.fillStyle=q[3]==='#17304d'?'#fff':'#17304d'; g.font='400 30px "Lilita One",sans-serif'; g.textAlign='right'; g.textBaseline='middle'; g.fillText(q[1],238,0); g.restore(); a=b;});
+    g.beginPath(); g.arc(260,260,34,0,7); g.fillStyle='#fdf6e3'; g.fill(); g.lineWidth=6; g.stroke();}
+  el.hidden=false; if(WH.n!==w.n){WH.n=w.n; WH.a=0; WH.to=null;}
+  if(w.res!=null&&WH.to==null){let a=0; for(let i=0;i<w.res;i++)a+=WSEG[i][2]*6.2832; let to=-Math.PI/2-(a+WSEG[w.res][2]*6.2832*w.f); while(to<WH.a+9)to+=6.2832; WH.to=to;}   /* turn on until the wedge the host drew is under the pointer */
+  const pa=WH.a; if(WH.to==null)WH.a+=dt*7.5; else WH.a+=(WH.to-WH.a)*Math.min(1,dt*2.4); if(Math.floor(WH.a/.45)!==Math.floor(pa/.45))tone(900,.02,'square',.025);
+  el.querySelector('canvas').style.transform=`rotate(${WH.a}rad)`; const cap=el.lastElementChild, tx=nameOf(w.k)+' bets '+w.bet+(w.res!=null&&Math.abs(WH.to-WH.a)<.03?' \u00b7 '+WSEG[w.res][1]:''); if(cap.textContent!==tx)cap.textContent=tx;
+}
 function playFx(f){
   if(f.t==='ferris'){const g=pawns[f.k]; if(g&&FXP.wheel){g.ride=2.5; FXP.boost=2.7; SFX.fly();}}
   else if(f.t==='erupt'){FXP.erupt=3.4; tone(70,1.6,'sawtooth',.09,40); setTimeout(()=>tone(55,1.4,'sawtooth',.08,35),500);}
+  else if(f.t==='metro'){if(FXP.metro)FXP.metro.t=3;}
+  else if(f.t==='tick'){tone(1300,.04,'square',.04);}
+  else if(f.t==='piano'){[523,587,659,784,880,1047].forEach((q,i)=>setTimeout(()=>tone(q,.16,'triangle',.07),i*170));}
+  else if(f.t==='brass'){tone(196,.5,'sawtooth',.08,392); setTimeout(()=>tone(392,.7,'sawtooth',.1,784),500);}
+  else if(f.t==='launch'){tone(120,.5,'square',.06,900);}
+  else if(f.t==='bump'){if(FXP.bump&&FXP.bump.length)FXP.bump[Math.floor(Math.random()*FXP.bump.length)].t=.4; tone(880,.08,'square',.06,440);}
+  else if(f.t==='flip'){if(FXP.flip)FXP.flip.forEach(q=>{q.t=.5;}); tone(160,.12,'square',.08,60);}
+  else if(f.t==='jackpot'){[784,988,1175,1568].forEach((q,i)=>setTimeout(()=>tone(q,.2,'square',.06),i*130));}
+  else if(f.t==='doom'){tone(180,.9,'sawtooth',.09,45);}
+  else if(f.t==='barrel'){FXP.brlT=2.7; tone(80,1.9,'sawtooth',.07,50);}
+  else if(f.t==='crumble'){tone(140,.5,'sawtooth',.07,50);}
+  else if(f.t==='lift'){tone(220,.8,'sine',.06,440);}
+  else if(f.t==='rush'){[523,659,784,1047].forEach((q,i)=>setTimeout(()=>tone(q,.25,'triangle',.07),i*150));}
   else if(f.t==='storm'){const el=$('#gl'); el.classList.add('storm'); tone(90,.5,'sawtooth',.08,50); setTimeout(()=>el.classList.remove('storm'),1700);}
 }
 function fxFrame(dt){
+  if(FXP.metro){const q=FXP.metro; q.t=Math.max(0,q.t-dt); q.ph+=dt*(q.t>0?3+(3-q.t)*5:1.6); q.arm.rotation.z=Math.sin(q.ph)*.55; const k=Math.floor(q.ph/Math.PI); if(q.t>0&&k!==q.lk)tone(1400,.03,'square',.03); q.lk=k;}   /* the metronome ticks over all the time, and races when it is set off */
+  if(FXP.bump)FXP.bump.forEach(b=>{b.t=Math.max(0,b.t-dt); b.g.scale.setScalar(1+Math.sin(b.t/.4*Math.PI)*.25);});
+  if(FXP.flip)FXP.flip.forEach(q=>{q.t=Math.max(0,q.t-dt); q.g.rotation.y=q.sd*(.45-Math.sin(q.t/.5*Math.PI)*.95);});
+  if(FXP.brl){FXP.brlT=Math.max(0,(FXP.brlT||0)-dt); const top=NODES.spots[0]; FXP.brl.forEach(b=>{const u=1-FXP.brlT/2.7-b.i*.14; b.g.visible=FXP.brlT>0&&u>0&&u<1;   /* three barrels roll from the summit down the climb, one behind another */
+    if(b.g.visible){const f=(1-u)*(top-1)+1, i=Math.floor(f), a=NODES[i], c=NODES[Math.min(top,i+1)], w=f-i; b.g.position.set(a.x+(c.x-a.x)*w,0,a.z+(c.z-a.z)*w); b.g.rotation.y=Math.atan2(c.x-a.x,c.z-a.z); b.g.children[0].rotation.x-=dt*9;}});}
   if(FXP.wheel)FXP.wheel.sp.v=FXP.boost>0?5:.25; if(FXP.boost>0)FXP.boost-=dt;
   const v=FXP.volc, P=lava.geometry.attributes.position.array, L=lava.life, W=lava.v; let any=false;
   if(v){v.smoke.forEach((sm,i)=>{sm.position.y=4+((T*.7+i*1.1)%4.4); sm.material.opacity=.55*(1-(sm.position.y-4)/4.4); sm.scale.setScalar(1+(sm.position.y-4)*.3);});
@@ -1431,7 +1529,7 @@ function frame(now){
   requestAnimationFrame(frame); const raw=(now-last)/1000||0, dt=Math.min(.05,raw); last=now; T+=dt; gpPoll(dt); if(!V||V.phase==='lobby')applyChars();
   if((++frN&1)===0)R.shadowMap.needsUpdate=true;
   if(raw<.5){frT+=raw; if(frN>=60){if(ADAPT&&frT/frN>1/52&&PR>1){PR=Math.max(1,PR-.25); R.setPixelRatio(PR); resize();} frT=0; frN=0;}} else{frT=0; frN=0;}
-  sync(dt); mT-=dt; if(mT<=0){mT=.4; musicTick();}
+  sync(dt); boardUi(dt); mT-=dt; if(mT<=0){mT=.4; musicTick();}
   spin.forEach(q=>{q.o.rotation[q.ax]+=dt*q.v;}); upright.forEach(c=>{c.rotation.z=-c.parent.rotation.z;}); fxFrame(dt);
   pearl.position.x+=(pearl.tx-pearl.position.x)*Math.min(1,dt*2.2); pearl.position.z+=(pearl.tz-pearl.position.z)*Math.min(1,dt*2.2);
   pearl.position.y=.06; pearl.halo.rotation.z+=dt*2; pearl.lid.rotation.x=-1.15-Math.sin(T*2)*.1; pearl.orb.position.y=.66+Math.sin(T*2)*.04;
@@ -1540,17 +1638,24 @@ function ask(k,...labels){
 async function waitFor(fn,ms){const t0=Date.now(); while(!fn()&&Date.now()-t0<ms)await sleep(120*SPEED);}
 const say=t=>{S.ui.msg=t;};
 const gain=(p,n)=>{p.t=Math.max(0,p.t+n);};
+const price=()=>S&&S.price!=null?S.price:COST;   /* what a pearl costs right now: 20, unless the board says otherwise */
 const nm=p=>CAST[p.i].name;
 async function stepTo(p,to){p.pos=to; p.st++; await sleep(260);}
 async function flyTo(p,to){p.pos=to; p.fly++; await sleep(900);}
 async function branch(p,nx,n=1){
   const d=nx.map(t=>dist(t,S.pearlAt)+1);
   if(S.tide&&S.round<=S.tide){say('The tide covers the bridge, so it is the main path only.'); await sleep(900); return nx[0];}
-  if(p.cpu){await sleep(450); return d[1]<d[0]?nx[1]:nx[0];}
+  if(p.cpu){await sleep(450); return cpuFork(p,nx,d);}
   const land=nx.map(t=>{let q=t; for(let r=n-1;r>0;r--)q=NODES[q].next[0]; return q;});
-  say('Fork in the path. Pick a way.'); S.ui.fork=1; askX={pick:1,land,info:['Main path','Bridge'].map((l,i)=>`${l}: the pearl is ${d[i]} spaces away. You land on ${spShort(land[i])}${land[i]===S.pearlAt?' with the pearl stall':''}.`)};
-  const c=await ask(p.k,'Main path','Bridge'); S.ui.fork=0; return nx[c];
+  say('Fork in the path. Pick a way.'); S.ui.fork=1; const FN=MAPS[S.map].forkN||['Main path','Bridge']; askX={pick:1,land,info:FN.map((l,i)=>`${l}: the pearl is ${d[i]} spaces away. You land on ${spShort(land[i])}${land[i]===S.pearlAt?' with the pearl stall':''}.${i?MAPS[S.map].forkTip||'':''}`)};
+  const c=await ask(p.k,...FN); S.ui.fork=0; return nx[c];
 }
+/* which way a computer player goes at the fork. d is how far the stall is by each way */
+function cpuFork(p,nx,d){const M=MAPS[S.map], can=p.t>=price(), near=d[1]<d[0]?nx[1]:nx[0], rank=[...S.p].sort((a,b)=>b.pe-a.pe||b.t-a.t).indexOf(p);
+  if(M.pockets){if(can&&d[1]<d[0]-2)return nx[1]; return rank>=S.p.length/2?(Math.random()<.75?nx[1]:nx[0]):(Math.random()<.2?nx[1]:nx[0]);}   /* pinball: whoever is behind gambles on the ramp; whoever is ahead mostly stays off it */
+  if(M.cycle)return can?near:(price()<=10?near:(d[1]<d[0]?nx[0]:nx[1]));   /* melody: go for the note when it can pay, or when the price is low enough to be worth racing for; otherwise take the long way and collect */
+  if(M.bulk)return can?near:nx[0];   /* temple: without the price of a pearl, climb the long way round */
+  return near;}
 async function moveP(p,n){
   while(n>0){
     S.ui.num=n; const nx=NODES[p.pos].next; await stepTo(p,nx.length>1?await branch(p,nx,n):nx[0]); n--;
@@ -1561,10 +1666,16 @@ async function moveP(p,n){
   await sleep(240); S.ui.num=-1;   // let the pawn finish its last stride before the space resolves
 }
 async function stall(p){
-  if(p.t<COST){say(`Pearl stall. ${nm(p)} needs ${COST} tickets.`); await sleep(1100); return;}
-  if(!p.cpu){say('Pearl stall! Trade 20 tickets for a pearl?'); if(await ask(p.k,'Buy pearl','Skip'))return;}
-  p.t-=COST; p.pe++; S.ui.cheer++; S.ui.cheerK=p.k; S.ui.pe=(S.ui.pe||0)+1; say(`${nm(p)} got a pearl!`); await sleep(2300);
-  await movePearl(p);
+  const M=MAPS[S.map], c=price(); let n=1;
+  if(p.t<c){say(`Pearl stall. ${nm(p)} needs ${c} ticket${c===1?'':'s'}.`); await sleep(1100); return;}
+  if(M.bulk){const mx=Math.floor(p.t/c);   /* the summit merchant sells as many as you can pay for */
+    if(p.cpu)n=mx; else{const q=[1]; if(mx>=3)q.push(2); if(mx>=2)q.push(mx); say(`The summit merchant! Pearls are ${c} tickets each and you have ${p.t}.`);
+      const a=await ask(p.k,...q.map((v,i)=>`${i===q.length-1&&mx>1?'Buy the most: '+v:'Buy '+v}|${v*c} tickets, ${p.t-v*c} left`),'Skip'); if(a>=q.length)return; n=q[a];}}
+  else if(p.cpu){if(M.cycle&&c>=30&&p.t<45&&S.round<S.rounds-1&&p.pe>=Math.max(...S.p.map(q=>q.pe))){say(`${nm(p)} will not pay ${c} for a pearl.`); await sleep(1100); return;}}   /* a computer player in the lead waits for a better price */
+  else{say(`Pearl stall! Trade ${c} tickets for a pearl?`); if(await ask(p.k,'Buy pearl','Skip'))return;}
+  p.t-=c*n; p.pe+=n; S.ui.cheer++; S.ui.cheerK=p.k; S.ui.pe=(S.ui.pe||0)+1; say(n>1?`${nm(p)} buys ${n} pearls!`:`${nm(p)} got a pearl!`); await sleep(2300);
+  if(M.cycle){S.pi=(S.pi+1)%M.cycle.length; S.price=M.cycle[S.pi]; S.ui.sp++; S.ui.spT=`Next pearl: ${S.price} tickets`; say(`The Golden Note now asks ${S.price} tickets for a pearl.`); await sleep(1900);}
+  else if(!M.fixed)await movePearl(p);
 }
 async function movePearl(p,any){
   const cand=NODES.spots.filter(i=>i!==S.pearlAt), n=cand[rand(0,cand.length-1)];
@@ -1594,13 +1705,13 @@ async function shopStop(p){
 }
 function cpuShop(p){
   if(p.it.length>=2)return null; let id=null;
-  if(p.t>=COST+ITEMS.kite.cost&&!p.it.includes('kite'))id='kite';
-  else if(p.t>=COST+ITEMS.twin.cost&&!p.it.includes('twin')&&dist(p.pos,S.pearlAt)>6)id='twin';
+  if(p.t>=price()+ITEMS.kite.cost&&!p.it.includes('kite'))id='kite';
+  else if(p.t>=price()+ITEMS.twin.cost&&!p.it.includes('twin')&&dist(p.pos,S.pearlAt)>6)id='twin';
   if(id){p.t-=ITEMS[id].cost; p.sp=(p.sp||0)+ITEMS[id].cost; p.it.push(id);} return id;
 }
 function cpuItem(p){
   const has=id=>p.it.indexOf(id);
-  if(has('kite')>=0&&p.t>=COST)return has('kite');
+  if(has('kite')>=0&&p.t>=price())return has('kite');
   if(has('twin')>=0)return has('twin');
   if(has('magnet')>=0&&S.p.some(o=>o!==p&&o.t>=3))return has('magnet');
   return -1;
@@ -1650,6 +1761,49 @@ const SPF={
   F:async p=>{await spCard('F'); const w=FXP.wheel; S.ui.cam=w?[w.x,w.z]:null; fx('ferris',{k:p.k}); say(`${nm(p)} rides the big wheel…`); await sleep(2700);
     let n; do{n=rand(1,44);}while(n===p.pos); S.ui.cam=null; await flyTo(p,n); say('The big wheel sets you down somewhere new.'); if(p.pos===S.pearlAt)await stall(p);},
   V:async p=>{const a=S.harv; await spCard('V',`The harvest is worth ${a} tickets.`); gain(p,a); S.harv=2; S.ui.cheer++; S.ui.cheerK=p.k; say(`Harvest time! ${nm(p)} gathers ${a} tickets.`);},
+  N:async p=>{await spCard('N'); const M=MAPS[S.map], mt=FXP.metro; S.ui.cam=mt?[mt.x,mt.z]:null; fx('metro'); say('The metronome swings faster and faster…'); await sleep(3100);
+    const cand=NODES.spots.filter(i=>i!==S.pearlAt), n=cand[rand(0,cand.length-1)], pr=M.cycle.filter(v=>v!==S.price), v=pr[rand(0,pr.length-1)]; S.pearlAt=n; S.price=v; S.pi=M.cycle.indexOf(v);   /* always one of the five stall spaces, so it can always be reached */
+    S.ui.cam=null; S.ui.follow=-1; S.ui.sp++; S.ui.spT=`Pearls now cost ${v}`; say(`The Golden Note moves, and a pearl now costs ${v} tickets.`); await sleep(2700); S.ui.follow=p.k; await sleep(400);},
+  O:async p=>{await spCard('O'); fx('piano'); say('The keys light up one after another…'); await sleep(1500); const o=NODES.findIndex((n,i)=>n.t==='O'&&i!==p.pos); if(o>=0)await flyTo(p,o); say('Piano Express! Set down across the room.'); if(p.pos===S.pearlAt)await stall(p);},
+  A:async p=>{await spCard('A'); const M=MAPS[S.map], k=NODES.filter((n,i)=>n.t==='A'&&i<p.pos).length, to=M.blast[k%M.blast.length]; fx('brass'); say('The trumpet takes a deep breath…'); await sleep(1600); await flyTo(p,to); say('Brass Blast! Blown clean across the room.'); if(p.pos===S.pearlAt)await stall(p);},
+  Z:async(p,d)=>{await spCard('Z'); const c=[]; NODES.forEach((n,i)=>{if((n.t==='+'||n.t==='-')&&i!==p.pos&&i<45)c.push(i);}); for(let i=c.length-1;i>0;i--){const j=rand(0,i); [c[i],c[j]]=[c[j],c[i]];}
+    const pick=c.slice(0,5), to=pick[rand(0,pick.length-1)]; say('The conductor spins his musical roulette…');
+    for(let r=0;r<7;r++){const i=pick[r%pick.length]; S.ui.cam=[NODES[i].x,NODES[i].z]; fx('tick'); await sleep(380+r*60);}   /* the camera visits the spaces it might be, slowing down */
+    S.ui.cam=[NODES[to].x,NODES[to].z]; await sleep(1000); S.ui.cam=null; await flyTo(p,to); say(`The roulette stops on ${spShort(to)}.`); await sleep(700); if(d<2)await land(p,d+1);},
+  1:async p=>{await spCard('1'); const mx=Math.min(15,Math.floor(p.t/5)*5); if(mx<5){say('Not enough tickets to place a bet.'); return;} let bet;
+    if(p.cpu){const rank=[...S.p].sort((a,b)=>b.pe-a.pe||b.t-a.t).indexOf(p); bet=rank===0?5:mx;}   /* the leader bets small; everyone else goes for it */
+    else{const o=['No bet']; for(let b=5;b<=mx;b+=5)o.push(`Bet ${b}`); say('Wheel of Wonder! How much will you bet?'); bet=(await ask(p.k,...o))*5;}
+    if(!bet){say(`${nm(p)} walks past the wheel.`); return;}
+    p.t-=bet; S.ui.wh={n:(S.ui.wh?S.ui.wh.n:0)+1,on:1,k:p.k,bet,res:null,f:0}; say(`${nm(p)} bets ${bet} tickets. Stop the wheel!`); if(p.cpu)await sleep(1300+rand(0,1300)); else await ask(p.k,'STOP!');
+    let x=Math.random(), i=0; while(i<WSEG.length-1&&x>WSEG[i][2]){x-=WSEG[i][2]; i++;} S.ui.wh.res=i; S.ui.wh.f=.15+Math.random()*.7; await sleep(3300);   /* the host makes the draw the moment the wheel is stopped: each wedge's chance is its share of the wheel */
+    const win=Math.round(bet*WSEG[i][0]); gain(p,win); if(WSEG[i][0]>=3){S.ui.cheer++; S.ui.cheerK=p.k; fx('jackpot');}
+    say(win>bet?`${nm(p)} wins ${win} tickets!`:win===bet?`${nm(p)} keeps the ${bet} tickets.`:win?`${nm(p)} gets ${win} tickets back.`:`${nm(p)} loses the ${bet} tickets.`); await sleep(1800); S.ui.wh.on=0;},
+  2:async(p,d)=>{await spCard('2'); const x=Math.random(), jz=NODES.findIndex(n=>n.t==='4'), dz=NODES.findIndex(n=>n.t==='5'); let to;
+    if(x<.1&&jz>=0)to=jz; else if(x<.2&&dz>=0)to=dz; else if(x<.45)to=45; else{to=p.pos; for(let i=rand(6,16);i>0;i--)to=NODES[to].next[0];}
+    const bm=[48,51,53,56].filter(i=>i!==to); fx('launch'); say('The spring winds back…'); await sleep(1300);
+    for(let i=0;i<2;i++){await flyTo(p,bm.splice(rand(0,bm.length-1),1)[0]); fx('bump');}   /* off two bumpers, then down where it was always going */
+    await flyTo(p,to); say(to===jz?'Launched straight into the Jackpot Zone!':to===dz?'Oh no: launched into the Doom Zone!':to===45?'Launched onto the ramp.':'Launched across the table.'); await sleep(500);
+    if(p.pos===S.pearlAt)await stall(p); if(d<2)await land(p,d+1);},
+  3:async p=>{await spCard('3'); fx('flip'); say('The flipper swings!'); await sleep(900); const here=p.pos, hit=S.p.filter(q=>q!==p&&q.pos<45&&Math.min((q.pos-here+45)%45,(here-q.pos+45)%45)<=3);
+    let to=here; for(let i=0;i<5;i++)to=NODES[to].next[0]; await flyTo(p,to); for(const q of hit){S.ui.follow=q.k; q.pos=45; q.fly++; say(`${nm(q)} is batted onto the ramp.`); await sleep(1400);}
+    S.ui.follow=p.k; say('Flipped 5 spaces on.'); if(p.pos===S.pearlAt)await stall(p);},
+  4:async p=>{const x=Math.random(); fx('jackpot'); S.ui.cheer++; S.ui.cheerK=p.k;
+    if(x<.25){await spCard('4','JACKPOT! A free pearl!'); p.pe++; S.ui.pe=(S.ui.pe||0)+1; say(`Jackpot Zone! ${nm(p)} wins a free pearl!`);}
+    else if(x<.5&&p.it.length<2){const id=Math.random()<.4?'kite':Math.random()<.5?'twin':'magnet'; await spCard('4',`JACKPOT! 10 tickets and a ${ITEMS[id].name}.`); p.it.push(id); gain(p,10); say(`Jackpot Zone! ${nm(p)} wins 10 tickets and a ${ITEMS[id].name}.`);}
+    else{await spCard('4','JACKPOT! 20 tickets!'); gain(p,20); say(`Jackpot Zone! ${nm(p)} wins 20 tickets.`);}},
+  5:async p=>{const x=Math.random(); fx('doom');
+    if(x<.2&&p.pe>0){await spCard('5','The machine swallows a pearl!'); p.pe--; say(`Doom Zone! ${nm(p)} loses a pearl.`);}
+    else if(x<.5&&p.it.length){const id=p.it.pop(); await spCard('5',`The machine swallows your ${ITEMS[id].name}.`); say(`Doom Zone! ${nm(p)} loses a ${ITEMS[id].name}.`);}
+    else{const a=Math.min(15,Math.ceil(p.t/2)); await spCard('5',a?`The machine swallows ${a} tickets.`:'Nothing left to swallow!'); gain(p,-a); say(`Doom Zone! ${nm(p)} loses ${a} tickets.`);}},
+  6:async p=>{await spCard('6'); const top=NODES.spots[0], mid=NODES[Math.floor(top/2)], hit=S.p.filter(q=>q!==p&&((q.pos>0&&q.pos<top)||NODES[q.pos].bridge));
+    fx('barrel'); S.ui.cam=[NODES[top].x,NODES[top].z]; say('Barrels thunder down the statue!'); await sleep(1000); S.ui.cam=[mid.x,mid.z]; await sleep(1700); S.ui.cam=null;
+    if(!hit.length){say('Nobody else was on the climb.'); S.ui.follow=p.k; return;}
+    for(const q of hit){S.ui.follow=q.k; q.pos=NODES[q.pos].bridge?MAPS[S.map].fork:Math.max(1,q.pos-5); q.fly++; say(`${nm(q)} is knocked back down the statue.`); await sleep(1500);} S.ui.follow=p.k;},
+  7:async p=>{await spCard('7'); const top=NODES.spots[0], to=Math.min(top-1,p.pos+7); if(p.pos>=top||to<=p.pos){say('Nothing to swing to from here.'); return;} await flyTo(p,to); say('Swung up the statue on a vine.');},
+  8:async p=>{await spCard('8'); fx('crumble'); await sleep(700); if(p.pos<45)await flyTo(p,Math.max(1,p.pos-6)); say('The steps crumble: slid back 6 spaces.');},
+  9:async p=>{const top=NODES.spots[0], to=top-4; if(p.pos>=to||p.pos>=45){await spCard('9','The lift only goes up, and you are already above it.'); return;} await spCard('9'); if(p.t<3){say('The lift costs 3 tickets.'); return;}
+    const go=p.cpu?(p.t-3>=price()||p.t<price()-6):(await ask(p.k,'Ride the lift|3 tickets','Walk'))===0; if(!go)return; p.t-=3; fx('lift'); await flyTo(p,to); say(`${nm(p)} rides the stone lift up the statue.`);},
+  0:async p=>{await spCard('0'); gain(p,8); say('Temple gold: +8 tickets.');},
   E:async p=>{await spCard('E'); const m=MAPS[S.map], sec=rand(0,m.secs.length-1), v=FXP.volc; S.ui.cam=v?[v.x,v.z]:null; fx('erupt',{a:sec}); say('The volcano erupts!'); await sleep(2600);
     S.burn={sec,until:S.round+2}; await sleep(1500); S.ui.cam=null; const s0=m.secs[sec][0];
     for(const q of S.p)if(inBurn(q.pos)){S.ui.follow=q.k; gain(q,-5); q.pos=(s0-1+45)%45; q.fly++; say(`${nm(q)} is burned: -5 tickets and pushed back.`); await sleep(1500);}
@@ -1687,7 +1841,7 @@ async function takeTurn(p){
     for(;;){
       if(p.cpu)break;
       const opts=['Hit the dice']; if(!used)p.it.forEach(id=>opts.push(`${ITEMS[id].name}|${ITEMS[id].tip}`));
-      const d=dist(p.pos,S.pearlAt); say(`The pearl is ${d} space${d===1?'':'s'} away.`);
+      const d=dist(p.pos,S.pearlAt), MM=MAPS[S.map]; say(`The pearl is ${d} space${d===1?'':'s'} away${MM.cycle||MM.bulk?' and costs '+price()+' tickets':''}.`);
       if(opts.length>1)askX={pick:1,start:0,info:[null,...p.it.map(id=>`${ITEMS[id].name}. ${ITEMS[id].desc}`)]};
       const c=await ask(p.k,...opts);
       if(c===0)break;
@@ -1699,8 +1853,10 @@ async function takeTurn(p){
   await sleep(1300);
 }
 async function gameLoop(){
-  S.ui.who=-1; say(''); await sleep(5900);
+  S.ui.who=-1; say(MAPS[S.map].note||''); await sleep(MAPS[S.map].note?7400:5900);
   while(S.round<=S.rounds){
+    if(MAPS[S.map].rush&&S.rush==null&&S.rounds-S.round<Math.min(5,Math.ceil(S.rounds/2))){S.rush=Math.random()<.5?1:0;   /* Golden Rush: in the last rounds there is an even chance the summit price falls to 5 for the rest of the game */
+      if(S.rush){S.price=5; S.ui.sp++; S.ui.spT='Golden Rush'; S.ui.who=-1; S.ui.follow=-1; fx('rush'); say('Golden Rush! The summit merchant sells pearls for 5 tickets until the game ends.'); await sleep(3600);}}
     if(S.burn&&S.round>S.burn.until)S.burn=null; if(S.tide&&S.round>S.tide)S.tide=0;
     if(S.round===S.rounds&&S.rounds>1){
       S.ui.sp++; S.ui.spT='Final round'; say('Blue and red spaces now count double.'); await sleep(1800);
@@ -1771,13 +1927,13 @@ function startGame(prac=-1){
   const far=NODES.spots;
   S.p=ps.map((p,k)=>({...p,k,pos:0,t:10,pe:0,it:[],mg:0,st:0,fly:0,on:0,mw:0,sp:0,iu:0,bl:0,rd:0,chn:0}));
   {const c=CRIT.map((q,i)=>i); for(let i=c.length-1;i>0;i--){const j=rand(0,i); [c[i],c[j]]=[c[j],c[i]];} S.crit=c.slice(0,3);}   /* three of the eight award rules are drawn in secret at the start */
-  Object.assign(S,{gid:rand(1,1e9),round:1,turn:0,pearlAt:far[rand(0,far.length-1)],deck:[],mid:0,res:null,mini:null,phase:'board',traps:{},burn:null,tide:0,pot:MAPS[S.map].sp.includes('J')?5:null,harv:MAPS[S.map].sp.includes('V')?4:null,
-    ui:{who:0,msg:'',dice:-1,hit:0,hitK:0,roll:'',num:-1,ask:null,sp:0,spT:'',follow:0,cheer:0,cheerK:0,fork:0,ch:0,chT:'',chH:'',chC:'',chG:'',fx:{n:0,t:''},cam:null}});
+  Object.assign(S,{gid:rand(1,1e9),round:1,turn:0,pearlAt:far[rand(0,far.length-1)],deck:[],mid:0,res:null,mini:null,phase:'board',traps:{},burn:null,tide:0,price:MAPS[S.map].cycle?MAPS[S.map].cycle[0]:null,pi:0,rush:null,pot:MAPS[S.map].sp.includes('J')?5:null,harv:MAPS[S.map].sp.includes('V')?4:null,
+    ui:{who:0,msg:'',dice:-1,hit:0,hitK:0,roll:'',num:-1,ask:null,sp:0,spT:'',follow:0,cheer:0,cheerK:0,fork:0,ch:0,chT:'',chH:'',chC:'',chG:'',fx:{n:0,t:''},cam:null,wh:null}});
   if(prac<0)gameLoop(); else{S.prac=1; S.ui.who=-1; practiceRun(prac);}
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=68; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=69; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
