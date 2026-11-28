@@ -2136,6 +2136,87 @@ THEME.pinball=function(m){
   TP.cabinet(K,KE,-(hx+58),-17.2,zn-10,.5,[0x1a1f6e,0x3a2fb0],0x35e0ff); TP.cabinet(K,KE,hx+60,-17.2,zn-22,-.45,[0x5a0e46,0xa02a8c],0xffc531); TP.cabinet(K,KE,-(hx+30),-17.2,zn-62,.2,[0x0e4a5a,0x1a8ca0],0xff5fa8); TP.cabinet(K,KE,hx+18,-17.2,zn-70,-.1,[0x4a1a0e,0xb0502a],0x35c98a);
   PLAT&&TP.bulbs(K,KE,[P.x-2.0,3.45,P.z+1.4],[P.x+2.0,3.45,P.z+1.4],8);
 };
+/* ---------- Temple of the Golden Titan: a jungle island that climbs to a huge stone guardian ---------- */
+LANDP.temple={id:'tmpl',sand:[.86,.78,.56],wet:[.68,.60,.42],ga:[.15,.45,.21],gb:[.36,.66,.25],ra:[.44,.44,.38],rb:[.66,.65,.55],deep:[.12,.50,.52]};
+function fallMat(flat){return new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{uN:{value:seaNoise()},uT:TOY.U.uT},
+  vertexShader:'varying vec2 vU; void main(){vU=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:flat?'uniform sampler2D uN; uniform float uT; varying vec2 vU; void main(){vec2 p=vU-.5; float r=length(p)*2., n=texture2D(uN,vU*1.6+vec2(uT*.05,uT*.03)).r, w=sin(r*15.-uT*3.+n*5.)*.5+.5; vec3 c=mix(vec3(.14,.60,.70),vec3(.56,.90,.95),w*.45+n*.3); c=mix(c,vec3(1.),smoothstep(.78,1.,r)*.55); gl_FragColor=vec4(c,.92*smoothstep(1.,.93,r));}'
+    :'uniform sampler2D uN; uniform float uT; varying vec2 vU; void main(){float n=texture2D(uN,vec2(vU.x*.9,vU.y*.35-uT*.5)).r, n2=texture2D(uN,vec2(vU.x*2.3+.37,vU.y*.9-uT*.95)).r, s=smoothstep(.36,.72,n*.55+n2*.45); vec3 c=mix(vec3(.40,.80,.92),vec3(1.),s); float e=smoothstep(0.,.14,vU.x)*smoothstep(1.,.86,vU.x); gl_FragColor=vec4(c,(.8+.2*s)*e);}'});}
+Object.assign(TP,{
+  /* water falling from height h, shooting 'out' from the lip, into a rock basin */
+  fall(K,x,y,z,w,h,out,turn){const pos=[],uv=[],idx=[],n=12; for(let i=0;i<=n;i++){const t=i/n, zz=out*(1-Math.exp(-t*4.5)), yy=h*(1-Math.pow(t,1.45)), ww=w*(1+.2*t)/2; pos.push(-ww,yy,zz,ww,yy,zz); uv.push(0,t*h/2.2,1,t*h/2.2);} for(let i=0;i<n;i++){const a=i*2; idx.push(a,a+2,a+1,a+1,a+2,a+3);}
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx); const f=new THREE.Mesh(g,fallMat(false)); f.position.set(x,y,z); f.rotation.y=turn||0; f.noBake=true; f.renderOrder=3; world.add(f);
+    const c=Math.cos(turn||0), s=Math.sin(turn||0), bx=x+s*out, bz=z+c*out, pool=new THREE.Mesh(new THREE.CircleGeometry(w*1.25,24),fallMat(true)); pool.rotation.x=-Math.PI/2; pool.position.set(bx,y+.16,bz+w*.35); pool.noBake=true; pool.renderOrder=2; world.add(pool);
+    for(let k=0;k<9;k++){const a=k/9*6.283+.3, r=w*1.3; if(Math.cos(a)<-.75)continue; TP.rock(K,bx+Math.sin(a)*r,bz+w*.35+Math.cos(a)*r,.45+.25*hash2(k,3,7),k+3,y-.1,[.5,.56,.46]);}
+    let acc=0; TOY.dyn.push({o:f,f:(o,t,dt)=>{acc+=dt; if(acc>.28){acc=0; toyPuff(bx+(Math.random()-.5)*w,y+.5,bz+.2,0xffffff,1,.55);}}});},
+  bigleaf(K,x,z,s,seed){const y=GY(x,z); K.at(x,y,z,seed*1.7,s||1); for(let k=0;k<6;k++){const a=k*1.047+hash2(k,seed,1)*.4, l=.9+hash2(k,seed,2)*.5; K.add(sphG(.5,1),M4(Math.sin(a)*l*.55,.42+l*.2,Math.cos(a)*l*.55,a,.42,.07,l,-.75,0),[0x2f8f3a,0x7fd24a],{ao:.2,aoH:.5,sway:.12});} K.add(sphG(.2,1),M4(0,.25,0),0x2f7a34,{ao:0});},
+  ruin(K,x,z,turn,seed){const y=GY(x,z), st=[0x7f7b68,0xc4bda2]; K.at(x,y-.1,z,turn); const n=3+Math.floor(hash2(seed,1,4)*3); for(let i=0;i<n;i++){const hh=1+Math.floor(hash2(seed,i,5)*3-(i>n-2?1:0)); for(let j=0;j<hh;j++)K.add(rbox(1.0,.62,.8,.12,2),M4(-n*.5+i*1.02+(j%2)*.25,.31+j*.62,(hash2(i,j,seed)-.5)*.12,(hash2(i,j,seed+2)-.5)*.14),st,{ao:.25,aoH:.6});} K.add(sphG(.5,1),M4(-n*.5+.4,.2,.5,0,1.3,.35,1),[0x3f7a34,0x6fae45],{ao:0}); K.add(rbox(.9,.5,.7,.12,2),M4(n*.5+.4,.2,.6,.7,1,1,1,.2,.3),st,{ao:.2});},
+  chest(K,KG,x,z,turn,s){const y=GY(x,z); K.at(x,y,z,turn,s||1); KG.at(x,y,z,turn,s||1); K.add(rbox(1.5,.8,1.0,.1,2),M4(0,.4,0),[0x6e3f22,0xa8683a],{ao:.3,aoH:.4}); K.add(cylG(.5,.5,1.5,12),M4(0,1.05,-.42,0,1,1,1,-.55,Math.PI/2),[0x7a4a22,0xb9793f],{ao:0}); for(const sx of [-.55,0,.55])KG.add(rbox(.14,.86,1.04,.04),M4(sx,.42,0),0xe9bd55,{ao:0}); KG.add(sphG(.62,1),M4(0,.72,.05,0,1.05,.42,.7),[0xd9a52e,0xffd45e],{ao:0}); for(let k=0;k<5;k++)KG.add(cylG(.13,.13,.05,8),M4(-.9+hash2(k,1,9)*1.8,.04,.7+hash2(k,2,9)*.5),0xffd45e,{ao:0});},
+  goldPile(KG,x,y,z,s){KG.at(x,y,z,0,s); KG.add(sphG(1,2),M4(0,.1,0,0,1.25,.5,1.1),[0xc9962e,0xffd45e],{ao:0}); for(let k=0;k<12;k++){const a=k*.9, r=.5+hash2(k,5,1)*.9; KG.add(cylG(.16,.16,.06,8),M4(Math.sin(a)*r,.42-r*.28,Math.cos(a)*r,a,1,1,1,hash2(k,6,1)*.8,0),0xffe27a,{ao:0});}},
+  idol(K,KG,KE,x,z){const y=GY(x,z); K.at(x,y,z,0); KG.at(x,y,z,0); KE.at(x,y,z,0); K.add(rbox(1.0,.7,1.0,.12,2),M4(0,.35,0),[0x7f7b68,0xc4bda2],{ao:.3,aoH:.4}); KG.add(latheG([[.3,0],[.34,.3],[.2,.5],[.3,.9],[.36,1.2],[.2,1.3]],10),M4(0,.7,0),[0xc9962e,0xffd45e],{ao:0}); KG.add(sphG(.3,1),M4(0,2.2,0),0xffd45e,{ao:0}); for(const sx of [-1,1])KE.add(sphG(.06,0),M4(sx*.12,2.26,.26),0x7fe8ff,{ao:0});},
+  vinePost(K,x,z,turn){const y=GY(x,z); K.at(x,y,z,turn); for(const sx of [-1,1])K.add(tubeG([[sx*.9,-.1,0],[sx*.95,1.4,0],[sx*.8,2.5,.1]],t=>.13-.04*t,6,true),null,[0x6a4a2a,0x9a7446],{ao:.3,aoH:.6}); const v=[]; for(let i=0;i<=10;i++){const t=i/10; v.push([-.8+t*1.6,2.45-Math.sin(t*Math.PI)*.9,.1]);} K.add(tubeG(v,.06,5,false),null,0x3f8a34,{ao:0,sway:.15}); for(let i=1;i<10;i+=2)K.add(sphG(.2,0),M4(v[i][0],v[i][1]-.16,.1,i,1,.3,.6,.5,0),[0x3f8a34,0x7fd24a],{ao:0,sway:.2}); K.add(tubeG([[0,1.55,.1],[.05,.9,.12],[0,.3,.1]],.045,4,false),null,0x3f8a34,{ao:0,sway:.3});},
+  gate(K,KG,x,z,turn,s){const y=GY(x,z), st=[0x7f7b68,0xc4bda2]; K.at(x,y,z,turn,s); KG.at(x,y,z,turn,s); for(const sx of [-1,1]){K.add(rbox(.6,2.6,.6,.12,2),M4(sx*1.1,1.3,0),st,{ao:.3,aoH:1}); K.add(rbox(.8,.3,.8,.1),M4(sx*1.1,.15,0),st,{ao:0});} K.add(rbox(3.4,.5,.8,.14,2),M4(0,2.8,0),st,{ao:0}); K.add(rbox(2.6,.36,.7,.12,2),M4(0,3.2,0),st,{ao:0}); KG.add(cylG(.36,.36,.14,14),M4(0,2.8,.42,0,1,1,1,Math.PI/2,0),[0xc9962e,0xffd45e],{ao:0});},
+  brazier(K,KE,x,y,z,s){K.at(x,y,z,0,s); KE.at(x,y,z,0,s); K.add(latheG([[.5,0],[.3,.2],[.24,.9],[.7,1.3],[.8,1.5],[.66,1.5]],12),null,[0x5f5a4a,0xa9a38a],{ao:.3,aoH:.6}); KE.add(sphG(.52,1),M4(0,1.8,0,0,1,1.35,1),0xffb13a,{ao:0,sway:.3}); KE.add(sphG(.34,1),M4(0,2.25,0,0,1,1.7,1),0xffd86a,{ao:0,sway:.45}); KE.add(sphG(.18,1),M4(0,2.7,0,0,1,1.9,1),0xfff6c8,{ao:0,sway:.6});},
+  /* the Golden Titan: chest and shoulders rise out of the rock, arms laid forward on the terrace; the head turns, and the jaw drops when the barrels roll */
+  titan(K,KG,KE,x,y,z,s){const st=[0x959079,0xcbc4a8], sh=[0xb0aa92,0xd6cfb4], st2=[0x777360,0xb0aa90], moss=[0x3f7a34,0x6fae45], gold=[0xc9962e,0xffd45e]; K.at(x,y,z,0,s); KG.at(x,y,z,0,s); KE.at(x,y,z,0,s);
+    K.add(rbox(18,8,7.5,1.8,3),M4(0,3.2,-1.2),st,{ao:.3,aoH:5}); K.add(rbox(5.2,3,4.8,.9,2),M4(0,7.9,-.6),st2,{ao:.3,aoH:2});
+    for(const sx of [-1,1]){K.add(rbox(5,5,5.4,1.7,3),M4(sx*8.9,5.6,-1),st,{ao:.2,aoH:3}); K.add(rbox(3.7,3.7,6.6,1.2,3),M4(sx*9.6,3.2,2.2,0,1,1,1,.62,0),st,{ao:.2,aoH:3}); K.add(rbox(3.4,3.0,6.4,1.1,3),M4(sx*8.6,1.3,6.2,-sx*.3),st,{ao:.3,aoH:1.5}); KG.add(rbox(3.7,3.3,1.3,.5,2),M4(sx*8.05,1.35,8.0,-sx*.3),gold,{ao:0}); KG.add(rbox(4.2,1.2,5.6,.5,2),M4(sx*9.3,8.0,-1),gold,{ao:0});
+      K.add(rbox(3.9,1.3,3.5,.55,2),M4(sx*7.25,.75,10.5,-sx*.3),st,{ao:.3,aoH:.8}); for(let f=0;f<4;f++)K.add(rbox(.82,1.0,2.0,.3,2),M4(sx*7.25+(-1.4+f*.93)-sx*.6,1.25,12.25-Math.abs(f-1.5)*.25,-sx*.3,1,1,1,-.5,0),st,{ao:.2,aoH:.6}); K.add(rbox(.9,1.0,1.9,.3,2),M4(sx*4.9,1.1,10.4,-sx*1.1,1,1,1,-.3,0),st,{ao:.2});
+      K.add(sphG(1.7,1),M4(sx*9.2,8.75,-1.6,0,1.2,.3,1.1),moss,{ao:0}); K.add(sphG(1.2,1),M4(sx*8.8,2.85,5.6,0,1.2,.3,1.7),moss,{ao:0}); K.add(tubeG([[sx*10.9,7.4,1.2],[sx*11.3,5.2,1.6],[sx*11.1,3.0,1.5],[sx*11.4,1.0,1.7]],.1,5,false),null,0x3f8a34,{ao:0,sway:.1}); K.add(tubeG([[sx*6.6,7.2,2.6],[sx*6.8,5.6,2.75],[sx*6.6,4.2,2.7]],.09,5,false),null,0x3f8a34,{ao:0,sway:.1});}
+    KG.add(cylG(2.1,2.1,.5,22),M4(0,3.4,2.6,0,1,1,1,Math.PI/2,0),gold,{ao:0}); KG.add(torG(1.5,.18,6,22),M4(0,3.4,2.86),gold,{ao:0}); KE.add(sphG(.85,1),M4(0,3.4,2.9,0,1,1,.4),0x7fe8ff,{ao:0});
+    for(let i=0;i<9;i++){if(Math.abs(i-4)<2)continue; K.add(rbox(1.1,1.1,.3,.15),M4(-6.4+i*1.6,5.9,2.5),st2,{ao:0}); K.add(rbox(.5,.5,.32,.1),M4(-6.4+i*1.6,5.9,2.56),0x4f4b3e,{ao:0});} for(let i=0;i<11;i++)K.add(rbox(.9,.5,.3,.1),M4(-7.5+i*1.5,.9,2.5),st2,{ao:0});
+    const H=new Kit(), HG=new Kit(), HE=new Kit(), J=new Kit();
+    H.add(rbox(8,7,7,1.3,3),M4(0,5.2,0),sh,{ao:.15,aoH:3}); H.add(rbox(5.6,2.4,5,.4),M4(0,1.4,.5),0x1f1c16,{ao:0}); H.add(rbox(8.3,1.2,1.0,.45,2),M4(0,6.4,3.2),st2,{ao:0}); H.add(rbox(1.7,3.3,1.7,.55,2),M4(0,4.5,3.6),sh,{ao:0});
+    for(const sx of [-1,1]){H.add(rbox(2.3,1.2,.5,.2),M4(sx*2.25,5.0,3.3),0x2e2b22,{ao:0}); HE.add(rbox(1.7,.75,.3,.15),M4(sx*2.25,5.0,3.5),0xffd23a,{ao:0,ph:1}); H.add(rbox(1.0,4.2,2.0,.4,2),M4(sx*4.4,4.6,-.2),st2,{ao:0}); HG.add(torG(.7,.2,6,14),M4(sx*4.55,2.0,-.2,Math.PI/2),gold,{ao:0}); H.add(rbox(1.3,1.7,.4,.15),M4(sx*3.0,3.1,3.42),st2,{ao:0}); H.add(rbox(.5,.5,.42,.1),M4(sx*3.0,3.1,3.46),0x4f4b3e,{ao:0});}
+    HG.add(rbox(8.8,1.5,7.8,.5,2),M4(0,9.0,0),gold,{ao:0}); for(let i=-2;i<=2;i++)HG.add(rbox(1.5,4.6-Math.abs(i)*.9,.6,.3,2),M4(i*1.75,11.5-Math.abs(i)*.45,.6,0,1,1,1,0,-i*.16),gold,{ao:0}); HE.add(sphG(.62,1),M4(0,9.1,3.95,0,1,1,.5),0x7fe8ff,{ao:0}); H.add(sphG(2,1),M4(2.6,8.3,-2.6,0,1.3,.3,1.2),moss,{ao:0}); H.add(sphG(1.3,1),M4(-3.4,7.6,-3.0,0,1.2,.3,1.2),moss,{ao:0});
+    J.add(rbox(6.8,2.4,6,.8,2),M4(0,1.0,.7),sh,{ao:.15,aoH:1.5}); J.add(rbox(4.0,.5,.4,.15),M4(0,1.9,3.6),0x2e2b22,{ao:0}); for(let i=0;i<4;i++)J.add(rbox(.62,.62,.4,.12),M4(-1.25+i*.83,2.0,3.66),0xe9e2c8,{ao:0});
+    const hg=new THREE.Group(), jm=J.mesh(TOYM.matte); hg.position.set(x,y+8.5*s,z-.4*s); hg.scale.setScalar(s); hg.noBake=true; hg.add(H.mesh(TOYM.matte)); hg.add(HG.mesh(TOYM.gloss,true)); hg.add(HE.mesh(TOYM.glow,false,false)); hg.add(jm); world.add(hg); let k=0;
+    TOY.dyn.push({o:hg,f:(o,t,dt)=>{k+=((FXP.brlT>0?1:0)-k)*Math.min(1,dt*7); o.rotation.y=Math.sin(t*.42)*.2*(1-k); o.rotation.z=Math.sin(t*31)*.018*k; jm.position.y=-1.15*k;}});},
+});
+MAPS.temple.toy={light:{sun:0xfff1c8,sunI:.82,sky:0xe2f6ea,ground:0x9cc27a,skyI:.66,from:[-13,25,14]}};
+THEME.temple=function(m){
+  const {K,KG,KT,KE}=toyKits(), P=PLAT, N=NODES, A=m.a, B=m.b, rnd=rng32(m.seed*3+11), top=N[N.spots[0]], z0=top.z-10.2, st=[0x7f7b68,0xc4bda2];
+  TOY.opt={walk:[0xb7b09c,0xa7a08c,0xc6bfa9],gap:0x5a5546,cut:[0xc48d55,0xb67f49,0xcf9a60]}; TOY.rock=[.5,.55,.46];
+  const spots=N.spots.map(i=>{const o=pearlSide(i); return[N[i].x+o[0],N[i].z+o[1],i];});
+  USED.push([top.x,top.z-3.4,4.4]);
+  /* the ground: the island rises from the beach in the south to the summit terrace in the north, with rock shelves inside the path */
+  const T=TOY.T=toyGround(m,{tide:false,pal:LANDP.temple,
+    patch:[[P.x,P.z+.4,4.7],[0,z0+2,13],[-11,z0+3.5,8.5],[11,z0+3.5,8.5],[0,z0-5,9],...spots.map(s=>[s[0],s[1],2.6])],
+    plateau:[[0,top.z-4.5,17,3.5],[-13.5,-2,8,.7],[13.5,-1,8,.7],[0,z0-6,9,2.4]],
+    mesa:[[8.2,.2,4.4,5.2,2.0],[8.8,-1.6,2.4,2.6,1.2],[-8.4,3.2,2.4,3.0,1.3]],
+    beach:[[2,B+3.5,11,4.2]],
+    islets:[[-33,13,4.6,1.0],[34,-2,5.0,1.2],[-27,-25,5.2,1.1],[30,22,3.8,.7],[-40,-8,3.2,.4]]});
+  const hS=3.5; T.pad(P.x,P.z,2.5,.12); T.pad(top.x,top.z-2.2,5.2,hS); T.pad(0,z0+4,12.5,hS); spots.forEach(s=>T.pad(s[0],s[1],1.1,T.raw(N[s[2]].x,N[s[2]].z,true)));
+  T.bake(); GY=T.walk;
+  /* the Titan, the rocks behind him and the two waterfalls */
+  TP.titan(K,KG,KE,0,GY(0,z0)-.3,z0,1.0);
+  [[-13.5,z0+1.5,4.2,1],[-17,z0+3,3.0,2],[-12,z0-2,4.6,3],[13.5,z0+1.5,4.2,4],[17,z0+3,3.0,5],[12,z0-2,4.6,6],[-6,z0-6,4.4,7],[6,z0-6.5,4.6,8],[0,z0-8,5.2,9],[-19.5,z0+6,2.2,10],[19.5,z0+6,2.2,11]].forEach(q=>TP.rock(K,q[0],q[1],q[2],q[3],GY(q[0],q[1])-.4));
+  for(const sx of [-1,1]){const fx=sx*13.2, fz=z0+4.6, fy=GY(fx,fz+2.6); TP.fall(K,fx,fy,fz,2.4,6.2,2.2,0); USED.push([fx,fz+3.4,3.6]);}
+  /* the summit: paved terrace, gate, torches, braziers in the Titan's hands and the temple's gold */
+  {const y=hS; K.at(top.x,y-.42,top.z-2.6,0); K.add(flatG(rrect(5.4,3.4,1.2,4),.4,.05),null,[0x9a947f,0xcfc8ae],{ao:0}); for(let i=0;i<9;i++)for(let j=0;j<5;j++){if((i+j)%2)continue; K.add(rbox(1.0,.06,1.0,.03),M4(-4.4+i*1.1,.52,-2.2+j*1.1),0xb7b09c,{ao:0});}
+    TP.gate(K,KG,top.x,top.z-4.9,0,1.5); TP.torch(K,top.x-4.6,top.z-1.2); TP.torch(K,top.x+4.6,top.z-1.2); TP.chest(K,KG,top.x+2.9,top.z-3.2,-.4,1.2); TP.goldPile(KG,top.x-3.0,y+.02,top.z-3.4,.8);
+    for(const sx of [-1,1]){TP.brazier(K,KE,sx*7.0,y+.95,z0+10.6,1.25);} TP.goldPile(KG,3.6,y+.02,z0+7.6,.6);}
+  /* things beside the special spaces: barrels where the barrels roll, vines where the vine swings, a broken column at the crumbling steps, an idol at the gold */
+  N.forEach((n,i)=>{if(i>=45)return; const nm={6:'barrels',7:'vines',8:'column',0:'idol'}[n.t]; if(!nm)return; const o=outN(i), x=n.x+o[0]*2.15, z=n.z+o[1]*2.15; if(!clearOf(x,z,.5))return; USED.push([x,z,.9]);
+    if(nm==='barrels'){TP.barrel(K,x-.3,z,.9); TP.barrel(K,x+.45,z+.2,.8);} else if(nm==='vines')TP.vinePost(K,x,z,Math.atan2(o[1],-o[0])); else if(nm==='column')TP.pillar(K,x,z,1.8,i); else TP.idol(K,KG,KE,x,z);});
+  /* the barrels the rules roll down the climb */
+  FXP.brl=[0,1,2].map(i=>{const g=grp(0,0,0), b=new Kit(); g.noBake=true; g.visible=false; b.add(cylG(.6,.6,1.5,14),M4(0,0,0,0,1,1,1,0,Math.PI/2),[0x8a5a2b,0xb9793f],{ao:0}); b.add(cylG(.66,.66,1.0,14),M4(0,0,0,0,1,1,1,0,Math.PI/2),0x9a6a3a,{ao:0}); for(const sx of [-.48,.48])b.add(cylG(.68,.68,.13,14),M4(sx,0,0,0,1,1,1,0,Math.PI/2),0x4a5568,{ao:0}); const bm=b.mesh(TOYM.matte); bm.position.y=.66; g.add(bm); return{g,i};}); FXP.brlT=0;
+  /* rope rails along the vine path */
+  {const C=T.cut, cn=C.length-1; K.at(0,0,0,0); for(const sd of [-1,1]){let rope=[]; for(let i=4;i<=cn-4;i+=3){const a=C[i-2], b=C[i+2], tx=b[0]-a[0], tz=b[1]-a[1], l=Math.hypot(tx,tz)||1, x=C[i][0]-tz/l*1.02*sd, z=C[i][1]+tx/l*1.02*sd, y=GY(C[i][0],C[i][1]), post=(i-4)%9===0; rope.push([x,y+(post?.72:.5),z]); if(post)K.add(cylG(.07,.09,.85,6),M4(x,y+.36,z),[0x6a4a2a,0x9a7446],{ao:.2,aoH:.4});} K.add(tubeG(rope,.03,4,false),null,0xd9c08a,{ao:0});}}
+  /* ruins, idols and jungle inside the path, wherever they hide nothing */
+  const put=(n,r,h,fn)=>{for(let i=0;i<n;i++){const q=spot([],r); if(q&&!TP.hides(q[0],q[1],h,r))fn(q[0],q[1],i);}};
+  put(2,1.6,3.3,(x,z,i)=>TP.arch(K,x,z,i*1.2+.3)); put(3,.8,2.8,(x,z,i)=>TP.pillar(K,x,z,[2.8,1.6,2.2][i],i+3)); put(3,1.6,1.6,(x,z,i)=>TP.ruin(K,x,z,i*1.1+.2,i+1)); put(1,1.0,1.2,(x,z)=>TP.chest(K,KG,x,z,.5,1)); put(2,.8,2.2,(x,z)=>TP.idol(K,KG,KE,x,z));
+  put(5,.9,3.2,(x,z,i)=>TP.palm(K,x,z,2.6+rnd()*.8,.26,rnd()*6,1)); put(7,.8,.9,(x,z,i)=>TP.bigleaf(K,x,z,1+rnd()*.5,i)); put(6,.8,.9,(x,z,i)=>TP.bush(K,x,z,.7+rnd()*.3,i)); put(5,.7,.6,(x,z,i)=>TP.rock(K,x,z,.5+rnd()*.5,i));
+  /* round the shore: a thick fringe of palms, trees, big leaves and old stones */
+  let made=0; for(let i=0;i<2600&&made<70;i++){const n=N[Math.floor(rnd()*45)], o=outN(N.indexOf(n)), d=2.3+rnd()*4.2, a=rnd()*6.283, x=n.x+o[0]*d+Math.cos(a)*.5, z=n.z+o[1]*d+Math.sin(a)*.5; if(!TP.free(x,z,.7)||T.landE(x,z)<1.3||z>n.z+1.0&&Math.abs(x-n.x)<2.2||Math.abs(x)<12&&z<top.z-.5)continue; made++; USED.push([x,z,.75]);
+    const k=made%7, back=z<n.z-.4; if(k===0&&back)TP.palm(K,x,z,3.0+rnd()*1.2,.24+rnd()*.14,rnd()*6,1+rnd()*.2); else if(k===1&&back)TP.tree(K,x,z,.8+rnd()*.35,made); else if(k===2)TP.bigleaf(K,x,z,1.1+rnd()*.6,made); else if(k===3&&back)TP.pillar(K,x,z,1.2+rnd()*1.6,made); else if(k===4)TP.rock(K,x,z,.5+rnd()*.7,made); else if(k===5)TP.bush(K,x,z,.8+rnd()*.4,made); else if(back)TP.palm(K,x,z,2.6+rnd(),.3,rnd()*6,1.05); else TP.bigleaf(K,x,z,1+rnd()*.4,made);}
+  made=0; for(let i=0;i<2500&&made<80;i++){const x=(rnd()-.5)*44, z=(rnd()-.5)*32; if(T.grassAt(x,z)<.8||!TP.free(x,z,.05))continue; made++; TP.tuft(K,x,z,rnd()*6,made%4===0?[0xff5fa8,0xffffff,0xffc531,0xff8c1a][(made>>2)%4]:0);}
+  /* behind the Titan, and out at sea */
+  [[-9,z0-3,3.8],[9,z0-3.5,4.0],[-16,z0-.5,3.4],[16,z0-.5,3.6],[-4,z0-9,3.2],[4,z0-9.5,3.4]].forEach((q,i)=>{if(T.landE(q[0],q[1])>1)TP.palm(K,q[0],q[1],q[2],.25,i*1.3,1.3);});
+  TP.palm(K,-33,13,3.4,.3,.5,1.2); TP.rock(K,-31.4,14.2,.9,3); TP.pillar(K,35,-1.4,2.8,2); TP.palm(K,33,-2.6,3.2,.3,2.2,1.2); TP.palm(K,-27.6,-25,3.6,.28,2.2,1.3); TP.ruin(K,-25.8,-24.4,.4,5); TP.palm(K,30,22,3.2,.3,2.6,1.2); TP.rock(K,-40,-8,1.2,1);
+  TP.boat(-24,9,-.6,0xb9793f,0xfdf6e3); TP.boat(23,-10,2.2,0xb9793f,0xffc531); TP.gull(-27,-19,7,8,.5,0); TP.gull(27,13,6,7.5,-.45,2); TP.gull(3,-30,8,12,.4,4); TP.buoy(-6.2,B+9,0xff4d4d); TP.buoy(15.2,B+8,0xffc531);
+  TP.bunting(K,KT,[P.x-3.0,GY(P.x-3.0,P.z+2.7),P.z+2.7],[P.x-2.0,GY(P.x,P.z)+1.1,P.z+1.4],2.2,4,2); TP.bunting(K,KT,[P.x+2.0,GY(P.x,P.z)+1.1,P.z+1.4],[P.x+4.7,GY(P.x+4.7,P.z+1.7),P.z+1.7],2.2,6,1); TOY.rock=null;
+};
 /* ---------- the pearl stall: a big pink clam holding a glowing lavender pearl ----------
    One landmark on every board. It breathes open and shut, opens wide when the camera visits it or a pearl is bought, and when it
    moves to a new space it snaps shut, vanishes in a puff of sparkles and pops open again where it lands. */
@@ -2226,8 +2307,8 @@ const INTRO={
     farm:{icon:'spaces/V',head:'Harvest',line:'A harvest space pays more the longer nobody lands on it.',focus:()=>NODES.find(n=>n.t==='V')},
     volcano:{icon:'spaces/E',head:'Eruption',line:'An eruption space sets off the volcano. Lava covers part of the board for 2 rounds.',focus:()=>FXP.volc,demo:'erupt'},
     melody:{icon:'maps/melody',head:'The Golden Note',line:MAPS.melody.note,focus:()=>FXP.metro},
-    pinball:{icon:'maps/pinball',head:'High risk, high reward',line:MAPS.pinball.note.replace(/^High risk, high reward\.\s*/,''),focus:()=>({x:0,z:0})},
-    temple:{icon:'maps/temple',head:'The summit merchant',line:MAPS.temple.note,focus:()=>MAPX.top?{x:MAPX.top[0],z:MAPX.top[1]}:null}},
+    pinball:{icon:'maps/pinball',head:'High risk, high reward',line:MAPS.pinball.note.replace(/^High risk, high reward\.\s*/,''),focus:()=>({x:0,z:0,r:18,h:11})},
+    temple:{icon:'maps/temple',head:'The summit merchant',line:MAPS.temple.note,focus:()=>{const t=NODES[NODES.spots[0]]; return t?{x:t.x,z:t.z-3,r:19,h:11,az:.12}:null;}}},
   /* the parts of each length, in seconds */
   seq:{full:[['wide',3.2],['focus',4.2],['pearl',2.9],['start',1.4]],quick:[['focus',2.3],['pearl',1.8],['start',.9]],skip:[['start',.9]],replay:[['wide',2.2],['focus',3.6],['pearl',2.6],['back',1]]},
   LIMIT:21000, names:{full:'full',quick:'quick',skip:'skip'}};
@@ -2615,7 +2696,7 @@ function fxFrame(dt){
   if(FXP.bump)FXP.bump.forEach(b=>{b.t=Math.max(0,b.t-dt); b.g.scale.setScalar(1+Math.sin(b.t/.4*Math.PI)*.25);});
   if(FXP.flip)FXP.flip.forEach(q=>{q.t=Math.max(0,q.t-dt); q.g.rotation.y=q.sd*(.45-Math.sin(q.t/.5*Math.PI)*.95);});
   if(FXP.brl){FXP.brlT=Math.max(0,(FXP.brlT||0)-dt); const top=NODES.spots[0]; FXP.brl.forEach(b=>{const u=1-FXP.brlT/2.7-b.i*.14; b.g.visible=FXP.brlT>0&&u>0&&u<1;   /* three barrels roll from the summit down the climb, one behind another */
-    if(b.g.visible){const f=(1-u)*(top-1)+1, i=Math.floor(f), a=NODES[i], c=NODES[Math.min(top,i+1)], w=f-i; b.g.position.set(a.x+(c.x-a.x)*w,0,a.z+(c.z-a.z)*w); b.g.rotation.y=Math.atan2(c.x-a.x,c.z-a.z); b.g.children[0].rotation.x-=dt*9;}});}
+    if(b.g.visible){const f=(1-u)*(top-1)+1, i=Math.floor(f), a=NODES[i], c=NODES[Math.min(top,i+1)], w=f-i; {const bx=a.x+(c.x-a.x)*w, bz=a.z+(c.z-a.z)*w; b.g.position.set(bx,GY(bx,bz),bz);} b.g.rotation.y=Math.atan2(c.x-a.x,c.z-a.z); b.g.children[0].rotation.x-=dt*9;}});}
   if(FXP.wheel)FXP.wheel.sp.v=FXP.boost>0?5:.25; if(FXP.boost>0)FXP.boost-=dt;
   const v=FXP.volc, P=lava.geometry.attributes.position.array, L=lava.life, W=lava.v; let any=false;
   if(v){v.smoke.forEach((sm,i)=>{sm.position.y=4+((T*.7+i*1.1)%4.4); sm.material.opacity=.55*(1-(sm.position.y-4)/4.4); sm.scale.setScalar(1+(sm.position.y-4)*.3);});
@@ -3099,7 +3180,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=79; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=80; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';

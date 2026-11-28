@@ -660,6 +660,21 @@ Pinball Paradise rebuilt to the Island standard.
 
 Tested: Pinball Paradise built and viewed on a desktop screen; a full three-round solo game (Wheel of Wonder bets, flipper launches, Jackpot Zone and Doom Zone all seen). Not tested: real phones.
 
+## Build 80
+Temple of the Golden Titan rebuilt to the Island standard. All seven boards are now 3D toy models.
+
+- A jungle island that really climbs: the path rises from the beach in the south to a paved summit terrace in the north, with rock shelves and ruins inside it.
+- The Golden Titan stands behind the summit: chest and shoulders rising out of the rock, arms laid forward so the terrace sits between his hands, gold headdress, shoulder plates, wrist bands and chest medallion, moss and vines. His head turns slowly and his eyes glow. When Barrel Barrage is played his jaw drops and his head shakes while the barrels roll.
+- A waterfall falls into a rock basin on each side of him, with spray.
+- On the summit: a stone gate, torches, a treasure chest, heaps of gold, and a brazier burning in each of the Titan's hands.
+- The loop is a stone path ('Stone stairs'). The short cut is a wooden walkway with rope rails ('Vine path').
+- Beside the special spaces: barrels at Barrel Barrage, a vine at Jungle vine, a broken column at Crumbling steps, a golden idol at Golden idol.
+- The barrels the rules roll down the climb are 3D and follow the slope.
+- Palms, round trees, big-leaf plants, bushes, flowers, old columns, arches and broken walls, on the island and on small islands out at sea.
+- The introduction camera now looks at the Titan over the summit on this board, and across the whole table on Pinball Paradise.
+
+Tested: Temple built and viewed on a desktop screen; a full three-round solo game (Barrel Barrage with players knocked back, Jungle vine, Golden idol all seen). Not tested: real phones.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
