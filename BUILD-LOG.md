@@ -646,6 +646,20 @@ Melody Mansion rebuilt to the Island standard.
 
 Tested: Melody Mansion built and viewed on a desktop screen and a phone-sized screen; a full three-round solo game (Golden Note, metronome, Piano Express, Brass Blast all seen). Not tested: real phones.
 
+## Build 79
+Pinball Paradise rebuilt to the Island standard.
+
+- The board is the playfield of a huge pinball machine: a lacquered blue board with a painted starburst, red cabinet walls with a chrome rail, a row of bulbs and two neon tubes, an arched top, an apron with score cards at the front, and a lit back box with the board's name.
+- The centre ramp really is a ramp. The short cut climbs, runs level above the board and comes down again, on yellow boards with chrome wire rails, posts and neon edges. The Jackpot Zone and the Doom Zone each have an arch over the ramp with a lit name board.
+- Pop bumpers and flippers are 3D models. The rules still make a bumper jump and the flippers snap exactly as before.
+- A chrome ball sits on the plunger at the bottom right. The plunger draws back, fires it up the right-hand lane, and it rolls round the arch and down the left-hand lane into a hole, then comes back.
+- A Wheel of Wonder stands at the top of the table and turns. Its wedges are the real wheel's wedges, in the same order and sizes.
+- Chrome balls, drop targets, star posts, rollover lanes and lamps set into the board. Arrows of light run round the outside of the path in the direction of play.
+- Round the machine: an arcade carpet far below, and other machines glowing in the dark.
+- Night light: cool and violet, with the lamps doing the work.
+
+Tested: Pinball Paradise built and viewed on a desktop screen; a full three-round solo game (Wheel of Wonder bets, flipper launches, Jackpot Zone and Doom Zone all seen). Not tested: real phones.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

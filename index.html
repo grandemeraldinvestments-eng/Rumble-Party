@@ -2041,6 +2041,101 @@ THEME.melody=function(m){
   [[-12,22,pz+4,0xff5fa8,3.2],[-3,26,pz-2,0xffd23a,2.6],[5,21,pz+6,0x35c98a,2.4],[A+10,19,-(B+12),0x2f8fff,2.8],[A+17,14,-(B+7),0xff8c1a,2.2],[A+15,9,B+2,0xc9a6ff,2.2],[-(A+15),24,3,0xff8c1a,2.6],[-(A+19),18,-(B+10),0x18b7c9,2.4],[-(A+11),10,B+12,0xffd23a,1.8]].forEach((n,i)=>TP.note(n[0],n[1],n[2],n[3],n[4],i*1.7));
   PLAT&&TP.bulbs(K,KE,[P.x-2.0,3.45,P.z+1.4],[P.x+2.0,3.45,P.z+1.4],8);
 };
+/* ---------- Pinball Paradise: players are tiny on the playfield of a huge pinball machine ---------- */
+/* a wall that follows a line of [x,z] points: th thick, h tall, standing on y=0 */
+function stripG(pts,th,h){const n=pts.length,pos=[],idx=[]; for(let i=0;i<n;i++){const a=pts[Math.max(0,i-1)],b=pts[Math.min(n-1,i+1)],tx=b[0]-a[0],tz=b[1]-a[1],l=Math.hypot(tx,tz)||1,nx=-tz/l*th/2,nz=tx/l*th/2,p=pts[i]; pos.push(p[0]-nx,0,p[1]-nz,p[0]-nx,h,p[1]-nz,p[0]+nx,h,p[1]+nz,p[0]+nx,0,p[1]+nz);}
+  for(let i=0;i<n-1;i++){const a=i*4,b=a+4; for(let k=0;k<3;k++)idx.push(a+k,a+k+1,b+k,a+k+1,b+k+1,b+k);} const e=(n-1)*4; idx.push(0,2,1,0,3,2,e,e+1,e+2,e,e+2,e+3);
+  let g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setIndex(idx); g=g.toNonIndexed(); g.computeVertexNormals(); return smoothN(g,40);}
+/* the outline of the table, from the south-west corner north, round the arched top and back down the east side */
+function pinPath(hx,zs,zn,rt,n){const p=[[-hx,zs]]; for(let i=0;i<=n;i++){const a=Math.PI+i/n*Math.PI/2; p.push([-(hx-rt)+Math.cos(a)*rt,(zn+rt)+Math.sin(a)*rt]);} for(let i=0;i<=n;i++){const a=1.5*Math.PI+i/n*Math.PI/2; p.push([(hx-rt)+Math.cos(a)*rt,(zn+rt)+Math.sin(a)*rt]);} p.push([hx,zs]); return p;}
+const lift=(p,y)=>p.map(q=>[q[0],y,q[1]]);
+function signTex(txt,bg,fg,w,h){const cv=document.createElement('canvas'); cv.width=w||256; cv.height=h||96; const c=cv.getContext('2d'); c.fillStyle=bg; c.fillRect(0,0,cv.width,cv.height); c.strokeStyle=fg; c.lineWidth=8; c.strokeRect(6,6,cv.width-12,cv.height-12); c.fillStyle=fg; c.textAlign='center'; c.textBaseline='middle'; let px=cv.height*.56; c.font=`800 ${px}px ${FONT}`; while(c.measureText(txt).width>cv.width-40&&px>10){px-=2; c.font=`800 ${px}px ${FONT}`;} c.fillText(txt,cv.width/2,cv.height/2+2); return new THREE.CanvasTexture(cv);}
+Object.assign(TP,{
+  bumper(x,z,col){const g=grp(x,0,z), B=new Kit(), G=new Kit(), E=new Kit(); g.noBake=true;
+    B.add(latheG([[1.15,0],[1.15,.16],[.86,.28],[.82,1.0],[1.0,1.12]],24),null,[0xd9d2c0,0xfdf6e3],{ao:.3,aoH:.5}); for(let k=0;k<8;k++)B.add(boxG(.12,.6,.1),M4(Math.cos(k*.785)*.85,.62,Math.sin(k*.785)*.85,-k*.785+1.571),0xe0364f,{ao:0});
+    G.add(latheG([[1.0,1.1],[1.5,1.18],[1.58,1.4],[1.3,1.6],[.6,1.74],[0,1.78]],28),null,col,{ao:0}); G.add(torG(1.18,.07,6,26),M4(0,.2,0,0,1,1,1,Math.PI/2,0),0xdfe5ee,{ao:0});
+    E.add(sphG(.5,1),M4(0,1.72,0,0,1,.4,1),0xffffff,{ao:0}); for(let k=0;k<8;k++)E.add(sphG(.13,0),M4(Math.cos(k*.785)*1.3,1.56,Math.sin(k*.785)*1.3),0xfff3b0,{ao:0,ph:k*1.3+x});
+    g.add(B.mesh(TOYM.matte)); g.add(G.mesh(TOYM.gloss,true)); g.add(E.mesh(TOYM.glow,false,false)); return g;},
+  flipper(x,z,sd,s){const g=grp(x,0,z), B=new Kit(), G=new Kit(), hull=(r0,r1,L)=>{const p=[], a0=Math.acos((r0-r1)/L); for(let i=0;i<=10;i++){const a=a0+i/10*(2*Math.PI-2*a0); p.push([Math.cos(a)*r0,Math.sin(a)*r0]);} for(let i=0;i<=6;i++){const a=-a0+i/6*2*a0; p.push([L+Math.cos(a)*r1,Math.sin(a)*r1]);} return p.map(q=>[-sd*q[0]*s,q[1]*s]);}; g.noBake=true;
+    B.add(flatG(hull(.95,.5,5),.5*s,.1),M4(0,.1,0),[0xb81d38,0xe0364f],{ao:.2,aoH:.4}); G.add(flatG(hull(.7,.3,5),.1*s,.05),M4(0,.5*s+.3,0),[0xfdf6e3,0xffffff],{ao:0}); G.add(sphG(.4*s,1),M4(0,.5*s+.45,0,0,1,.5,1),0xdfe5ee,{ao:0}); B.add(flatG(hull(.3,.16,3.6),.04,.02),M4(-sd*.6*s,.5*s+.52,0),0xffc531,{ao:0});
+    g.add(B.mesh(TOYM.matte)); g.add(G.mesh(TOYM.gloss,true)); g.rotation.y=sd*.45; return{g,sd,t:0};},
+  /* an arch over the ramp, with a lit name board */
+  zoneArch(K,KG,KE,n,dir,gold,txt){const ang=Math.atan2(dir[0],dir[1]), col=gold?[0xd9a52e,0xffd45e]:[0x2a1746,0x5b2a86]; KG.at(n.x,n.y,n.z,ang); KE.at(n.x,n.y,n.z,ang); K.at(n.x,n.y,n.z,ang);
+    const arc=[]; for(let i=0;i<=14;i++){const a=i/14*Math.PI; arc.push([Math.cos(a)*1.5,2.3+Math.sin(a)*1.25,0]);} KG.add(tubeG([[1.5,0,0],[1.5,2.3,0]].concat(arc.slice(1)).concat([[-1.5,0,0]]),.17,8,true),null,col,{ao:0}); for(const sx of [-1,1])KG.add(latheG([[.4,0],[.42,.2],[.24,.34]],10),M4(sx*1.5,0,0),gold?0xb9862e:0x1a0f2e,{ao:0});
+    for(let i=1;i<14;i+=2){const a=i/14*Math.PI; KE.add(sphG(.13,0),M4(Math.cos(a)*1.5,2.3+Math.sin(a)*1.25,.2),gold?0xfff3b0:0xff4d6a,{ao:0,ph:i*1.9});}
+    if(gold){const st=[]; for(let i=0;i<10;i++){const a=i/10*6.283+Math.PI/2, r=i%2?.26:.6; st.push([Math.cos(a)*r,Math.sin(a)*r]);} KE.add(flatG(st,.12,.03),M4(0,4.2,-.09,0,1,1,1,-Math.PI/2,0),0xffe27a,{ao:0});}
+    else{for(const sx of [-1,1])K.add(cylG(0,.2,.8,8),M4(sx*.8,3.75,0,0,1,1,1,0,-sx*.5),0xe0364f,{ao:0}); KE.add(sphG(.3,1),M4(0,3.85,0),0xff4d6a,{ao:0});}
+    const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.7,1.0),new THREE.MeshBasicMaterial({map:signTex(txt,gold?'#ffc531':'#2a1746',gold?'#7a3b00':'#ff6b86')})); sg.position.set(n.x,n.y+(gold?5.3:4.75),n.z+.2); sg.rotation.x=-.5; sg.noBake=true; world.add(sg);},
+  wonderWheel(K,KG,KE,x,z,turn,s){K.at(x,0,z,turn,s); KG.at(x,0,z,turn,s); KE.at(x,0,z,turn,s); for(const sx of [-1,1]){KG.add(tubeG([[sx*2.6,0,-.7],[0,4.7,-.5]],.2,8,true),null,[0xb9862e,0xffd45e],{ao:0}); K.add(sphG(.4,1),M4(sx*2.6,.15,-.7,0,1,.5,1),0x5b2a86,{ao:0});} K.add(rbox(6.4,.4,1.6,.15),M4(0,.2,-.7),[0x2a1746,0x5b2a86],{ao:0});
+    KE.add(flatG([[0,.6],[.45,-.5],[-.45,-.5]],.2,.04),M4(0,8.5,.1,0,1,1,1,Math.PI/2,0),0xffe27a,{ao:0});
+    const W=new Kit(), E=new Kit(); let a0=0; WSEG.forEach(q=>{const a1=a0+q[2]*6.283, p=[[0,0]]; for(let i=0;i<=5;i++){const a=a0+(a1-a0)*i/5; p.push([Math.cos(a)*3.3,Math.sin(a)*3.3]);} W.add(flatG(p,.3,0),null,parseInt(q[3].slice(1),16),{ao:0}); E.add(sphG(.13,0),M4(Math.cos(a0)*3.42,.36,Math.sin(a0)*3.42),0xfff3b0,{ao:0,ph:a0*5}); a0=a1;});
+    W.add(torG(3.42,.16,6,44),M4(0,.15,0,0,1,1,1,Math.PI/2,0),0xffc531,{ao:0}); W.add(cylG(.7,.7,.5,18),M4(0,.3,0),0xffc531,{ao:0}); W.add(sphG(.4,1),M4(0,.55,0,0,1,.5,1),0xfdf6e3,{ao:0});
+    const g=new THREE.Group(), wm=W.mesh(TOYM.gloss,true), em=E.mesh(TOYM.glow,false,false), c=Math.cos(turn), sn=Math.sin(turn); g.add(wm); g.add(em); g.position.set(x+(-.2*sn)*s,4.7*s,z+(-.2*c)*s); g.rotation.set(Math.PI/2,0,0); g.rotation.order='YXZ'; g.rotation.y=turn; g.scale.setScalar(s); g.noBake=true; world.add(g); spin.push({o:wm,ax:'y',v:.5}); spin.push({o:em,ax:'y',v:.5});},
+  dropBank(K,KE,x,z,turn,n){K.at(x,0,z,turn); KE.at(x,0,z,turn); K.add(rbox(n*1.0+.5,.3,.9,.1),M4(0,.15,0),[0x1a0f2e,0x3a1f5c],{ao:0}); const cs=[0xff5fa8,0xffc531,0x35e0ff,0x35c98a,0xff8c1a]; for(let i=0;i<n;i++){K.add(rbox(.8,1.1,.3,.08,2),M4(-(n-1)*.5+i*1.0,.8,0),[cs[i%5],cs[i%5]],{ao:.2,aoH:.4}); KE.add(cylG(.22,.22,.06,10),M4(-(n-1)*.5+i*1.0,.9,.17,0,1,1,1,Math.PI/2,0),0xffffff,{ao:0,ph:i*2.1});}},
+  starPost(K,KG,x,z){K.at(x,0,z,0); KG.at(x,0,z,0); KG.add(latheG([[.3,0],[.3,.9],[.36,1.0],[.2,1.1],[0,1.14]],12),null,[0xb81d38,0xff4d6a],{ao:0}); K.add(torG(.42,.11,6,16),M4(0,.5,0,0,1,1,1,Math.PI/2,0),0xfdf6e3,{ao:0});},
+  cabinet(K,KE,x,y,z,turn,col,scr){K.at(x,y,z,turn); KE.at(x,y,z,turn); K.add(rbox(20,30,18,1,2),M4(0,15,0),[col[0],col[1]],{ao:.2,aoH:8}); K.add(rbox(20,16,12,1,2),M4(0,37,-3),[col[1],col[1]],{ao:0}); K.add(rbox(21,3,16,.8),M4(0,29.5,2.5,0,1,1,1,.25,0),0x1a0f2e,{ao:0}); KE.add(boxG(15,10,.3),M4(0,37,3.2),scr,{ao:0}); KE.add(boxG(17,3.2,.3),M4(0,47,3.1),0xffe27a,{ao:0}); for(let i=0;i<3;i++)KE.add(sphG(.9,1),M4(-5+i*5,31.2,4.5),[0xff4d6a,0x35e0ff,0xffc531][i],{ao:0,ph:i*2});},
+});
+MAPS.pinball.toy={light:{sun:0xd8dcff,sunI:.6,sky:0xa99cff,ground:0xff7fc0,skyI:.66,from:[-11,27,13]}};
+THEME.pinball=function(m){
+  const {K,KG,KT,KE}=toyKits(), P=PLAT, N=NODES, A=m.a, B=m.b, R=rng32(m.seed*5+1), KC=new Kit(), chrome=TOYM.chrome||(TOYM.chrome=new THREE.MeshStandardMaterial({vertexColors:true,color:0xffffff,roughness:.12,metalness:1,envMap:toyEnv(),envMapIntensity:1.5})); chrome.keep=true;
+  TOY.opt={walk:[0x2fb4e6,0x28a6dc,0x45c3f0],gap:0x12306b,cut:[0xffc531,0xf7b722,0xffd45e],gapCut:0x9a5a00};
+  const T=TOY.T=toyGround(m,{tide:false}); T.walk=()=>0;
+  let xm=0, z0=0, z1=0; for(const p of T.loop){xm=Math.max(xm,Math.abs(p[0])); z0=Math.min(z0,p[1]); z1=Math.max(z1,p[1]);}
+  const hx=xm+9, zn=z0-10.5, zs=z1+13, rt=15, wallP=pinPath(hx,zs+.3,zn,rt,12);
+  /* the centre ramp really is a ramp: the short cut climbs, runs level and comes down again */
+  {const C=T.cut, cn=C.length-1, H=1.9; GY=(x,z)=>{let b=1e9, bi=0; for(let i=0;i<=cn;i+=2){const d=(C[i][0]-x)*(C[i][0]-x)+(C[i][1]-z)*(C[i][1]-z); if(d<b){b=d; bi=i;}} const t=bi/cn, d=Math.sqrt(b); return H*sstep(.05,.24,t)*sstep(.95,.76,t)*(1-sstep(1.3,1.9,d));}; T.walk=GY;
+    KC.at(0,0,0,0); KE.at(0,0,0,0); K.at(0,0,0,0); for(const sd of [-1,1]){const rail=[], glow=[]; for(let i=3;i<=cn-3;i+=2){const a=C[Math.max(0,i-2)], b=C[Math.min(cn,i+2)], tx=b[0]-a[0], tz=b[1]-a[1], l=Math.hypot(tx,tz)||1, x=C[i][0]-tz/l*1.08*sd, z=C[i][1]+tx/l*1.08*sd, y=GY(C[i][0],C[i][1]); rail.push([x,y+.62,z]); glow.push([x,y+.0,z]); if(i%8===3){KC.add(cylG(.05,.05,.6,5),M4(x,y+.32,z),0xffffff,{ao:0}); if(y>.5)KC.add(cylG(.1,.1,y,6),M4(x,y/2-.04,z),0xffffff,{ao:0});}}
+      KC.add(tubeG(rail,.07,6,true),null,0xffffff,{ao:0}); KE.add(tubeG(glow,.07,5,true),null,sd>0?0xff5fa8:0x35e0ff,{ao:0});}}
+  /* the playfield: lacquered board, a painted starburst, and the cabinet it sits on */
+  {const out=pinPath(hx+.5,zs+.5,zn-.5,rt+.5,12); KG.at(0,-.7,0,0); KG.add(flatG(out,.5,.05),null,[0x141845,0x1b2060],{ao:0}); K.at(0,-17.2,0,0); K.add(flatG(pinPath(hx+1.3,zs+1.3,zn-1.3,rt+1.3,12),16,.2),null,[0x2a0d3a,0xc12a4f],{ao:0});
+    K.at(0,-.095,1,0); for(let i=0;i<24;i++){if(i%2)continue; const a0=i/24*6.283, a1=(i+1)/24*6.283, r=Math.min(hx-1.5,zs-6); K.add(flatG([[0,0],[Math.cos(a0)*r,Math.sin(a0)*r*.92],[Math.cos(a1)*r,Math.sin(a1)*r*.92]],.012,0),null,0x2a3096,{ao:0});} K.at(0,-.07,0,0); K.add(flatG(loopOutline(-1.7).filter((p,i)=>i%2===0),.012,0),null,0x2c1c7c,{ao:0}); K.at(0,-.045,1,0); for(let i=0;i<24;i++){if(i%2===0)continue; const a0=i/24*6.283, a1=(i+1)/24*6.283, r=B*.9; K.add(flatG([[0,0],[Math.cos(a0)*r,Math.sin(a0)*r],[Math.cos(a1)*r,Math.sin(a1)*r]],.012,0),null,0x3a2796,{ao:0});}
+    const fl=new THREE.Mesh(new THREE.PlaneGeometry(700,700),(()=>{const cv=document.createElement('canvas'); cv.width=cv.height=256; const c=cv.getContext('2d'); c.fillStyle='#17123a'; c.fillRect(0,0,256,256); const q=rng32(9); for(let i=0;i<26;i++){c.strokeStyle=c.fillStyle=['#ff5fa8','#35e0ff','#ffc531','#7c5cff','#35c98a'][i%5]; c.lineWidth=5; const x=q()*256, y=q()*256, k=i%3; c.beginPath(); if(k===0){c.moveTo(x,y); c.lineTo(x+18,y-22); c.lineTo(x+36,y); c.stroke();} else if(k===1){c.arc(x,y,7,0,6.3); c.fill();} else{c.moveTo(x,y); c.bezierCurveTo(x+12,y-18,x+24,y+18,x+38,y); c.stroke();}} const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(26,26); return new THREE.MeshStandardMaterial({map:t,color:0x6a6a8c,roughness:1,metalness:0});})()); fl.rotation.x=-Math.PI/2; fl.position.y=-17.2; fl.noBake=true; fl.receiveShadow=false; world.add(fl);}
+  /* the walls: red cabinet sides with a chrome rail, a row of bulbs and two neon tubes; lane walls for the ball; the apron at the front */
+  K.at(0,-.1,0,0); K.add(stripG(wallP,1.1,3.1),null,[0x7a1230,0xe0364f],{ao:0}); KC.at(0,0,0,0); KC.add(tubeG(lift(wallP,3.12),.3,8,true),null,0xffffff,{ao:0});
+  KE.at(0,0,0,0); KE.add(tubeG(lift(pinPath(hx-.62,zs+.2,zn+.62,rt-.62,12),1.15),.09,5,true),null,0xff5fa8,{ao:0}); KE.add(tubeG(lift(pinPath(hx-.62,zs+.2,zn+.62,rt-.62,12),2.0),.09,5,true),null,0x35e0ff,{ao:0});
+  {const q=pinPath(hx-.2,zs+.2,zn+.2,rt-.2,12); let d=0; for(let i=1;i<q.length;i++){const a=q[i-1], b=q[i], l=Math.hypot(b[0]-a[0],b[1]-a[1]); let u=(2.4-d%2.4)%2.4; for(;u<l;u+=2.4){const k=Math.round((d+u)/2.4); KE.add(sphG(.26,1),M4(a[0]+(b[0]-a[0])*u/l,3.45,a[1]+(b[1]-a[1])*u/l),[0xfff3b0,0xff9fd0,0x9fe1ff][k%3],{ao:0,ph:k*1.7});} d+=l;}}
+  const lx=hx-2.5, lane=pinPath(lx,zs-6.6,zn+2.5,rt-2.5,14).reverse();
+  for(const sx of [-1,1]){const dv=[]; for(let z=zs-4.5;z>=zn+rt+1;z-=3)dv.push([sx*(hx-4.7),z]); K.at(0,-.1,0,0); K.add(stripG(dv,.5,1.25),null,[0x3a1f8c,0x6a4fe0],{ao:0}); KC.at(0,0,0,0); KC.add(tubeG(lift(dv,1.22),.14,6,true),null,0xffffff,{ao:0});}
+  K.at(-2.55,0,zs-2,0); K.add(rbox(hx*2-6.2,1.7,5.4,.4,2),M4(0,.5,0,0,1,1,1,.14,0),[0x7a1230,0xe0364f],{ao:0}); K.add(rbox(4.4,2.4,.7,.2),M4(hx,1.1,2.1),[0x7a1230,0xe0364f],{ao:0}); for(const sx of [-1,1]){K.add(rbox(8,.12,3.2,.06),M4(sx*9.5,1.5,.1,0,1,1,1,.14,0),0xfdf6e3,{ao:0}); for(let i=0;i<4;i++)K.add(boxG(6.4,.13,.14),M4(sx*9.5,1.53-i*.09+.14,-.9+i*.62,0,1,1,1,.14,0),0x17304d,{ao:0});} K.add(rbox(5.4,.5,1.2,.2),M4(0,.45,-2.7),0x0c0a1c,{ao:0});
+  /* bumpers and flippers: the pieces the rules move */
+  FXP.bump=[]; [[-A*.32,-B*.3],[A*.08,B*.4],[A*.42,B*.22],[-A*.48,B*.42],[A*.5,-B*.45]].forEach((q,i)=>{if(!clearOf(q[0],q[1],1.7))return; USED.push([q[0],q[1],1.7]); FXP.bump.push({g:TP.bumper(q[0],q[1],[0xff4d4d,0xffc531,0x35c98a,0xff5fa8,0xb58bff][i]),t:0}); KE.at(q[0],-.03,q[1],0); KE.add(torG(1.75,.06,5,36),M4(0,0,0,0,1,1,1,Math.PI/2,0),0xffffff,{ao:0}); for(let k=0;k<10;k++)KE.add(cylG(.2,.2,.03,8),M4(Math.cos(k*.628)*2.25,0,Math.sin(k*.628)*2.25),[0xffc531,0x35e0ff][k%2],{ao:0,ph:k*2.2+i});});
+  FXP.flip=[-1,1].map(sd=>TP.flipper(sd*6.6,zs-7.0,sd,1.15)); for(const sx of [-1,1]){const gd=[[sx*14.5,zs-9.6],[sx*11,zs-8.4],[sx*7.9,zs-7.3]]; K.at(0,-.1,0,0); K.add(stripG(gd,.45,1.0),null,[0x3a1f8c,0x6a4fe0],{ao:0}); KE.at(0,0,0,0); KE.add(tubeG(lift(gd,.95),.08,5,true),null,0xffc531,{ao:0}); TP.starPost(K,KG,sx*14.9,zs-9.8);}
+  /* neon rings and rows of lamps set into the board */
+  KE.at(0,-.035,0,0); [[0,0,B*.62,0x35e0ff],[0,0,B*.3,0xff5fa8],[-A*.62,B*.1,B*.36,0xffc531],[A*.62,-B*.1,B*.36,0x35c98a]].forEach(q=>KE.add(torG(q[2],.065,5,72),M4(q[0],0,q[1],0,1,1,1,Math.PI/2,0),q[3],{ao:0}));
+  {const O=loopOutline(2.05), n=O.length, tri=flatG([[0,.55],[.42,-.35],[-.42,-.35]],.02,0); KE.at(0,-.05,0,0); for(let i=0;i<n;i+=3){const a=O[(i+n-1)%n], b=O[(i+1)%n]; KE.add(tri,M4(O[i][0],0,O[i][1],Math.atan2(b[0]-a[0],b[1]-a[1])),[0x35e0ff,0xffc531,0xff5fa8][(i/3)%3],{ao:0,ph:i*.35});}
+    for(const sx of [-1,1])for(let i=0;i<6;i++)KE.add(cylG(.3,.3,.03,10),M4(sx*(16-i*1.7),0,zs-10.4+i*.55-(i>4?.2:0)),[0xff5fa8,0xffc531][i%2],{ao:0,ph:i*.9}); for(let i=0;i<5;i++)KE.add(cylG(.34,.34,.03,10),M4(0,0,zs-13.5+i*1.3),[0x35e0ff,0xffffff][i%2],{ao:0,ph:i*1.1});}
+  /* the Jackpot Zone and the Doom Zone on the ramp */
+  {const jz=N.findIndex(n=>n.t==='4'), dz=N.findIndex(n=>n.t==='5'), dir=i=>{const a=N[i-1]||N[i], b=N[i+1]||N[i]; return[b.x-a.x,b.z-a.z];}; if(jz>=0)TP.zoneArch(K,KG,KE,{x:N[jz].x,y:GY(N[jz].x,N[jz].z),z:N[jz].z},dir(jz),true,'JACKPOT'); if(dz>=0)TP.zoneArch(K,KG,KE,{x:N[dz].x,y:GY(N[dz].x,N[dz].z),z:N[dz].z},dir(dz),false,'DOOM');}
+  /* at the top of the table: the Wheel of Wonder, the rollover lanes and the lit back box */
+  TP.wonderWheel(K,KG,KE,-hx*.44,zn+5.4,.25,1.0);
+  for(let i=0;i<4;i++){K.at(hx*.14+i*3.2,-.1,zn+5.7,0); K.add(rbox(.6,1.1,2.6,.28,2),M4(0,.55,0),[0x3a1f8c,0x6a4fe0],{ao:.2,aoH:.4}); if(i<3){KE.at(hx*.14+i*3.2+1.6,-.05,zn+5.7,0); KE.add(cylG(.5,.5,.03,12),null,[0xffc531,0xff5fa8,0x35e0ff][i],{ao:0,ph:i*2});}}
+  {const bw=hx*1.5, bh=17, bz=zn-3.2, cv=document.createElement('canvas'); cv.width=1024; cv.height=512; const c=cv.getContext('2d'), gr=c.createLinearGradient(0,0,0,512); gr.addColorStop(0,'#2a1a7a'); gr.addColorStop(1,'#c2338f'); c.fillStyle=gr; c.fillRect(0,0,1024,512);
+    c.save(); c.translate(512,300); for(let i=0;i<28;i++){c.rotate(6.283/28); c.fillStyle=i%2?'rgba(255,255,255,.07)':'rgba(255,197,49,.10)'; c.beginPath(); c.moveTo(0,0); c.lineTo(-70,-800); c.lineTo(70,-800); c.closePath(); c.fill();} c.restore();
+    const q=rng32(4); for(let i=0;i<40;i++){c.fillStyle=['#fff3b0','#9fe1ff','#ff9fd0'][i%3]; c.beginPath(); c.arc(q()*1024,q()*512,2+q()*4,0,6.3); c.fill();}
+    c.textAlign='center'; c.textBaseline='middle'; c.lineJoin='round'; c.font=`800 150px ${FONT}`; c.lineWidth=26; c.strokeStyle='#1a0f4a'; c.strokeText('PINBALL',512,170); c.fillStyle='#ffc531'; c.fillText('PINBALL',512,170); c.font=`800 118px ${FONT}`; c.strokeText('PARADISE',512,318); c.fillStyle='#35e0ff'; c.fillText('PARADISE',512,318);
+    c.fillStyle='#0c0a1c'; c.fillRect(262,404,500,78); c.font=`800 56px ${FONT}`; c.fillStyle='#ff8c1a'; c.fillText('HIGH  9,999,990',512,446);
+    const bg=new THREE.Mesh(new THREE.PlaneGeometry(bw,bh),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv)})); bg.position.set(0,5+bh/2,bz+.75); bg.noBake=true; world.add(bg);
+    K.at(0,0,bz,0); K.add(rbox(bw+3,bh+3,1.4,.6,2),M4(0,5+bh/2,0),[0x7a1230,0xe0364f],{ao:0}); K.add(rbox(bw*.5,6,1.4,.5),M4(0,2.2,0),[0x5a0e26,0x7a1230],{ao:0}); KE.at(0,0,bz,0); for(let i=0;i<=26;i++){const x=-bw/2-.8+i*(bw+1.6)/26; for(const y of [4.2,5.8+bh])KE.add(sphG(.34,1),M4(x,y,.75),[0xfff3b0,0xff9fd0,0x9fe1ff][i%3],{ao:0,ph:i*.8});} for(let i=1;i<9;i++)for(const sx of [-1,1])KE.add(sphG(.34,1),M4(sx*(bw/2+.8),4.2+i*(bh+1.6)/9,.75),[0xfff3b0,0xff9fd0,0x9fe1ff][i%3],{ao:0,ph:i*1.3});}
+  /* things standing about the board */
+  {const put=(n,r,h,fn)=>{for(let i=0;i<n;i++){const q=spot([],r); if(q&&!TP.hides(q[0],q[1],h,r))fn(q[0],q[1],R()*6.283,i);}};
+    put(3,1.5,2.2,(x,z)=>{KC.at(x,0,z,0); KC.add(sphG(1.15,3),M4(0,1.1,0),0xffffff,{ao:0}); KE.at(x,-.04,z,0); KE.add(torG(1.5,.05,5,28),M4(0,0,0,0,1,1,1,Math.PI/2,0),0x35e0ff,{ao:0});});
+    put(2,2.0,1.3,(x,z,t)=>TP.dropBank(K,KE,x,z,Math.round(t/1.571)*1.571*.2,3)); put(6,.7,1.2,(x,z)=>TP.starPost(K,KG,x,z));
+    put(5,.9,.1,(x,z,t,i)=>{const st=[]; for(let k=0;k<10;k++){const a=k/10*6.283+t, r=k%2?.34:.8; st.push([Math.cos(a)*r,Math.sin(a)*r]);} KE.at(x,-.05,z,0); KE.add(flatG(st,.02,0),null,[0xffc531,0xff5fa8,0x35e0ff][i%3],{ao:0,ph:i*2.3});});}
+  /* the ball: the plunger draws back, fires it up the right-hand lane, and it rolls round the arch and home down the left */
+  {const cum=[0]; for(let i=1;i<lane.length;i++)cum.push(cum[i-1]+Math.hypot(lane[i][0]-lane[i-1][0],lane[i][1]-lane[i-1][1])); const L=cum[cum.length-1], at=d=>{let i=1; while(i<lane.length-1&&cum[i]<d)i++; const u=(d-cum[i-1])/((cum[i]-cum[i-1])||1); return[lane[i-1][0]+(lane[i][0]-lane[i-1][0])*u,lane[i-1][1]+(lane[i][1]-lane[i-1][1])*u];};
+    const BK=new Kit(); BK.add(sphG(1.15,3),null,0xffffff,{ao:0}); const ball=BK.mesh(chrome,true); ball.noBake=true; world.add(ball);
+    const pg=grp(lx,1.15,zs-4.9), PK=new Kit(); pg.noBake=true; PK.add(cylG(.16,.16,7,8),M4(0,0,3.3,0,1,1,1,Math.PI/2,0),0xffffff,{ao:0}); PK.add(cylG(.75,.75,.3,14),M4(0,0,-.15,0,1,1,1,Math.PI/2,0),0xffffff,{ao:0}); const kn=new Kit(); kn.add(sphG(.7,2),M4(0,0,7.1,0,1,1,1.2),0xe0364f,{ao:0}); kn.add(latheG([[.5,0],[.62,.3],[.4,.6]],12),M4(0,0,6.3,0,1,1,1,Math.PI/2,0),0x17304d,{ao:0});
+    const sp=[]; for(let i=0;i<=60;i++){const a=i/60*6.283*6; sp.push([Math.cos(a)*.5,Math.sin(a)*.5,i/60*2.6]);} const SK=new Kit(); SK.add(tubeG(sp,.08,5,true),null,0xffffff,{ao:0});
+    TOY.dyn.push({o:ball,f:(o,t)=>{const u=t%12, pull=u<2.2?0:u<3.4?1.6*sstep(2.2,3.4,u):u<3.5?1.6*(1-(u-3.4)/.1):0; pg.position.z=zs-4.9+pull; if(pg.spring)pg.spring.scale.z=Math.max(.2,(2.6-pull)/2.6);
+      let d=0, sc=1; if(u>=3.5&&u<9.7){const q=(u-3.5)/6.2; d=L*(1-Math.pow(1-q,1.8));} else if(u>=9.7&&u<10.3){d=L; sc=1-(u-9.7)/.6;} else if(u>=10.3&&u<11.5){sc=0;} else if(u>=11.5){sc=(u-11.5)/.5;} const p=at(d); o.position.set(p[0],1.15,p[1]+(d<.01?pull:0)); o.scale.setScalar(Math.max(.001,sc)); o.visible=sc>.01;}});
+    TOY.pinParts={ball,pg,PK,kn,SK,zs,lx};
+    /* the hole the ball drops into at the end of its run */
+    K.at(-lx,-.08,zs-6.6,0); K.add(cylG(1.5,1.5,.04,20),null,0x05040c,{ao:0}); KC.at(-lx,-.06,zs-6.6,0); KC.add(torG(1.5,.12,6,24),M4(0,0,0,0,1,1,1,Math.PI/2,0),0xffffff,{ao:0});}
+  {const cm=KC.mesh(chrome,true); cm.noBake=true; world.add(cm); const Q=TOY.pinParts; Q.pg.add(Q.PK.mesh(chrome,true)); Q.pg.add(Q.kn.mesh(TOYM.gloss,true)); const sm=Q.SK.mesh(chrome,false); sm.position.set(Q.lx,1.15,Q.zs-2.0); sm.rotation.y=Math.PI; sm.noBake=true; world.add(sm); Q.pg.spring=sm; TOY.pinParts=null;}
+  /* the arcade round the machine */
+  TP.cabinet(K,KE,-(hx+58),-17.2,zn-10,.5,[0x1a1f6e,0x3a2fb0],0x35e0ff); TP.cabinet(K,KE,hx+60,-17.2,zn-22,-.45,[0x5a0e46,0xa02a8c],0xffc531); TP.cabinet(K,KE,-(hx+30),-17.2,zn-62,.2,[0x0e4a5a,0x1a8ca0],0xff5fa8); TP.cabinet(K,KE,hx+18,-17.2,zn-70,-.1,[0x4a1a0e,0xb0502a],0x35c98a);
+  PLAT&&TP.bulbs(K,KE,[P.x-2.0,3.45,P.z+1.4],[P.x+2.0,3.45,P.z+1.4],8);
+};
 /* ---------- the pearl stall: a big pink clam holding a glowing lavender pearl ----------
    One landmark on every board. It breathes open and shut, opens wide when the camera visits it or a pearl is bought, and when it
    moves to a new space it snaps shut, vanishes in a puff of sparkles and pops open again where it lands. */
@@ -3004,7 +3099,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=78; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=79; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
