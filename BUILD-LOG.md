@@ -629,6 +629,7 @@ Volcano rebuilt to the Island standard.
 - Old ruins (arches and columns), glowing crystals, smoking vents, dead trees and dark rocks, on the island and on the small islands out at sea.
 - Dusk light: a low warm sun and a violet fill.
 - Each space has its own material here, so a burning stretch still darkens and glows space by space.
+- On every board the START board now stands on whichever edge of the start deck is nearest the camera, and the sparks of an eruption and the confetti are round and glowing, not square dots.
 
 Tested: Volcano built and viewed on a desktop screen; a full three-round solo game. Not tested: real phones.
 
