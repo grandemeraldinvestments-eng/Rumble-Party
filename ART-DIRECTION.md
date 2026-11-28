@@ -2,6 +2,9 @@
 
 Working notes for the visual overhaul. Branch `visual-overhaul`, based on Build 60 (commit 5a9328b).
 
+## Status at Build 81
+All seven boards are 3D toy models (Island 73, Carnival 75, Farm 76, Volcano 77, Melody Mansion 78, Pinball Paradise 79, Temple 80). Eighteen platform mini games stand in 3D scenery built by `toyArena()` from the `ARENA` sets (sea, ship, fair, music, theatre, night, snow, crater, factory); the painted surround is now only a fallback, and is what Conveyor Chaos still uses. Anything below that says a board is still flat or uses standees describes the game before these builds. BUILD-LOG.md has what each build changed and what has not been rebuilt.
+
 ## The look: "boardwalk toybox"
 
 Everything should look like a painted wooden toy from a seaside fairground.
