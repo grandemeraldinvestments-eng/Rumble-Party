@@ -633,6 +633,19 @@ Volcano rebuilt to the Island standard.
 
 Tested: Volcano built and viewed on a desktop screen; a full three-round solo game. Not tested: real phones.
 
+## Build 78
+Melody Mansion rebuilt to the Island standard.
+
+- The board is laid on a woven rug on the floor of a huge music room; to the players everything else is enormous. The floorboards are wider than a player.
+- A grand piano with its lid propped open stands behind the board, with a light that hops from key to key as if someone were playing. Round the rug: a drum kit whose cymbals rock, two speaker stacks, a guitar on its stand, a xylophone, a gramophone, two trumpets, a piano stool, an armchair and a floor lamp.
+- The room has walls: striped paper over panelling, a skirting board, a window with curtains, framed pictures, a wall socket and a mouse hole.
+- The path is ivory boards. The short cut, 'Across the keys', is a keyboard with black keys along it.
+- Small instruments lie on the rug inside the path: records, tambourines, bongos, maracas, a harmonica, triangles, drumsticks and guitar picks.
+- The metronome is a 3D model. The rules still swing its arm, and it still races when it is about to move the Golden Note.
+- The Golden Note beside the pearl is a glowing 3D note that turns, not a flat picture. Coloured notes hang in the air over the instruments.
+
+Tested: Melody Mansion built and viewed on a desktop screen and a phone-sized screen; a full three-round solo game (Golden Note, metronome, Piano Express, Brass Blast all seen). Not tested: real phones.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
