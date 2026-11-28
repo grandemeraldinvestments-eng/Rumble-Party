@@ -1466,6 +1466,13 @@ function seaMesh(T){
     fragmentShader:'uniform sampler2D uH;'+SEAFRAG+`void main(){vec2 uv=(vW.xz+${HALF}.)/${HALF*2}.; float h=texture2D(uH,uv).r*2.4-2.1; if(uv.x<0.||uv.x>1.||uv.y<0.||uv.y>1.)h=-2.1;
       vec4 c=seaCol(max(0.,${SEA.toFixed(2)}-h)); c.a*=1.-smoothstep(120.,200.,length(vW.xz)); gl_FragColor=c;}`});
   const g=new THREE.PlaneGeometry(440,440,1,1); g.rotateX(-Math.PI/2); const q=new THREE.Mesh(g,mt); q.position.y=SEA; q.noBake=true; q.frustumCulled=false; q.renderOrder=2; q.sea=ht; TOY.sea=q; return q;}
+/* lava: slow bright currents under a drifting dark crust, lit from within */
+function lavaMat(){if(TOYM.lava)return TOYM.lava; const m=new THREE.ShaderMaterial({uniforms:{uN:{value:seaNoise()},uT:TOY.U.uT},
+  vertexShader:'varying vec3 vW; void main(){vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w;}',
+  fragmentShader:`uniform sampler2D uN; uniform float uT; varying vec3 vW; void main(){vec2 p=vW.xz; vec3 A=texture2D(uN,p*.06+vec2(uT*.006,uT*.004)).rgb, B=texture2D(uN,p*.17-vec2(uT*.01,-uT*.007)).rgb, C=texture2D(uN,p*.23+vec2(-uT*.008,uT*.012)).rgb;
+    float h=A.r*.6+B.g*.4; vec3 col=mix(vec3(.80,.14,.02),vec3(1.,.55,.08),smoothstep(.34,.66,h)); col=mix(col,vec3(1.,.92,.45),smoothstep(.66,.84,h));
+    float crust=smoothstep(.47,.3,h+(C.b-.5)*.3); col=mix(col,vec3(.17,.09,.09),crust*.82); col+=vec3(1.,.68,.2)*(1.-smoothstep(0.,.04,abs(B.b-C.b)))*.45*(1.-crust); gl_FragColor=vec4(col,1.);}`});
+  m.keep=true; return TOYM.lava=m;}
 /* water that follows a line, for the tide in the channel: the same look as the sea, shallow at its banks */
 function streamMat(){return new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{uN:{value:seaNoise()},uT:TOY.U.uT},
   vertexShader:'attribute float aD; varying vec3 vW; varying float vD; void main(){vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; vD=aD; gl_Position=projectionMatrix*viewMatrix*w;}',
@@ -1582,7 +1589,7 @@ const TP={
     for(let k=0;k<3;k++){const a=k*2.1+.4; K.add(sphG(.16,0),M4(tx+Math.cos(a)*.2,h-.2,Math.sin(a)*.2),0x7a4a22,{sway:sw,ao:0});}
     const lf=(px,py,pz,nx,ny)=>{const t=clamp01(px/2.3), rib=ny>0&&Math.abs(pz)<.05?.12:0, c=[mixn(.15,.42,t)+rib,mixn(.50,.76,t)+rib,mixn(.22,.2,t)+rib*.3]; if(ny<0){c[0]*=.72; c[1]*=.72; c[2]*=.72;} return c;};
     for(let k=0;k<9;k++){const a=k/9*6.283+.3, up=k%2?.28:-.08, L=k%2?2.0:2.4; K.add(leafG(L,.36,k%2?.3:.42,6),M4(tx,h+.06,0,a,1,1,1,0,up),lf,{sway:sw,ao:0});}},
-  rock(K,x,z,s,seed,y){K.at(x,(y==null?GY(x,z):y)-.05*s,z,seed*1.7,s); K.add(rockG(seed%5,2),M4(0,0,0,0,1,.8+(seed%3)*.12,1),(px,py,pz,nx,ny)=>{const t=clamp01(ny*.5+.5)*clamp01(py+.3); return[mixn(.46,.72,t),mixn(.42,.68,t),mixn(.40,.62,t)];},{ao:.3,aoH:.5});},
+  rock(K,x,z,s,seed,y,tint){const c=tint||TOY.rock||[1,1,1]; K.at(x,(y==null?GY(x,z):y)-.05*s,z,seed*1.7,s); K.add(rockG(seed%5,2),M4(0,0,0,0,1,.8+(seed%3)*.12,1),(px,py,pz,nx,ny)=>{const t=clamp01(ny*.5+.5)*clamp01(py+.3); return[mixn(.46,.72,t)*c[0],mixn(.42,.68,t)*c[1],mixn(.40,.62,t)*c[2]];},{ao:.3,aoH:.5});},
   bush(K,x,z,s,seed){K.at(x,GY(x,z)-.04,z,seed,s); const c=[0x2f8f45,0x6cc85a]; for(let k=0;k<4;k++){const a=k*1.7+seed, r=k?.42:0; K.add(sphG(.5,1),M4(Math.cos(a)*r,.3+(k?0:.14),Math.sin(a)*r,0,k?.8:1,k?.66:.8,k?.8:1),c,{sway:.1,aoH:.5,ao:.36});}},
   tuft(K,x,z,seed,flower){K.at(x,GY(x,z)-.02,z,seed); for(let k=0;k<5;k++){const a=k*1.26+seed; K.add(bladeG(),M4(Math.cos(a)*.08,.15,Math.sin(a)*.08,0,1,1,1,Math.cos(a)*.35,-Math.sin(a)*.35),[0x3f9a3d,0x8ad65a],{sway:.25,ao:0});}
     if(flower){K.add(cylG(.012,.012,.36,4),M4(0,.18,0),0x4aa64a,{sway:.2,ao:0}); K.add(sphG(.085,1),M4(0,.4,0,0,1,.6,1),flower,{sway:.3,ao:0}); K.add(sphG(.04,0),M4(0,.44,0),0xffe27a,{sway:.3,ao:0});}},
@@ -1888,6 +1895,56 @@ THEME.farm=function(m){
   for(let i=0;i<46;i++){const a=i/46*6.283+rnd()*.1, r=31+rnd()*22; TP.farTree(K,Math.cos(a)*r*1.15,Math.sin(a)*r*.9,1.5+rnd()*1.4);}
   TP.gull(-m.a*1.4,-m.b*1.5,9,9,.4,0); TP.gull(m.a*1.5,m.b*1.2,8,8.5,-.35,3);
 };
+/* ---------- Volcano: dark rock, bright lava ---------- */
+LANDP.volcano={id:'volc',sand:[.34,.30,.33],wet:[.22,.20,.24],ga:[.36,.32,.38],gb:[.50,.45,.48],ra:[.40,.24,.20],rb:[.62,.38,.28],deep:[.16,.46,.58]};
+Object.assign(TP,{
+  /* a cluster of glowing crystals on a dark stone */
+  crystal(K,KE,x,z,s,col,seed){const y=GY(x,z); K.at(x,y-.05,z,seed,s||1); K.add(rockG(seed%5,1),M4(0,0,0,0,.7,.4,.7),[0x3a3440,0x5a5260],{aoH:.3}); KE.at(x,y,z,seed,s||1);
+    [[0,0,1.25,.24,0,0],[.3,.1,.85,.18,.35,.2],[-.28,-.12,.95,.2,-.3,-.25],[.05,.3,.7,.15,.1,.45],[-.1,-.3,.6,.14,-.4,.1]].forEach((q,i)=>KE.add(cylG(.02,q[3],q[2],5),M4(q[0],q[2]/2+.12,q[1],i,1,1,1,q[5],q[4]),(px,py)=>{const c=hexC(col), k=.62+.5*clamp01(py/q[2]+.5); return[Math.min(1,c[0]*k+.1),Math.min(1,c[1]*k+.1),Math.min(1,c[2]*k+.1)];},{ao:0,ph:i*1.3+seed}));},
+  /* a standing stone column from an old ruin; broken ones are shorter with a slanted top */
+  pillar(K,x,z,h,seed){const y=GY(x,z); K.at(x,y-.05,z,seed); K.add(latheG([[.5,0],[.5,.2],[.4,.26],[.36,h-.2],[.46,h-.12],[.46,h]],10),null,(px,py,pz)=>{const k=.86+.14*Math.abs(Math.cos(Math.atan2(pz,px)*5)); return[.62*k,.58*k,.6*k];},{aoH:.8,ao:.35}); K.add(rbox(1.1,.2,1.1,.05),M4(0,.1,0),0x5a5260,{aoH:.2}); if(h>2.4)K.add(rbox(1.05,.22,1.05,.05),M4(0,h+.1,0),0x6f6672,{ao:0}); else K.add(rockG((seed|0)%5,1),M4(0,h-.1,0,seed,.42,.3,.42),0x6f6672,{ao:0});},
+  arch(K,x,z,turn){const y=GY(x,z); K.at(x,y-.05,z,turn); for(const sx of [-1.1,1.1])K.add(latheG([[.42,0],[.4,.2],[.32,.26],[.3,2.5],[.4,2.6],[.4,2.75]],10),M4(sx,0,0),[0x5a5260,0x8a8290],{aoH:.8,ao:.35}); K.add(rbox(3.1,.42,.8,.1,2),M4(0,2.96,0),[0x6f6672,0x8a8290],{ao:0}); K.add(rbox(1.0,.3,.7,.08),M4(.3,3.3,0,0,1,1,1,0,.12),0x6f6672,{ao:0});},
+  deadTree(K,x,z,s,seed){K.at(x,GY(x,z)-.05,z,seed,s||1); const c=[0x2b2530,0x4a3f4a]; K.add(tubeG([[0,0,0],[.1,.9,0],[-.05,1.7,.1],[.12,2.5,0]],t=>.17-.11*t,6),null,c,{aoH:.6}); K.add(tubeG([[.05,1.0,0],[.6,1.5,.1],[.9,2.1,.05]],t=>.08-.05*t,5),null,c,{ao:0}); K.add(tubeG([[-.02,1.5,.05],[-.5,1.9,-.1],[-.75,2.5,-.05]],t=>.07-.045*t,5),null,c,{ao:0});},
+  /* a pool of lava in a ring of dark rock */
+  lavaPool(K,KE,x,z,r,seed){const y=GY(x,z); K.at(x,y-.02,z,seed); K.add(latheG([[r*1.22,0],[r*1.18,.12],[r*1.02,.16],[r*.96,.04]],18),null,[0x2b2530,0x4a3f4a],{ao:0}); const g=new THREE.CircleGeometry(r,18); g.rotateX(-Math.PI/2); const q=new THREE.Mesh(g,lavaMat()); q.position.set(x,y+.07,z); q.noBake=true; world.add(q);},
+  /* a crack that breathes smoke */
+  vent(K,KE,x,z,seed){const y=GY(x,z); K.at(x,y-.03,z,seed); K.add(latheG([[.7,0],[.5,.3],[.3,.5],[.2,.46]],9),null,[0x2b2530,0x5a4a4a],{aoH:.3}); KE.at(x,y,z,0); KE.add(sphG(.2,0),M4(0,.4,0,0,1,.4,1),0xff7a1a,{ao:0,ph:seed}); let acc=seed%1; TOY.dyn.push({o:null,f:(o,t,dt)=>{acc+=dt; if(acc>.7){acc=0; if(V&&!MS)toyPuff(x,y+.7,z,0x8a8490,1,1.8);}}});},
+});
+MAPS.volcano.toy={light:{sun:0xffd9b0,sunI:.66,sky:0xdccfff,ground:0xffa06a,skyI:.62,from:[-14,22,14]}};
+THEME.volcano=function(m){
+  const {K,KG,KT,KE}=toyKits(), P=PLAT, N=NODES, rnd=rng32(5353), vc=m.core||[0,0]; TOY.opt={walk:[0x7a7180,0x6a6272,0x8a8290],gap:0x2a2530,cut:[0xa0503c,0x8e4434,0xb46048]};
+  const q=spot([vc,[-m.a*.38,-m.b*.2],[m.a*.38,m.b*.2],[0,0]],4.2)||[0,0], spots=N.spots.map(i=>{const o=pearlSide(i); return[N[i].x+o[0],N[i].z+o[1],i];});
+  const T=TOY.T=toyGround(m,{tide:false,pal:LANDP.volcano,patch:[...N.slice(45).map(n=>[n.x,n.z,3.0]),[P.x,P.z,4.6],...spots.map(s=>[s[0],s[1],2.6])],plateau:[],mesa:[],beach:[],
+    islets:[[-33,12,4.6,1.6],[34,-6,5.4,2.2],[-26,-25,5,1.4],[8,-31,6,2.0],[30,22,3.6,1.0]],shade:[[q[0],q[1],5.2,.45]]});
+  T.pad(P.x,P.z,2.5,.12); T.bake(); GY=T.walk; TOY.rock=[.56,.5,.56];
+  /* the hollow the path circles is a lake of lava */
+  {const lg=new THREE.CircleGeometry(9.5,40); lg.rotateX(-Math.PI/2); const lk=new THREE.Mesh(lg,lavaMat()); lk.position.set(q[0],SEA+.14,q[1]+1.5); lk.noBake=true; world.add(lk);}
+  /* the volcano: its size and the parts the eruption shakes and lights are kept as the rules expect */
+  {const g=grp(q[0],0,q[1]), C=new Kit(), E=new Kit(), TOP=5.0; g.noBake=true; C.at(0,0,0,0); E.at(0,0,0,0);
+    C.add(latheG([[4.6,0],[4.2,.5],[3.3,1.9],[2.4,3.3],[1.75,4.4],[1.5,5.05],[1.2,5.0],[.9,4.6],[.05,4.5]],26),null,(px,py,pz)=>{const a=Math.atan2(pz,px), k=.8+.2*fbm(a*2.2+3,py*.9,4), t=clamp01(py/5); return[mixn(.26,.52,t)*k,mixn(.2,.27,t)*k,mixn(.22,.2,t)*k];},{ao:.3,aoH:1.4});
+    for(let i=0;i<7;i++){const a=i*.9+.3, s=.5+((i*3)%4)*.22; C.add(rockG(i%5,1),M4(Math.cos(a)*4.3,0,Math.sin(a)*4.3,i,s*1.3,s,s*1.3),[0x2b2530,0x5a4a52],{aoH:.4});}
+    {const cg=new THREE.CircleGeometry(1.05,20); cg.rotateX(-Math.PI/2); E.add(cg,M4(0,4.62,0),(px,py,pz)=>{const d=Math.hypot(px,pz); return[1,mixn(.9,.4,d),mixn(.35,.03,d)];},{ao:0});}
+    for(let i=0;i<6;i++){const a=i*1.05+.4, pts=[]; for(let k=0;k<=7;k++){const t=k/7, r=1.35+t*(2.6+((i*2)%3)*.4), w=Math.sin(t*5+i)*.22; pts.push([Math.cos(a+w*.2)*r,5.02-t*t*(3.9+((i*2)%3)*.5)-t*.6,Math.sin(a+w*.2)*r]);} E.add(tubeG(pts,t=>.16-.07*t,5,false),null,(px,py)=>[1,mixn(.34,.74,clamp01(py/5)),.05],{ao:0,ph:i*1.9});}
+    g.add(C.mesh(TOYM.matte)); g.add(E.mesh(TOYM.glow,false,false)); const pl=new THREE.PointLight(0xff6a00,1.1,26); pl.position.set(0,6.2,0); g.add(pl); FXP.volc={x:q[0],z:q[1],top:TOP,g,pl,smoke:[]};
+    let acc=0; TOY.dyn.push({o:null,f:(o,t,dt)=>{acc+=dt; if(acc>.32){acc=0; if(V&&!MS)toyPuff(q[0]+(Math.random()-.5)*.8,TOP+.4,q[1]+(Math.random()-.5)*.8,FXP.erupt>0?0xffb060:0x7a7480,1,FXP.erupt>0?3.4:2.6);}}});}
+  /* lava that floods beside a burning stretch of path: the same shapes and timing as before, lifted onto the ground */
+  m.secs.forEach(([s0,len,far])=>{
+    const sec=Array.from({length:len},(_,i)=>N[(s0+i)%45]), off=far?1.87:1.5, band=sec.map(n=>{const dx=q[0]-n.x,dz=q[1]-n.z,l=Math.hypot(dx,dz)||1; return[n.x+dx/l*off,n.z+dz/l*off];}), mid=band[Math.floor(len/2)];
+    const o=far?mid:q, g=grp(o[0],GY(mid[0],mid[1])+.1,o[1]), mt=new THREE.MeshBasicMaterial({color:0xff7a10,transparent:true,opacity:.92,side:THREE.DoubleSide}), rel=C=>C.map(c=>[c[0]-o[0],c[1]-o[1]]);
+    const add=(C,hw)=>{const L=smoothLine(rel(C),8), r=mesh(ribbonGeo(L,i=>hw(i/(L.length-1)),()=>0),mt,0,0,0,g); r.castShadow=false; r.noBake=true;};
+    add(band,u=>(far?.5:.62)*Math.min(1,.2+Math.min(u,1-u)*5));
+    if(!far){const dx=mid[0]-q[0],dz=mid[1]-q[1],D=Math.hypot(dx,dz),px=-dz/D,pz=dx/D; add([[q[0]+dx/D*4.4,q[1]+dz/D*4.4],[q[0]+dx*.66+px*.5,q[1]+dz*.66+pz*.5],[q[0]+dx*.86-px*.3,q[1]+dz*.86-pz*.3],mid],u=>.42+u*.3);}
+    g.material=mt; g.noBake=true; g.scale.set(.001,1,.001); g.visible=false; FXP.tong.push(g);});
+  /* pools, vents, crystals, ruins, dead trees and rocks, wherever they stand clear of the path and hide nothing */
+  [.5,1.8,2.9,4.3,5.5].forEach((a,i)=>{const x=q[0]+Math.sin(a)*6.3, z=q[1]+Math.cos(a)*6.3; if(TP.free(x,z,1.3)){TP.lavaPool(K,KE,x,z,.8+i*.12,i); USED.push([x,z,1.4]);}});
+  const put=(n,r,h,fn)=>{for(let i=0;i<n;i++){const s=spot([],r); if(s&&!TP.hides(s[0],s[1],h,r))fn(s[0],s[1],i);}};
+  put(2,1.6,3.3,(x,z,i)=>TP.arch(K,x,z,i*1.2+.3)); put(3,.8,3.0,(x,z,i)=>TP.pillar(K,x,z,[3.0,1.6,2.2][i],i+1)); put(3,.8,1.4,(x,z,i)=>TP.crystal(K,KE,x,z,1,[0x7fe8ff,0xc9a6ff,0xff8fd0][i],i)); put(2,.7,.6,(x,z,i)=>TP.vent(K,KE,x,z,i+.3)); put(2,.8,2.6,(x,z,i)=>TP.deadTree(K,x,z,1,i*2.1));
+  /* round the shore */
+  let made=0; for(let i=0;i<1400&&made<34;i++){const a=rnd()*6.283, n=N[Math.floor(rnd()*45)], o=outN(N.indexOf(n)), d=2.2+rnd()*2.6, x=n.x+o[0]*d+Math.cos(a)*.4, z=n.z+o[1]*d+Math.sin(a)*.4; if(!TP.free(x,z,.7)||T.landE(x,z)<.9||z>n.z+1.2&&Math.abs(x-n.x)<2)continue; made++; USED.push([x,z,.8]);
+    const k=made%6; if(k===0)TP.crystal(K,KE,x,z,.8+rnd()*.4,[0x7fe8ff,0xc9a6ff,0xff8fd0][made%3],made); else if(k===1&&z<n.z)TP.pillar(K,x,z,1.4+rnd()*1.8,made); else if(k===2&&z<n.z)TP.deadTree(K,x,z,.9+rnd()*.3,made); else if(k===3)TP.vent(K,KE,x,z,made+.5); else TP.rock(K,x,z,.5+rnd()*.7,made);}
+  TP.rock(K,-33,12,1.6,2); TP.crystal(K,KE,-31.6,12.8,1.5,0x7fe8ff,3); TP.rock(K,34,-6,2.0,4); TP.pillar(K,35.4,-5,3.2,2); TP.rock(K,8,-31,1.8,1); TP.crystal(K,KE,9.6,-30.2,1.6,0xc9a6ff,5); TP.rock(K,-26,-25,1.6,3); TP.deadTree(K,-24.6,-24.4,1.4,2); TP.rock(K,30,22,1.2,6);
+  TP.buoy(-m.a*1.5,m.b*1.0,0xff4d4d); TP.buoy(m.a*1.5,-m.b*.9,0xffc531); TOY.rock=null;
+};
 /* ---------- the pearl stall: a big pink clam holding a glowing lavender pearl ----------
    One landmark on every board. It breathes open and shut, opens wide when the camera visits it or a pearl is bought, and when it
    moves to a new space it snaps shut, vanishes in a puff of sparkles and pops open again where it lands. */
@@ -2053,7 +2110,7 @@ function introPreload(id){const c=INTRO.boards[id], el=$('#introVid'); if(!el||!
 function buildWorld(id){
   const m=MAPS[id]||MAPS.island; curMap=id; MAPX=m;
   if(world){scene.remove(world); freeScene(world);}
-  world=new THREE.Group(); scene.add(world); defParent=world; spin=[]; upright=[]; clouds=[]; boats=[]; FXP={tong:[],boost:0,erupt:0}; shownBurn=-2; COAST=null; USED=[]; MBATCH={}; GY=()=>0; TOY.dyn=[]; if(TOY.sea&&TOY.sea.sea)TOY.sea.sea.dispose(); TOY.sea=null; TOY.T=null; toyRig(m.toy);
+  world=new THREE.Group(); scene.add(world); defParent=world; spin=[]; upright=[]; clouds=[]; boats=[]; FXP={tong:[],boost:0,erupt:0}; shownBurn=-2; COAST=null; USED=[]; MBATCH={}; GY=()=>0; TOY.dyn=[]; if(TOY.sea&&TOY.sea.sea)TOY.sea.sea.dispose(); TOY.sea=null; TOY.T=null; TOY.rock=null; toyRig(m.toy);
   NODES=buildGraph(m); NODES.forEach(n=>{n.y=0;}); introPreload(id); $('#gl').style.background=`url(assets/sky/${id in THEME?id:'island'}.webp) center top/cover no-repeat, linear-gradient(${m.sky[0]},${m.sky[1]} 60%)`;   // painted sky, with the plain gradient behind it until it loads
   if(!ICONS){const mk=d=>{const tx=tex(d), mt=new THREE.MeshBasicMaterial({map:tx,transparent:true}); tx.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy()); mt.keep=true; return mt;};
     ICONS={S:mk((g,s)=>label(g,s,'GO','#17304d',26)),
@@ -2851,7 +2908,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=76; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=77; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';

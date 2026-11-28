@@ -620,6 +620,18 @@ Farm
 
 Tested: Farm built and viewed on a desktop screen; game view; a full three-round solo game. Not tested: real phones.
 
+## Build 77
+Volcano rebuilt to the Island standard.
+
+- A dark rock island in a bright sea. The path is dark stone, the short cut red stone on a spit of rock at the front.
+- The hollow the path circles is a lake of lava: slow bright currents under a drifting dark crust. Lava pools use the same material.
+- The volcano is larger, with lava running down its sides, smoke from the crater and a glow that lights the ground round it. Eruptions shake it, light it and throw lava exactly as before, and the lava that floods beside a burning stretch of path is unchanged.
+- Old ruins (arches and columns), glowing crystals, smoking vents, dead trees and dark rocks, on the island and on the small islands out at sea.
+- Dusk light: a low warm sun and a violet fill.
+- Each space has its own material here, so a burning stretch still darkens and glows space by space.
+
+Tested: Volcano built and viewed on a desktop screen; a full three-round solo game. Not tested: real phones.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
