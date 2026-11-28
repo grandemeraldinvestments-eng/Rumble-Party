@@ -736,6 +736,45 @@ Hedge Maze is unchanged on purpose: the dark round the maze is its rule (you onl
 
 Tested: all 47 mini games started in practice on a desktop screen with no errors and looked at; four tap games at phone size; the award ceremony and final results played through; an online game on three phones with a computer player through four mini games (results and seed identical on every phone, no errors). Not tested: real phones.
 
+## Build 83
+Kite, pearl stall and mini game edges: rules fixed at the root, and the Kite gets its flight.
+
+The Kite is rare now, and its rarity is set in one place
+- Every way an item reaches a player now reads one table, `RARITY` (in the code under "ONE TABLE FOR EVERY ITEM"): item spaces, the free item for stopping at a shop, the Mystery Box, the Jackpot Zone and the shop shelf.
+- What was found: an item space gave a Kite 15% of the time, the Mystery Box and the Jackpot Zone 40%, every shop always sold one for 15 tickets, and a computer player could buy one at the start of any turn from anywhere on the board.
+- Now: item space 4%, shop gift 2%, Mystery Box 6%, Jackpot Zone 10%. The shop puts a single Kite on the shelf on about one round in four, for 25 tickets. A player can hold one Kite at a time. At most 1 Kite reaches the players in a 5-round game, 2 in a 10-round game and 3 in a 15-round game, counted across every source.
+- The shop has a shelf that is refilled each round and shared by all three shops: 3 Twin Dice, 2 Magnets and, some rounds, 1 Kite.
+- Computer players buy at the shop like everyone else. They no longer buy from anywhere.
+
+The Kite flight
+- Using a Kite is now a film in five parts: the kite sails down out of the sky with its string trailing; the player watches it, hops and catches the string, and the kite dips as it takes the weight; a gust lifts them; they fly over the board to wherever the pearl stall stands, swinging underneath, with the camera travelling alongside; they are set down by the stall with a bounce and a cheer while the kite flies off.
+- The kite is a 3D toy: four bright cloth panels that flutter, a face, a tail of bows that streams behind it, a string that ripples while it hangs loose, and streaks of wind in flight.
+- The path is worked out from where the player stands and where the stall stands at that moment, and it climbs over whatever ground lies between (the Temple statue, the Pinball ramp).
+- It is safe by construction. The player's place changes the moment the Kite is used and the Kite leaves the bag at the same moment; the film is only a film. So nothing along the way is set off, a dropped connection or a skipped film cannot leave anyone between spaces or pay out twice, and the offer of a pearl is made after landing against the place the stall stands then.
+- Every phone shows the same flight, each working it out from the host's one message. The flier (or the host, for a computer player) can tap Skip.
+- The film runs by the clock, so a slow phone does not fall behind the game.
+
+The pearl stall
+- One function, `pearlStop`, now decides when a pearl is offered. Walking past the stall, stopping exactly on its space, arriving by cannon, pipe, wheel, piano, trumpet, flipper or Kite, and starting a turn while standing on its space all go through it.
+- What was wrong: the offer was only made at the moment of arriving. A player who stopped on the stall's space without enough tickets, or who was standing there when the stall moved to them, was never asked again, even after winning tickets in the mini game. They had to walk away and come round again.
+- Now a player standing on the stall's space who can pay is offered the pearl at the start of their turn. Nobody is asked twice in a turn, saying no is respected, and where the stall stays put (Melody Mansion, the Temple) buying once is all a visit allows.
+- Not enough tickets: the player shakes their head, "Need 8 more" floats up, and the message says the price and what they hold. The stall only moves after a sale.
+- A gold ring on the ground marks the one space the stall belongs to.
+
+Mini game edges
+- Every platform game now has a stated rule for its edge (`edgeRule`): fall, wall or none. A game that is not listed gets a wall, so no game is knocked out at the edge just for using the shared platform.
+- What was wrong: one line in the shared platform code knocked out anyone who stepped past the rim, in every game that used it. That included Ticket Grab, Spotlight, Paint Fight and Ghost Hot Potato, whose own rules say nobody is knocked out.
+- Wall (the rim stops you, and a hard shove into it bounces back): Boom Hop, Ticket Grab, Hot Planks, Coconut Drop, Spotlight, Sumo Shove, Paint Fight (the hole too), Stomp, Trap Doors, Lantern Match, Musical Chairs, Ghost Hot Potato.
+- Fall (staying on is the game): Slippery Slope, Cannonball Kickoff, Crumble Deck. Even there nobody can fall in the first second, and being over the rim for a single stray frame no longer counts.
+- Unchanged: the mazes and the bomb ring have no rim, and the course games already put you back at the last flag.
+
+Checked
+- Pearl stall, on Island, Melody Mansion and the Temple: passing, stopping exactly, not enough tickets, waiting on the space and then being able to pay, saying no, arriving by Kite, a skipped Kite.
+- Kite odds measured over 40,000 draws per source; none past the cap; never a second one in the same bag.
+- Two phones online: the joined player used a Kite and bought the pearl; both phones showed the flight and ended in the same state.
+- Fifteen platform games: a player was walked straight at the rim. The twelve wall games held them; the three fall games dropped them.
+- Screenshots of the flight on the Island (desktop) and the Temple (phone).
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
