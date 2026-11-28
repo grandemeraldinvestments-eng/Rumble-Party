@@ -695,6 +695,47 @@ Not changed in this build: the ten racing and climbing games that build their ow
 
 Tested: all eighteen games started in practice on a desktop screen with no errors and looked at; two on a phone-sized screen; one played to its results. Rules, scoring and controls are untouched. Not tested: real phones, online play.
 
+## Build 82
+The rest of the Full Game Visual Overhaul: every mini game now plays in a 3D scene, plus the award ceremony, the results and character reactions.
+
+Course games (scenery down both sides of the course, never on it; rules, tracks and timing untouched)
+- Rail Riders: big pines, snowmen, igloos, ice crystals and snow banks.
+- Tricycle Turbo, Vacuum Escape and Shortcut Circuit: a playroom, with block towers, ring stacks, crayons, presents, balls, books, teddies and balloons.
+- Marble Mayhem: the factory floor far below, with turning gear wheels, robot arms, pipes, crates and warning lamps.
+- Soapbox Surfers: moving water, sand bars with palms, rocks, buoys and float rings.
+- Rapid Rafts: trees, bushes, toadstools, rocks and flowers along the banks.
+- Crater Crawl: crystals, broken columns, arches and dead trees beyond the boulders.
+- Pixel Panic: neon arches over the grid, shapes turning in the dark, a grid of light far below and coloured stars.
+- Clockwork Climb: brass wheels turning on the back wall, pipes, wall lamps and a clock face with moving hands at the top.
+- Conveyor Chaos: the painted floor is replaced by a real factory floor with presents, block towers, crates, belts, pipes and robot arms.
+
+Tap and timing games (the flat blue panel is gone; each is played in a scene that answers to the game)
+- Bell Ringer: a fairground high striker. Every tap knocks the puck up the tower; tap fast enough and it rings the bell.
+- Ring Toss: a stall with a peg on a table. A ring slides to and fro above it in step with the marker; Toss drops it where it is.
+- Lighthouse: a lighthouse on a rock at night. Its lamp is dark until the signal, then it blazes and sweeps its beams.
+- Crab Count: the crabs are 3D and run out onto a real beach, in exactly the places the game chose.
+- Ticket Catch: the tickets, the red crates and the basket are 3D objects, placed exactly where the game puts them, in front of a stall.
+- Pier Dash: moving water, sand bars with palms, buoys, rocks and pier posts.
+- Balloon Pop: the fairground behind the balloons.
+- Crate Stack: a wooden dock with crates and barrels, boats, a lighthouse and palms.
+
+Own-screen games
+- Drum Beater: sand bars with palms, speakers, a gramophone and notes round the drum island.
+- Limelight Shuffle: theatre curtains, lighting rigs and footlights round the stage.
+- Critter Wrangler, Hedge Hustle (meadow), Dress for Success (theatre), Candy Detective, Matchstick Marksman (fairground), Chalkboard Drop, Twist and Route (playroom) and Sky Shapes (clouds, floating islands and balloons): each is now set in a 3D scene in place of the painted stall. Their play areas are still the 2D drawings they were designed as.
+
+Shared
+- Platform games open with the camera sweeping in from the side during 3, 2, 1.
+- The award ceremony is on a theatre stage: plank floor, red curtains with gold pelmets, lighting rigs, footlights, gold stars and balloons.
+- Final results: rows pop in, the winner's row glows gold, confetti falls, the fanfare plays and the winner's piece cheers on the board.
+- Characters use two animations they already carried but never played: they flinch when they lose tickets on the board or are knocked out of a platform game, and cheer when they win 8 or more tickets at once.
+- If any scene cannot be built the game falls back to what it showed before and plays on.
+- Online play: a phone that started slowly could find Host and Join greyed out for good, because the room connection was tried once, for four seconds. It now keeps trying for about half a minute and switches the buttons on when it gets through.
+
+Hedge Maze is unchanged on purpose: the dark round the maze is its rule (you only see where you have been).
+
+Tested: all 47 mini games started in practice on a desktop screen with no errors and looked at; four tap games at phone size; the award ceremony and final results played through; an online game on three phones with a computer player through four mini games (results and seed identical on every phone, no errors). Not tested: real phones.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

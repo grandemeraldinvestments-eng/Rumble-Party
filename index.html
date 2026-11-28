@@ -244,6 +244,15 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 #mini.gl #stage{justify-content:flex-start; max-width:none; gap:8px; overflow:visible!important; touch-action:none}
 #mini.gl *{touch-action:none}
 #mini.gl #mgActs{display:none}
+#mini.bd{background:none}
+#mini.bd .sub,#mini.bd .f2top span,#mini.bd .wait{color:#fff; text-shadow:0 2px 0 var(--ink),0 0 8px rgba(23,48,77,.85)}
+#mini.bd-bell #stage,#mini.bd-ring #stage{justify-content:flex-end}
+#mini.bd-bell .bell{width:min(34vw,150px)}
+#mini.bd-light .lamp{background:rgba(12,22,60,.22); border-color:rgba(255,255,255,.8); color:#fff; text-shadow:0 2px 0 var(--ink)}
+#mini.bd-light .lamp.lit{background:rgba(255,220,90,.28); box-shadow:0 0 70px 30px rgba(255,209,102,.5)}
+#mini.bd-crab .field,#mini.bd-catch .field{background:none; border:3px dashed rgba(255,255,255,.55)}
+#mini.bd-crab .field .crab,#mini.bd-catch #cv{opacity:0}
+#mini.bd-ring .lane{background:rgba(23,48,77,.55)}
 #mini.gl .bar{background:rgba(23,48,77,.35)}
 .mhud{display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none}
 .mhud .big{color:#fff; text-shadow:0 3px 0 var(--ink),3px 0 0 var(--ink),-3px 0 0 var(--ink),0 -3px 0 var(--ink),3px 3px 0 var(--ink)}
@@ -2272,7 +2281,7 @@ const PUFF=[];
 function toyPuff(x,y,z,col,n,size){if(!TOY.puffT){TOY.puffT=glowTex(false); TOY.puffT.keep=true;}
   for(let i=0;i<n;i++){let s=PUFF.find(q=>q.life<=0); if(!s){if(PUFF.length>=28)return; s=new THREE.Sprite(new THREE.SpriteMaterial({map:TOY.puffT,transparent:true,depthWrite:false})); s.material.keep=true; s.life=0; PUFF.push(s); scene.add(s);}
     const a=i/n*6.283+Math.random(); s.position.set(x,y,z); s.v=[Math.cos(a)*(1.1+Math.random()*.6),.5+Math.random()*.8,Math.sin(a)*(1.1+Math.random()*.6)]; s.life=s.max=.45+Math.random()*.2; s.size=(size||1)*(.35+Math.random()*.25); s.material.color.setHex(col); s.visible=true;}}
-function ticketFly(k,d){const g=pawns[k], chip=$('#score').children[k]; if(!g||!chip||document.hidden||!V||V.phase!=='board'||!chip.animate)return;
+function ticketFly(k,d){const g=pawns[k], chip=$('#score').children[k]; if(g&&V&&V.phase==='board'){if(d<0)g.hit=.75; else if(d>=8&&!(g.cheer>0))g.cheer=.9;} if(!g||!chip||document.hidden||!V||V.phase!=='board'||!chip.animate)return;
   const r=(chip.querySelector('.tk')||chip).getBoundingClientRect(), hx=r.left+r.width/2, hy=r.top+r.height/2, [sx,sy]=screenPos(new THREE.Vector3(g.position.x,g.position.y+1.3,g.position.z)), n=Math.min(8,Math.max(2,Math.round(Math.abs(d)/2)));
   for(let i=0;i<n;i++){const e=document.createElement('i'); e.className='tkfly'; document.body.appendChild(e); const ox=(Math.random()-.5)*90, oy=-20-Math.random()*60, f=d>0?[sx,sy]:[hx,hy], t=d>0?[hx,hy]:[sx+ox*1.2,sy+70];
     const an=e.animate([{transform:`translate(${f[0]}px,${f[1]}px) scale(.3) rotate(0deg)`,opacity:0},{transform:`translate(${f[0]+ox}px,${f[1]+oy}px) scale(1.2) rotate(${ox}deg)`,opacity:1,offset:.3},{transform:`translate(${t[0]}px,${t[1]}px) scale(.6) rotate(${ox*3}deg)`,opacity:d>0?1:0}],{duration:620+i*50,delay:i*45,easing:'cubic-bezier(.45,0,.25,1)',fill:'both'});
@@ -2406,7 +2415,7 @@ Object.assign(TP,{
   rigLamp(K,KE,x,z,turn,h){K.at(x,0,z,turn||0); KE.at(x,0,z,turn||0); K.add(cylG(.1,.14,h,6),M4(0,h/2,0),0x2a2e44,{ao:.2}); K.add(rbox(1.9,.14,.14,.05),M4(0,h,0),0x2a2e44,{ao:0}); for(const sx of [-.7,0,.7]){K.add(cylG(.2,.28,.5,10),M4(sx,h-.3,.12,0,1,1,1,.7,0),0x17202e,{ao:0}); KE.add(cylG(.24,.24,.04,10),M4(sx,h-.5,.34,0,1,1,1,.7,0),[0xfff3b0,0xff9fd0,0x9fe1ff][Math.round(sx/.7)+1],{ao:0,ph:sx*3});}},
   lanternBoat(K,KE,x,z,turn,s){K.at(x,0,z,turn||0,s||1); KE.at(x,0,z,turn||0,s||1); const o=[[0,-1.5],[.5,-1.1],[.62,0],[.5,1.1],[0,1.4],[-.5,1.1],[-.62,0],[-.5,-1.1]]; K.add(flatG(o,.34,.06),M4(0,-.12,0),[0x6e3f22,0xa8683a],{ao:0}); K.add(flatG(o.map(p=>[p[0]*.78,p[1]*.84]),.05,0),M4(0,.3,0),0x4f2d18,{ao:0}); K.add(cylG(.03,.03,1.1,5),M4(0,.85,-.5),0x2a2e44,{ao:0}); KE.add(rbox(.26,.32,.26,.08),M4(0,1.3,-.5),0xffd27a,{ao:0,ph:x});},
   buoyS(K,KE,x,z,col){K.at(x,0,z,0); KE.at(x,0,z,0); K.add(sphG(.42,2),M4(0,.12,0,0,1,.8,1),[col,col],{ao:0}); K.add(cylG(.34,.34,.14,12),M4(0,.2,0),0xfdf6e3,{ao:0}); K.add(cylG(.04,.04,.9,5),M4(0,.75,0),0x2a2e44,{ao:0}); KE.add(sphG(.1,1),M4(0,1.24,0),0xfff3b0,{ao:0,ph:x+z});},
-  sandbar(K,x,z,rx,rz,seed){K.at(x,0,z,seed||0); K.add(sphG(1,3),M4(0,-.12,0,0,rx,.42,rz),[0xe2c684,0xf6e2aa],{ao:0}); K.add(sphG(1,2),M4(rx*.3,-.06,-rz*.1,0,rx*.55,.36,rz*.6),[0x6cbf4f,0x8ad65e],{ao:0});},
+  sandbar(K,x,z,rx,rz,seed){K.at(x,0,z,seed||0); K.add(sphG(1,3),M4(0,-.12,0,0,rx,.42,rz),[0xc9a55e,0xe9cf8f],{ao:0}); K.add(sphG(1,2),M4(rx*.3,-.06,-rz*.1,0,rx*.55,.36,rz*.6),[0x6cbf4f,0x8ad65e],{ao:0});},
   cannon(K,KG,x,z,turn,s){K.at(x,0,z,turn||0,s||1); KG.at(x,0,z,turn||0,s||1); K.add(rbox(.9,.36,1.3,.1,2),M4(0,.36,0),[0x6e3f22,0xa8683a],{ao:.3,aoH:.3}); for(const q of [[-.5,.42],[.5,.42],[-.5,-.42],[.5,-.42]])K.add(cylG(.24,.24,.14,10),M4(q[0],.24,q[1],0,1,1,1,0,Math.PI/2),0x4f2d18,{ao:0}); KG.add(latheG([[.26,0],[.3,.2],[.24,.4],[.2,1.5],[.26,1.6],[.2,1.62]],12),M4(0,.72,-.7,0,1,1,1,Math.PI/2+.12,0),[0x1b1d2b,0x3a3f58],{ao:0});},
 });
 const ARENA={
@@ -2496,9 +2505,152 @@ function toyArena(G,sc,sh,base){
   const L=ARENALT[set], s=sc.sun, h=sc.hemi; if(s&&h&&L){s.color.setHex(L[0]); h.color.setHex(L[1]); h.groundColor.setHex(L[2]); s.shadow.radius=2.6; s.shadow.bias=-.0012; s.shadow.normalBias=.03;}
   return true;}
 /* the results of a mini game arrive with a little ceremony: the rows pop in from first to last, the winner's row glows, confetti falls and the fanfare plays */
-function miniCheer(){const host=$('#mini'); if(!host)return; try{SFX.win();}catch(e){} const box=document.createElement('div'), cs=['#ff4d4d','#ffc531','#2f8fff','#35c98a','#ff5fa8','#9b6bff']; box.className='mconf'; let h='';
+/* a platform game opens with the camera sweeping in from the side while 3, 2, 1 counts down */
+function arenaSweep(m,st,G){if(G.noDeck||G.zs||G.alone||G.dark||!MS||MS.cam!==m.cam)return; const b=st.camBase, t0=performance.now(), p0=new THREE.Vector3(b.p[2]*.95,b.p[1]*.5,b.p[2]*1.2), p1=new THREE.Vector3(), l=new THREE.Vector3(); let done=false;
+  MS.dyn=MS.dyn||[]; MS.spin=MS.spin||[]; MS.dyn.push({o:m.cam,f:()=>{if(done)return; const u=Math.min(1,(performance.now()-t0)/2250), e=1-Math.pow(1-u,3); p1.set(b.p[0],b.p[1],b.p[2]); l.set(b.l[0],b.l[1],b.l[2]); if(u>=1){done=true; st.zoom(1); return;} m.cam.position.lerpVectors(p0,p1,e); m.cam.lookAt(l);}});}
+function miniCheer(sel){const host=$(sel||'#mini'); if(!host)return; try{SFX.win();}catch(e){} const box=document.createElement('div'), cs=['#ff4d4d','#ffc531','#2f8fff','#35c98a','#ff5fa8','#9b6bff']; box.className='mconf'; let h='';
   for(let i=0;i<46;i++)h+=`<i style="left:${(Math.random()*100).toFixed(1)}%;background:${cs[i%6]};animation-delay:${(Math.random()*.7).toFixed(2)}s;animation-duration:${(1.7+Math.random()*1.3).toFixed(2)}s;--r:${Math.round(Math.random()*720-360)}deg;--x:${Math.round(Math.random()*140-70)}px"></i>`;
   box.innerHTML=h; host.appendChild(box); setTimeout(()=>box.remove(),3600);}
+/* ---------- scenery for the mini games that build their own course ---------- */
+/* build kit scenery into a mini game's scene, standing on ground level y. Board props can be used inside fn: the board's world, heights and animation lists are swapped out while it runs */
+function toyScope(sc,y,fn){
+  if(!TOYM.matte&&!toyMats())return false; if(!MS||MS.scene!==sc)return false;
+  const env=new THREE.Group(); env.position.y=y; const w0=world, g0=GY, d0=TOY.dyn, s0=spin, u0=upright, r0=TOY.rock, dyn=[], sp=[], A={K:new Kit(),KG:new Kit(),KT:new Kit(),KE:new Kit(),env}; let ok=true;
+  try{world=env; GY=()=>0; TOY.dyn=dyn; spin=sp; upright=[]; TOY.rock=null; fn(A); if(A.gain)for(const k of [A.K,A.KG,A.KT])for(let i=0;i<k.C.length;i++)k.C[i]*=A.gain;
+    if(A.K.tris)env.add(A.K.mesh(TOYM.matte)); if(A.KG.tris)env.add(A.KG.mesh(TOYM.gloss,true)); if(A.KT.tris)env.add(A.KT.mesh(TOYM.thin)); if(A.KE.tris)env.add(A.KE.mesh(TOYM.glow,false,false));}
+  catch(err){ok=false; console.warn('scenery',err);}
+  world=w0; GY=g0; TOY.dyn=d0; spin=s0; upright=u0; TOY.rock=r0; if(!ok){freeScene(env); return false;}
+  sc.add(env); MS.dyn=(MS.dyn||[]).concat(dyn); MS.spin=(MS.spin||[]).concat(sp); const s=sc.sun; if(s){s.shadow.radius=2.6; s.shadow.bias=-.0012; s.shadow.normalBias=.03;} return true;}
+Object.assign(TP,{
+  mushroom(K,x,z,s,col){K.at(x,0,z,x*3,s||1); K.add(cylG(.14,.2,.6,8),M4(0,.3,0),[0xe9e2c8,0xfdf6e3],{ao:.3,aoH:.3}); K.add(sphG(.5,2),M4(0,.6,0,0,1,.62,1),[col,col],{ao:0}); for(let k=0;k<5;k++)K.add(sphG(.09,0),M4(Math.cos(k*1.26)*.3,.84-.06*(k%2),Math.sin(k*1.26)*.3,0,1,.5,1),0xfdf6e3,{ao:0});},
+  crayon(K,x,z,turn,s,col){K.at(x,0,z,turn,s||1); K.add(cylG(.2,.2,2.4,10),M4(0,.2,0,0,1,1,1,0,Math.PI/2),[col,col],{ao:.2,aoH:.3}); K.add(cylG(0,.2,.5,10),M4(1.45,.2,0,0,1,1,1,0,-Math.PI/2),col,{ao:0}); K.add(cylG(.21,.21,.9,10),M4(-.2,.2,0,0,1,1,1,0,Math.PI/2),0xfdf6e3,{ao:0});},
+  ringStack(K,KG,x,z,s){K.at(x,0,z,0,s||1); KG.at(x,0,z,0,s||1); K.add(cylG(.9,1.0,.2,16),M4(0,.1,0),0xfdf6e3,{ao:.2}); K.add(cylG(.12,.14,2.0,8),M4(0,1.1,0),0xfdf6e3,{ao:0}); [0xff4d4d,0xffc531,0x35c98a,0x2f8fff,0xc9a6ff].forEach((c,i)=>KG.add(torG(.78-i*.11,.2-i*.012,8,18),M4(0,.4+i*.36,0,0,1,1,1,Math.PI/2,0),c,{ao:0}));},
+  books(K,x,z,turn,s){K.at(x,0,z,turn,s||1); [[0x2f8fff,0],[0xff4d4d,.3],[0x35c98a,-.2]].forEach((q,i)=>{K.add(rbox(3.0,.55,2.2,.08,2),M4(.1*i,.28+i*.56,0,q[1]),[q[0],q[0]],{ao:.2,aoH:.4}); K.add(boxG(2.9,.4,.06),M4(.1*i,.28+i*.56,1.1,q[1]),0xfdf6e3,{ao:0});});},
+  blockStack(K,x,z,s,seed){const cs=[0xff4d4d,0xffc531,0x2f8fff,0x35c98a,0xff5fa8,0x9b6bff], n=1+(seed%3); for(let j=0;j<n;j++){K.at(x+(hash2(seed,j,1)-.5)*.2*s,j*s,z+(hash2(seed,j,2)-.5)*.2*s,hash2(seed,j,3)*1.2,s); K.add(rbox(1,1,1,.12,2),M4(0,.5,0),[cs[(seed+j)%6],cs[(seed+j)%6]],{ao:j?0:.25,aoH:.4}); K.add(rbox(.62,.62,.04,.08),M4(0,.5,.5),0xfdf6e3,{ao:0}); K.add(rbox(.04,.62,.62,.08),M4(.5,.5,0),0xfdf6e3,{ao:0});}},
+  floatRing(K,x,z,col){K.at(x,.14,z,0); K.add(torG(.7,.26,8,20),M4(0,0,0,0,1,1,1,Math.PI/2,0),col,{ao:0}); for(let i=0;i<4;i++)K.add(torG(.7,.265,8,5,.5),M4(0,0,0,i*1.571,1,1,1,Math.PI/2,0),0xfdf6e3,{ao:0});},
+});
+const COURSEPICK={
+  snow(A,x,z,far,R,i){const K=A.K; if(far){if(i%11===5)TP.igloo(K,x,z,R()*6,1.2); else TP.pine(K,x,z,1.3+R()*1.2,i);} else if(i%7===3)TP.snowman(K,x,z,R()*6,1.1); else if(i%6===1)TP.crystal(K,A.KE,x,z,.9,0x9fe1ff,i); else TP.snowbank(K,x,z,.8+R()*.7,i);},
+  toys(A,x,z,far,R,i){const K=A.K, cs=[0xff4d4d,0xffc531,0x2f8fff,0x35c98a,0xff5fa8,0x9b6bff], k=i%9; if(far){if(k===0)TP.teddy(K,x,z,R()*6,2+R(),[0xc98f55,0xe7a6c4,0x9fd0ff][i%3]); else if(k===1)TP.books(K,x,z,R()*6,1.3); else if(k===2)TP.ringStack(K,A.KG,x,z,1.6+R()*.6); else if(k===3)TP.balloons(K,x,z,3,i); else TP.blockStack(K,x,z,1.5+R()*.9,i);}
+    else if(k<3)TP.blockStack(K,x,z,.9+R()*.4,i); else if(k===3)TP.gift(K,x,z,.9+R()*.3,cs[i%6],R()*6); else if(k===4)TP.ball(K,x,z,1.3+R()*.6); else if(k===5||k===6)TP.crayon(K,x,z,R()*6,.9,cs[i%6]); else TP.ringStack(K,A.KG,x,z,.9);},
+  sea(A,x,z,far,R,i){const K=A.K; if(far&&i%5===0){TP.sandbar(K,x,z,3.6,2.8,i); TP.palm(K,x-.4,z,2.8+R(),.28,R()*6,1.1);} else if(i%4===1)TP.buoyS(K,A.KE,x,z,[0xff4d4d,0xffc531,0xff5fa8][i%3]); else if(i%4===2)TP.rock(K,x,z,.6+R()*.7,i,-.2); else if(i%4===3)TP.floatRing(K,x,z,[0xff4d4d,0x2f8fff,0xff5fa8][i%3]); else TP.crate(K,x,z,R()*6,.8,-.25);},
+  forest(A,x,z,far,R,i){const K=A.K; if(far){if(i%5===2)TP.rock(K,x,z,1.2+R(),i); else TP.tree(K,x,z,1.0+R()*.7,i,i%4===0);} else{const k=i%6; if(k===0)TP.bush(K,x,z,.8+R()*.4,i); else if(k===1)TP.rock(K,x,z,.5+R()*.4,i); else if(k===2)TP.mushroom(K,x,z,1+R()*.6,[0xe0364f,0xff8c1a,0x9b6bff][i%3]); else for(let j=0;j<3;j++)TP.tuft(K,x+(R()-.5)*1.4,z+(R()-.5)*1.4,i+j,[0xff5fa8,0xffffff,0xffc531,0xc9a6ff][(i+j)%4]);}},
+  crater(A,x,z,far,R,i){const K=A.K; TOY.rock=[.46,.4,.46]; if(far){if(i%4===0)TP.pillar(K,x,z,2+R()*2,i); else if(i%4===1)TP.deadTree(K,x,z,1.1+R()*.4,i); else if(i%9===2)TP.arch(K,x,z,R()*6); else TP.rock(K,x,z,1.4+R()*1.6,i,-.3);} else TP.crystal(K,A.KE,x,z,.9+R()*.5,[0x7fe8ff,0xc9a6ff,0xff8fd0][i%3],i); TOY.rock=null;},
+  factory(A,x,z,far,R,i){const K=A.K, cs=[0xff4d4d,0xffc531,0x2f8fff,0x35c98a,0xff5fa8,0x9b6bff], k=i%8, s=A.big||1; if(far&&k<2){const g=new Kit(), r=(1.6+R()*1.4)*s; g.add(TP.gearG(r,10,.5*s),null,[cs[i%6],cs[i%6]],{ao:0}); g.add(cylG(r*.24,r*.24,.8*s,12),M4(0,.4*s,0),0x566f8b,{ao:0}); const gm=g.mesh(TOYM.gloss,true); gm.position.set(x,.1,z); world.add(gm); spin.push({o:gm,ax:'y',v:(i%2?1:-1)*(.4+R()*.5)});}
+    else if(far&&k===2)TP.pipes(K,A.KG,x,z,R()*6,1.4*s); else if(far&&k===3)TP.robotArm(K,A.KG,A.KE,x,z,R()*6,1.4*s); else if(k===4)TP.gift(K,x,z,(1+R()*.5)*s,cs[i%6],R()*6); else if(k===5)TP.blockStack(K,x,z,(1.1+R()*.5)*s,i); else if(k===6){K.at(x,0,z,0); A.KE.at(x,0,z,0); K.add(cylG(.12,.16,2.4*s,6),M4(0,1.2*s,0),[0xf2a81e,0xffc531],{ao:.2}); A.KE.add(sphG(.24*s,1),M4(0,2.56*s,0),0xff4d6a,{ao:0,ph:i});} else{for(let j=0;j<1+(i%2);j++)TP.crate(K,x,z,R()*6,1.1*s,j*1.1*s);}},
+};
+/* props down both sides of a course, never on it */
+function toyCourse(G,sc,st){
+  const T=st&&st.T, cfg=typeof RAIL!=='undefined'&&G===RAIL?{set:'snow',y:0,step:2.4}:G===TRIKE?{set:'toys',y:0,step:3.0}:G===VAC?{set:'toys',y:0,step:4.8,span:14}:G===CIRC?{set:'toys',y:0,step:2.8,more:[st.B,st.J]}:G===MARBLE?{set:'factory',y:-1.4,step:3.4,big:1.9,span:12}:G===SOAP?{set:'sea',y:-1.4,step:5.6,span:13,near:2.2}:G===RAFT?{set:'forest',y:0,step:3.0,near:1.6}:G===CRAWL?{set:'crater',y:0,step:2.4,W:st.L*CRAWL.LW/2+2.4}:null;
+  if(G===PIXEL)return toyPixel(sc,st); if(G===CLOCK)return toyClock(sc,st); if(G===BELT)return toyBelt(sc,st); if(!cfg||!T)return false;
+  const W=cfg.W||st.W||3, R=rng32(4242+Math.round(T.len)), pick=COURSEPICK[cfg.set], put=[];
+  const clear=(x,z,d)=>{const nr=T.near(x,z), q=T.P[nr.i]; if(Math.hypot(x-q.x,z-q.z)<W+d)return false; for(const B of cfg.more||[])if(B&&B.P){const b=B.near(x,z), p=B.P[b.i]; if(Math.hypot(x-p.x,z-p.z)<W+d)return false;} return true;};
+  if(cfg.set==='sea')sc.children.forEach(o=>{if(o.isMesh&&o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1)o.material=waterMat(0x1a9fd0,0x52d2ea);});
+  return toyScope(sc,cfg.y,A=>{A.big=cfg.big; let i=0; for(let s=2;s<T.len-1;s+=cfg.step)for(const sd of [-1,1]){i++; const far=R()<.55, q=T.at(s+R()*cfg.step*.6), d=W+(far?4.4+R()*(cfg.span||9):(cfg.near||1.4)+R()*1.9), x=q.x+q.nx*sd*d, z=q.z+q.nz*sd*d, r=far?2.2:1.0;
+    if(!clear(x,z,far?3.8:(cfg.near||1.4)-.2)||put.some(p=>Math.hypot(p[0]-x,p[1]-z)<p[2]+r))continue; put.push([x,z,r]); pick(A,x,z,far,R,i);}});}
+/* Pixel Panic: a neon void. Arches over the grid, shapes turning in the dark, a grid of light far below */
+function toyPixel(sc,st){let z0=0, z1=0, hx=3; st.cells.forEach(c=>{z0=Math.min(z0,c.z); z1=Math.max(z1,c.z); hx=Math.max(hx,Math.abs(c.x));});
+  return toyScope(sc,0,A=>{const KE=A.KE, R=rng32(77), cs=[0x35e0ff,0xff5fa8,0xffc531,0x7c5cff,0x35c98a]; let i=0;
+    for(let z=z1-4;z>z0-4;z-=9){KE.at(0,0,z,0); KE.add(tubeG([[-(hx+2.4),-4,0],[-(hx+2.4),3.4,0],[-(hx+1.2),4.8,0],[hx+1.2,4.8,0],[hx+2.4,3.4,0],[hx+2.4,-4,0]],.1,5,false),null,cs[(i++)%5],{ao:0,ph:z}); for(const sx of [-1,1])KE.add(sphG(.22,1),M4(sx*(hx+2.4),3.4,0),0xffffff,{ao:0,ph:z+sx});}
+    for(let k=0;k<26;k++){const sd=k%2?1:-1, q=new Kit(); q.add(k%3===0?torG(1,.13,5,14):k%3===1?sphG(1,0):rbox(1.4,1.4,1.4,.1),null,cs[k%5],{ao:0,ph:k}); const m=q.mesh(TOYM.glow,false,false); m.position.set(sd*(hx+4+R()*10),-4+R()*9,z1+4-R()*(z1-z0+10)); m.scale.setScalar(.6+R()*1.5); m.rotation.set(R()*3,R()*3,0); world.add(m); spin.push({o:m,ax:k%2?'x':'y',v:.3+R()*.5});}
+    const cv=document.createElement('canvas'); cv.width=cv.height=128; const c=cv.getContext('2d'); c.fillStyle='#0b0b2a'; c.fillRect(0,0,128,128); c.strokeStyle='#7c5cff'; c.lineWidth=5; c.strokeRect(0,0,128,128); c.strokeStyle='#35e0ff'; c.lineWidth=1.5; c.strokeRect(2,2,124,124); const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(60,60);
+    const g=new THREE.Mesh(new THREE.PlaneGeometry(240,240),new THREE.MeshBasicMaterial({map:t})); g.rotation.x=-Math.PI/2; g.position.set(0,-9,(z0+z1)/2); g.noBake=true; world.add(g);
+    const n=260, P=new Float32Array(n*3), C=new Float32Array(n*3); for(let k=0;k<n;k++){P[k*3]=(R()-.5)*120; P[k*3+1]=-6+R()*26; P[k*3+2]=z1+20-R()*(z1-z0+60); const q=hexC(cs[k%5]); C[k*3]=q[0]; C[k*3+1]=q[1]; C[k*3+2]=q[2];} const sg=new THREE.BufferGeometry(); sg.setAttribute('position',new THREE.BufferAttribute(P,3)); sg.setAttribute('color',new THREE.BufferAttribute(C,3));
+    const pts=new THREE.Points(sg,new THREE.PointsMaterial({size:.5,vertexColors:true,map:glowTex(true),transparent:true,depthWrite:false})); pts.frustumCulled=false; world.add(pts);});}
+/* Clockwork Climb: the inside of a clock tower. Brass wheels turn on the back wall, lamps hang at the sides, the clock face is at the top */
+function toyClock(sc,st){let top=0, wz=-2.4; st.P.forEach(p=>{top=Math.max(top,p.y);}); sc.children.forEach(o=>{if(o.isMesh&&o.geometry&&o.geometry.parameters){const p=o.geometry.parameters; if((p.height||0)>18&&o.position.z<-.7)wz=Math.max(wz,Math.min(-1.1,o.position.z+(p.depth||0)/2+.14));}});
+  return toyScope(sc,0,A=>{const {K,KG,KE}=A, R=rng32(1212), br=[[0xb9862e,0xe9bd55],[0x8a5a2b,0xc48d55],[0x9aa3b2,0xdfe5ee],[0xc9962e,0xffd45e]]; A.gain=1.5;
+    for(let y=1.5,i=0;y<top+6;y+=3.1+R()*1.6,i++){const r=1.3+R()*2.0, x=(i%2?1:-1)*(1.2+R()*3.6), g=new Kit(), n=Math.max(8,Math.round(r*5)); g.add(TP.gearG(r,n,.34),null,br[i%4],{ao:0}); g.add(cylG(r*.3,r*.3,.5,12),M4(0,.25,0),0x3a2a22,{ao:0}); for(let k=0;k<5;k++)g.add(cylG(r*.1,r*.1,.4,8),M4(Math.cos(k*1.257)*r*.58,.2,Math.sin(k*1.257)*r*.58),0x2a1d18,{ao:0});
+      const m=g.mesh(TOYM.gloss,false), h=new THREE.Group(); h.position.set(x,y,wz); h.rotation.x=Math.PI/2; h.add(m); world.add(h); spin.push({o:m,ax:'y',v:(i%2?1:-1)*(.5+R()*.6)/r*1.6});}
+    for(let y=3;y<top+4;y+=7)for(const sx of [-1,1]){K.at(sx*6.3,y,wz+.5,0); KE.at(sx*6.3,y,wz+.5,0); K.add(tubeG([[0,1.2,0],[-sx*.5,1.2,.3],[-sx*.5,.5,.3]],.05,5,true),null,0x2a1d18,{ao:0}); K.add(rbox(.5,.7,.5,.1,2),M4(-sx*.5,.2,.3),0x3a2a22,{ao:0}); KE.add(rbox(.36,.5,.36,.08),M4(-sx*.5,.2,.3),0xffd27a,{ao:0,ph:y+sx});}
+    for(let y=6;y<top;y+=9){K.at(0,y,wz+.12,0); KG.at(0,y,wz+.12,0); K.add(tubeG([[-6.4,0,0],[-2,.3,0],[2,-.3,0],[6.4,0,0]],.16,6,false),null,[0x2f8f6b,0x4fc79a],{ao:0}); for(const x of [-4,0,4])KG.add(cylG(.26,.26,.14,10),M4(x,x?.12*Math.sign(-x):0,0,0,1,1,1,0,Math.PI/2),0xffc531,{ao:0});}
+    {const y=top+5.5, f=new Kit(), hd=new Kit(); f.add(cylG(3.2,3.2,.2,40),null,[0xf3e9cf,0xfdf6e3],{ao:0}); f.add(torG(3.2,.26,8,40),M4(0,.1,0,0,1,1,1,Math.PI/2,0),[0xb9862e,0xe9bd55],{ao:0}); for(let k=0;k<12;k++)f.add(boxG(.16,.06,k%3?.4:.8),M4(Math.sin(k*.5236)*2.6,.12,Math.cos(k*.5236)*2.6,k*.5236),0x17304d,{ao:0}); f.add(cylG(.26,.26,.3,12),M4(0,.15,0),0xe0364f,{ao:0});
+      const fm=f.mesh(TOYM.gloss,false), h=new THREE.Group(); h.position.set(0,y,wz+.05); h.rotation.x=Math.PI/2; h.add(fm); hd.add(boxG(.2,.08,2.3),M4(0,.26,-1.0),0x17304d,{ao:0}); const hm=hd.mesh(TOYM.matte,false,false); h.add(hm); spin.push({o:hm,ax:'y',v:-.7}); const h2=new Kit(); h2.add(boxG(.26,.08,1.5),M4(0,.24,-.6),0x17304d,{ao:0}); const hm2=h2.mesh(TOYM.matte,false,false); h.add(hm2); spin.push({o:hm2,ax:'y',v:-.06}); world.add(h);}});}
+/* Conveyor Chaos: the factory floor on both sides of the belts */
+function toyBelt(sc,st){const hw=(st.h||7)+.3, z1=(st.z1||-26)-2, R=rng32(909), put=[];
+  sc.children.forEach(o=>{if(o.isMesh&&o.geometry&&o.geometry.type==='PlaneGeometry'&&Math.abs(o.position.y+1.4)<.03&&(o.geometry.parameters.width||0)>20)o.visible=false;});
+  return toyScope(sc,-1.4,A=>{A.big=1.4; let i=0; for(let z=9;z>z1-9;z-=1.9)for(const sd of [-1,1]){i++; const far=R()<.5, x=sd*(hw+(far?4.6+R()*8:1.5+R()*2.2)), zz=z+R()*1.6, r=far?2.6:1.2; if(put.some(p=>Math.hypot(p[0]-x,p[1]-zz)<p[2]+r))continue; put.push([x,zz,r]); COURSEPICK.factory(A,x,zz,far,R,i);}
+    for(let k=0;k<5;k++){const x=-8+k*4, z=z1-4-(k%2)*2.5; if(k%2)TP.pipes(A.K,A.KG,x,z,0,1.8); else TP.robotArm(A.K,A.KG,A.KE,x,z,-1.57,1.8);} TP.conveyor(A.K,-(hw+3),2,0,7); TP.conveyor(A.K,hw+3,-12,0,7);});}
+/* ---------- 3D scenes for the mini games that are played on a flat panel ---------- */
+const TAPSET={'Bell Ringer':'bell','Ring Toss':'ring','Ticket Catch':'catch','Lighthouse':'light','Crab Count':'crab','Critter Wrangler':'meadow','Dress for Success':'theatre','Candy Detective':'fair','Hedge Hustle':'forest','Chalkboard Drop':'toys','Matchstick Marksman':'fair','Twist and Route':'toys','Sky Shapes':'sky'};
+function tapGround(sc,mat,y){const f=new THREE.Mesh(new THREE.PlaneGeometry(420,420),mat); f.rotation.x=-Math.PI/2; f.position.y=y||0; f.receiveShadow=true; f.noBake=true; sc.add(f); return f;}
+function tapLight(sc,sun,sunI,sky,ground,skyI,bg){const s=sc.sun, h=sc.hemi; if(s){s.color.setHex(sun); s.intensity=sunI; s.position.set(-13,25,14);} if(h){h.color.setHex(sky); h.groundColor.setHex(ground); h.intensity=skyI;} sc.background=new THREE.Color(bg);}
+/* the same places round a platform that the arenas use, for a scene with no platform */
+function tapRing(A,e){const R=rng32(Math.round(e*313)+7); Object.assign(A,{e,R,at(a,d){const s=Math.sin(a), c=-Math.cos(a); return[s*(e+d),c*(e+d)];},far(a,d){return this.at(a,d);},clear(x,z,d){return Math.hypot(x,z)>e+d;},base(){},floor(){},piles(){}}); return A;}
+function tapScatter(A,set,n,r0,r1){const R=rng32(n*31+r0*7), put=[]; for(let i=0;i<n*3&&put.length<n;i++){const a=R()*6.283, far=R()<.5, r=far?r0+4+R()*(r1-r0-4):r0+R()*3.4, x=Math.sin(a)*r, z=-Math.cos(a)*r, rr=far?2.2:1; if(z>r0*.5&&far)continue; if(put.some(p=>Math.hypot(p[0]-x,p[1]-z)<p[2]+rr))continue; put.push([x,z,rr]); COURSEPICK[set](A,x,z,far,R,i);}}
+const TAPBUILD={
+  /* Lighthouse: a lighthouse at night. Its lamp is dark until the game lights it */
+  light(m,sc,c){tapLight(sc,0xb8c8ff,.42,0x8f9cff,0x33407a,.55,0x0a1230); tapGround(sc,waterMat(0x0f2460,0x1f4496),0); c.position.set(0,6.4,21); c.lookAt(0,7.6,0);
+    toyScope(sc,0,A=>{const {K,KE}=A; A.gain=1.7; TOY.rock=[.42,.44,.52]; [[0,0,3.4,1],[2.6,1.4,1.8,2],[-2.8,.8,2.0,3],[.6,2.6,1.5,4],[-1.4,-2.2,2.2,5]].forEach(q=>TP.rock(K,q[0],q[1],q[2],q[3],-.6)); TOY.rock=null; K.at(0,0,0,0); TP.lighthouse(K,0,0,2.4);
+      [[-9,4,.5],[8,7,-.7],[13,-6,1.2],[-14,-9,2]].forEach(q=>TP.lanternBoat(K,KE,q[0],q[1],q[2],1.3)); [[-5,8,0xff4d4d],[6,11,0xffc531]].forEach(q=>TP.buoyS(K,KE,q[0],q[1],q[2])); for(let i=0;i<5;i++)TP.rock(K,-20+i*10,-16-(i%2)*6,1.6+(i%3),i+7,-.4);});
+    const n=220, P=new Float32Array(n*3), R=rng32(5); for(let i=0;i<n;i++){P[i*3]=(R()-.5)*190; P[i*3+1]=6+R()*60; P[i*3+2]=-50-R()*40;} const sg=new THREE.BufferGeometry(); sg.setAttribute('position',new THREE.BufferAttribute(P,3)); const st=new THREE.Points(sg,new THREE.PointsMaterial({size:.9,color:0xfff3d0,map:glowTex(true),transparent:true,depthWrite:false})); st.frustumCulled=false; sc.add(st);
+    const moon=new THREE.Mesh(new THREE.CircleGeometry(4.2,28),new THREE.MeshBasicMaterial({color:0xfff6da})); moon.position.set(-22,30,-70); sc.add(moon);
+    const g=new THREE.Group(); g.position.set(0,10.0,0); sc.add(g); const lamp=new THREE.Mesh(new THREE.SphereGeometry(.95,16,12),new THREE.MeshBasicMaterial({color:0x4a5a8c})); g.add(lamp); const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),color:0xffe27a,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending})); halo.scale.set(13,13,1); g.add(halo);
+    const bm=new THREE.MeshBasicMaterial({color:0xffe9a0,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}), beams=new THREE.Group(); for(const sx of [-1,1]){const b=new THREE.Mesh(new THREE.ConeGeometry(4.6,34,18,1,true),bm); b.rotation.z=sx*Math.PI/2; b.position.x=sx*17; beams.add(b);} g.add(beams); let k=0;
+    m.dyn.push({o:g,f:(o,t,dt)=>{const L=document.getElementById('lamp'), lit=!!(L&&L.classList.contains('lit')); k+=((lit?1:0)-k)*Math.min(1,dt*(lit?14:4)); lamp.material.color.setHex(lit?0xfff3b0:0x4a5a8c); halo.material.opacity=k*.95; halo.scale.setScalar(13+Math.sin(t*9)*1.2*k); bm.opacity=k*.3; beams.rotation.y+=dt*(.6+k*1.4); if(sc.sun)sc.sun.intensity=.42+k*.5;}});},
+  /* Bell Ringer: a high striker. Every tap knocks the puck up; keep tapping and it rings the bell */
+  bell(m,sc,c){tapLight(sc,0xffe6c2,.8,0xece4ff,0xe6b890,.66,0x9fd8ff); tapGround(sc,gmat('cobble',0xd9a878,60,60),0); c.position.set(0,5.4,17); c.lookAt(0,5.6,0);
+    toyScope(sc,0,A=>{const {K,KG,KT,KE}=A; TP.tent(K,KT,-9,-9,0xff4d4d,1.7); TP.tent(K,KT,9,-9,0x2f8fff,1.7); TP.tent(K,KT,0,-15,0x35c98a,2.0); TP.stall(K,KE,-7.5,-1.5,.9,0xffc531); TP.stall(K,KE,7.5,-1.5,-.9,0xff5fa8); const L=[[-11,2],[-5.5,-5],[5.5,-5],[11,2]]; L.forEach((p,i)=>{TP.lamp(K,KE,p[0],p[1],4.2); if(i)TP.bulbs(K,KE,[L[i-1][0],4.1,L[i-1][1]],[p[0],4.1,p[1]],11);}); TP.balloons(K,-4.4,-2.5,4,1); TP.balloons(K,4.6,-2.8,3,2); TP.teddy(K,-3.6,1.2,.6,1.3,0xc98f55); TP.planter(K,3.4,1.6,1); TP.cart(K,KE,12,-5,-.6,0xff4d4d);
+      K.at(0,0,0,0); KG.at(0,0,0,0); K.add(rbox(4.2,.6,3,.2,2),M4(0,.3,0),[0x8a1f3a,0xe0364f],{ao:.2,aoH:.4}); K.add(rbox(1.5,9.4,.5,.2,2),M4(0,5.2,-.6),[0xfdf6e3,0xffffff],{ao:.2,aoH:2}); [0x35c98a,0x18b7c9,0x2f8fff,0xffc531,0xff8c1a,0xe0364f].forEach((q,i)=>K.add(boxG(1.1,1.2,.06),M4(0,1.6+i*1.35,-.33),q,{ao:0})); for(const sx of [-1,1])KG.add(cylG(.07,.07,9.2,6),M4(sx*.42,5.2,-.24),0xdfe5ee,{ao:0}); K.add(cylG(.9,1.0,.4,18),M4(0,.75,1.0),[0xb81d38,0xff4d6a],{ao:0}); KG.add(rbox(2.2,.5,.9,.2,2),M4(0,10.2,-.6),[0xc9962e,0xffd45e],{ao:0});});
+    const pk=new Kit(); pk.add(rbox(1.0,.5,.5,.14,2),null,[0xc9962e,0xffd45e],{ao:0}); const puck=pk.mesh(TOYM.gloss,true); puck.position.set(0,1.3,-.2); sc.add(puck);
+    const bk=new Kit(); bk.add(latheG([[0,1.2],[.3,1.15],[.55,.8],[.7,.2],[.95,0],[.9,-.08],[.6,.05]],18),M4(0,-1.2,0),[0xd9a52e,0xffe27a],{ao:0}); bk.add(sphG(.2,1),M4(0,-1.25,0),0x8a5a2b,{ao:0}); const bell=bk.mesh(TOYM.gloss,true), bg=new THREE.Group(); bg.position.set(0,11.9,-.6); bg.add(bell); sc.add(bg);
+    const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(true),color:0xfff3b0,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending})); halo.scale.set(7,7,1); halo.position.set(0,11,0); sc.add(halo); let y=1.3, v=0, last=0, ring=0;
+    m.dyn.push({o:puck,f:(o,t,dt)=>{const n=document.getElementById('n'), cnt=n?parseInt(n.textContent,10)||0:0; if(cnt>last){v=Math.min(15,v+5.2*(cnt-last)); last=cnt;} if(cnt<last)last=cnt; v-=17*dt; y+=v*dt; if(y<1.3){y=1.3; v=0;} if(y>9.5){y=9.5; if(v>0){v=-v*.25; ring=1; try{tone(1320,.18,'triangle',.05,1760);}catch(e){}}} o.position.y=y; ring=Math.max(0,ring-dt*1.6); bg.rotation.z=Math.sin(t*26)*.3*ring; halo.material.opacity=ring;}});},
+  /* Ring Toss: a ring slides to and fro over a peg, in step with the marker on the bar. Toss drops it where it is */
+  ring(m,sc,c){tapLight(sc,0xffe6c2,.8,0xece4ff,0xe6b890,.66,0x9fd8ff); tapGround(sc,gmat('cobble',0xd9a878,60,60),0); c.position.set(0,6.2,13.5); c.lookAt(0,3.3,0);
+    toyScope(sc,0,A=>{const {K,KG,KT,KE}=A; TP.curtain(KT,K,0,-3.4,0,13,8,[0xe0364f,0xff6b7f]); for(const sx of [-1,1]){K.at(sx*6.8,0,-1,0); K.add(cylG(.2,.26,8.6,8),M4(0,4.3,0),[0x8f5e33,0xcf9f63],{ao:.2,aoH:2}); TP.balloons(K,sx*8.6,-.5,4,sx+2);} TP.bulbs(K,KE,[-6.8,8.4,-1],[6.8,8.4,-1],13);
+      K.at(0,0,0,0); KG.at(0,0,0,0); K.add(rbox(11,1.9,3.6,.25,2),M4(0,.95,0),[0x8a1f3a,0xe0364f],{ao:.2,aoH:1}); K.add(rbox(11.4,.24,4,.1),M4(0,2.0,0),[0xd9a868,0xf3d9a8],{ao:0}); [[4.7,0xe0364f],[3.3,0xff8c1a],[1.9,0xffc531],[.75,0x35c98a]].forEach(q=>K.add(boxG(q[0]*2,.03,3.4),M4(0,2.13+.004*(5-q[0]),0),q[1],{ao:0}));
+      KG.add(latheG([[.42,0],[.44,.14],[.16,.26],[.14,1.5],[.2,1.62],[0,1.7]],14),M4(0,2.14,0),[0xc9962e,0xffd45e],{ao:0}); TP.teddy(K,-8.4,1.6,.5,1.5,0xc98f55); TP.teddy(K,8.2,1.4,-.5,1.3,0xe7a6c4); TP.gift(K,-6.4,2.4,1,0x2f8fff,.4); TP.gift(K,6.6,2.6,.9,0xffc531,1.1);});
+    const mk=()=>{const k=new Kit(); k.add(torG(.62,.11,8,22),M4(0,0,0,0,1,1,1,Math.PI/2,0),[0xff4d4d,0xff6b7f],{ao:0}); const q=k.mesh(TOYM.gloss,true); sc.add(q); return q;}; let cur=mk(), st='hover', vy=0, tx=0; const done=[];
+    m.dyn.push({o:null,f:(o,t,dt)=>{const M=document.getElementById('mk'), I=document.getElementById('info'), txt=I?I.textContent:''; if(st==='hover'){if(M&&M.style.left)tx=((parseFloat(M.style.left)-6)/88-.5)*9.4; cur.position.set(tx,5.0+Math.sin(t*5)*.12,0); cur.rotation.z=Math.sin(t*3)*.12; if(txt.indexOf('+')>=0){st='drop'; vy=0;}}
+      else if(st==='drop'){vy-=26*dt; cur.position.y+=vy*dt; const fl=Math.abs(tx)<.5?2.36:2.26; if(cur.position.y<=fl){cur.position.y=fl; cur.rotation.z=Math.abs(tx)<.5?0:.0; st='rest';}} else if(st==='rest'&&txt.indexOf('Throw')===0){done.push(cur); if(done.length>4)sc.remove(done.shift()); cur=mk(); st='hover';}}});},
+  /* Crab Count: the crabs run out onto a real beach. Count them before they go */
+  crab(m,sc,c){tapLight(sc,0xfff0d6,.78,0xe8f4ff,0xd6c49a,.68,0x9fe0ff); tapGround(sc,waterMat(0x1a9fd0,0x52d2ea),-.5); c.position.set(0,12.5,9.5); c.lookAt(0,0,.2);
+    toyScope(sc,0,A=>{const {K,KE}=A; K.at(0,-.9,1.5,0); K.add(sphG(1,3),M4(0,0,0,0,15,.9,10.5),[0xc9a55e,0xe9cf8f],{ao:0}); [[-9,-5,3.6,.26,2.4],[9.5,-5.6,3.3,.3,.6],[-11,1,2.9,.34,3],[11,2,3.1,.3,0],[-6.5,-7.5,3.2,.3,1.4],[6,-8,3.4,.26,2]].forEach(q=>TP.palm(K,q[0],q[1],q[2],q[3],q[4],1.2));
+      TP.umbrella(K,-8.4,4.6,0xff4d4d,0xfdf6e3,.16,.3); TP.towel(K,-7,5.6,.3,0xffc531); TP.umbrella(K,8.6,5.2,0x2f8fff,0xfdf6e3,-.14,1.2); TP.castle(K,7.2,6.2,.4); TP.ball(K,-9.6,6.4,1); TP.rock(K,-10.5,-2.4,1.0,2); TP.rock(K,10.2,-1.6,.8,5); for(let i=0;i<10;i++){const a=i*.9; if(i%2)TP.shell(K,Math.cos(a)*8.4,2+Math.sin(a)*4.6,i,[0xffb8cf,0xfdf6e3,0xc9a6ff][i%3]); else TP.star(K,Math.cos(a)*8.8,2+Math.sin(a)*4.8,i,[0xff8a5c,0xff5fa8,0xffc531][i%3]);} TP.buoyS(K,KE,-13,-10,0xff4d4d); TP.buoyS(K,KE,12,-11,0xffc531);});
+    const ck=new Kit(); ck.add(sphG(.42,2),M4(0,.3,0,0,1.25,.62,1),[0xd9342b,0xff6b4a],{ao:.2,aoH:.3}); for(const sx of [-1,1]){ck.add(sphG(.2,1),M4(sx*.62,.36,.34,0,1.1,.8,1.3),0xff6b4a,{ao:0}); ck.add(cylG(.03,.03,.3,5),M4(sx*.16,.62,.3),0xd9342b,{ao:0}); ck.add(sphG(.09,1),M4(sx*.16,.8,.3),0xffffff,{ao:0}); ck.add(sphG(.045,0),M4(sx*.16,.81,.37),0x17202e,{ao:0}); for(let k=0;k<3;k++)ck.add(cylG(.03,.04,.5,5),M4(sx*.6,.18,-.2+k*.2,0,1,1,1,0,sx*1.0),0xd9342b,{ao:0});}
+    const proto=ck.mesh(TOYM.matte,true), pool=[]; for(let i=0;i<25;i++){const q=new THREE.Mesh(proto.geometry,TOYM.matte); q.castShadow=true; q.visible=false; q.frustumCulled=false; sc.add(q); pool.push(q);} let sig='';
+    m.dyn.push({o:null,f:(o,t)=>{const F=document.getElementById('fld'), ks=F?F.children:[], s=ks.length?ks.length+':'+ks[0].style.left:''; if(s!==sig){sig=s; pool.forEach((q,i)=>{const e=ks[i]; q.visible=!!e; if(e){q.position.set(((parseFloat(e.style.left)-4)/18-2.2)*2.0,-.02,((parseFloat(e.style.top)-4)/18-2.2)*1.55+.6); q.userData.p=i*1.7;}});} pool.forEach(q=>{if(q.visible){q.rotation.y=Math.sin(t*3+q.userData.p)*.5; q.position.y=-.02+Math.abs(Math.sin(t*7+q.userData.p))*.08;}});}});},
+  /* Ticket Catch: the tickets and the basket are real things, in exactly the places the game puts them */
+  catch(m,sc,c){tapLight(sc,0xffe6c2,.8,0xece4ff,0xe6b890,.66,0x7fc4ff); tapGround(sc,gmat('cobble',0xd9a878,60,60),-3.2); c.position.set(0,2.5,14); c.lookAt(0,2.5,0);
+    toyScope(sc,-3.2,A=>{const {K,KG,KT,KE}=A; TP.curtain(KT,K,0,-4,0,26,13,[0x2f6fd0,0x58a6ff]); TP.tent(K,KT,-13,-2,0xff4d4d,1.8); TP.tent(K,KT,13,-2,0xffc531,1.8); TP.bulbs(K,KE,[-12,11.5,-3.5],[12,11.5,-3.5],17); TP.balloons(K,-9,1,4,1); TP.balloons(K,9.4,.6,4,2); TP.teddy(K,-10.5,2.4,.5,1.5,0xc98f55); TP.striker(K,KE,10.6,2.2,-.4);});
+    const tk=new Kit(); tk.add(rbox(.78,.46,.09,.06),null,[0xf2b21e,0xffd45e],{ao:0}); tk.add(boxG(.5,.05,.1),M4(0,.06,0),0xfdf6e3,{ao:0}); tk.add(boxG(.5,.05,.1),M4(0,-.08,0),0xfdf6e3,{ao:0}); const tg=tk.mesh(TOYM.gloss,true).geometry, bk=new Kit(); bk.add(rbox(.62,.62,.62,.08,2),null,[0xb81d38,0xff4d6a],{ao:0}); bk.add(boxG(.66,.1,.66),null,0x6e0f22,{ao:0}); const bgm=bk.mesh(TOYM.matte,true).geometry, pool=[];
+    for(let i=0;i<40;i++){const q=new THREE.Mesh(i<28?tg:bgm,i<28?TOYM.gloss:TOYM.matte); q.visible=false; q.frustumCulled=false; q.castShadow=true; sc.add(q); pool.push(q);}
+    const bs=new Kit(); bs.add(latheG([[.7,0],[1.0,.9],[.92,.9],[.64,.12],[0,.12]],18),null,[0x8f5e33,0xd9a868],{ao:.2,aoH:.5}); bs.add(torG(1.0,.08,6,20),M4(0,.9,0,0,1,1,1,Math.PI/2,0),0x6a4426,{ao:0}); const basket=bs.mesh(TOYM.matte,true); basket.frustumCulled=false; sc.add(basket);
+    const v=new THREE.Vector3(), at=(px,py,out)=>{v.set(px/innerWidth*2-1,-(py/innerHeight*2-1),.5).unproject(c).sub(c.position).normalize(); const k=-c.position.z/v.z; return out.copy(c.position).addScaledVector(v,k);}, P=new THREE.Vector3(), Q=new THREE.Vector3();
+    m.dyn.push({o:null,f:(o,t)=>{const S=m.tc, cv=document.getElementById('cv'); if(!S||!cv){pool.forEach(q=>q.visible=false); basket.visible=false; return;} const r=cv.getBoundingClientRect(), L=S.o; let a=0, b=28; pool.forEach(q=>q.visible=false);
+      for(const e of L){const q=e.bad?pool[b++]:pool[a++]; if(!q||(e.bad?b>40:a>28))continue; at(r.left+e.x,r.top+e.y,P); q.position.copy(P); q.visible=true; q.rotation.set(0,e.bad?t*2+e.x:t*5+e.x,e.bad?t+e.x:.2);}
+      at(r.left+S.x,r.top+S.H-22,P); at(r.left+S.x+S.BW/2,r.top+S.H-22,Q); basket.visible=true; basket.position.set(P.x,P.y-.5,0); basket.scale.setScalar(Math.max(.4,(Q.x-P.x)));}});},
+  meadow(m,sc,c){tapLight(sc,0xfff4d8,.78,0xe6f3ff,0xc9d8a0,.7,0x9fe0ff); tapGround(sc,gmat('grass',0x86d86f,70,70),0); c.position.set(0,12.5,9.4); c.lookAt(0,0,.6); return toyScope(sc,0,A=>tapScatter(A,'forest',44,7.5,22));},
+  forest(m,sc,c){return TAPBUILD.meadow(m,sc,c);},
+  toys(m,sc,c){tapLight(sc,0xffe9c8,.76,0xfff0e0,0xe6b890,.7,0xd9b0ff); tapGround(sc,gmat('carpet',0x7b4fc9,70,70),0); c.position.set(0,12.5,9.4); c.lookAt(0,0,.6); return toyScope(sc,0,A=>tapScatter(A,'toys',40,7.5,22));},
+  fair(m,sc,c){tapLight(sc,0xffe6c2,.8,0xece4ff,0xe6b890,.66,0x9fd8ff); tapGround(sc,gmat('cobble',0xd9a878,60,60),0); c.position.set(0,12.5,9.4); c.lookAt(0,0,.6); return toyScope(sc,0,A=>ARENA.fair(tapRing(A,6.4)));},
+  theatre(m,sc,c){tapLight(sc,0xffe2c0,.5,0xcfc4ff,0x7a5a8c,.5,0x120c22); c.position.set(0,12.5,9.4); c.lookAt(0,0,.6); return toyScope(sc,0,A=>{A.gain=2.0; A.floor=mat=>{tapGround(sc,mat,0);}; const B=tapRing(A,6.4); B.floor=mat=>{tapGround(sc,mat,0);}; ARENA.theatre(B);});},
+  /* Sky Shapes: up among the clouds, with islands and balloons drifting past */
+  sky(m,sc,c){tapLight(sc,0xfff4d8,.8,0xe6f3ff,0xbfe0ff,.8,0x8fd0ff); c.position.set(0,3,16); c.lookAt(0,2,0);
+    toyScope(sc,0,A=>{const {K,KG,KE}=A, R=rng32(9); for(let i=0;i<26;i++){const x=(R()-.5)*70, y=-7+R()*20, z=-6-R()*40, s=1.2+R()*2.4; K.at(x,y,z,R()*6,s); for(let k=0;k<4;k++)K.add(sphG(1,2),M4((k-1.5)*.9,(k%2)*.3,(R()-.5)*.6,0,1+R()*.4,.62+R()*.2,1),[0xdcecff,0xffffff],{ao:0});}
+      for(let i=0;i<4;i++){const x=-24+i*16+(R()-.5)*4, y=-3+R()*6, z=-14-R()*10; K.at(x,y,z,0,1.3); K.add(cylG(3,.4,3.4,12),M4(0,-1.7,0),[0x8a6a4a,0xc9a070],{ao:0}); K.add(cylG(3.1,3,.5,14),M4(0,.25,0),[0x5fb85a,0x86d86f],{ao:0}); TP.tree(K,x-1,z,1.1,i); K.at(x,y,z,0,1.3); if(i%2)TP.hut(K,x+1.2,z+.4,.4,.9,0,y+.5);}
+      for(let i=0;i<5;i++){const x=-28+i*14, y=4+R()*7, z=-10-R()*14, col=[0xff4d4d,0xffc531,0x2f8fff,0x35c98a,0xff5fa8][i]; KG.at(x,y,z,0,1.2); K.at(x,y,z,0,1.2); KG.add(sphG(1.5,2),M4(0,0,0,0,1,1.2,1),[col,col],{ao:0}); K.add(rbox(.7,.6,.7,.1),M4(0,-2.6,0),[0x8f5e33,0xcf9f63],{ao:0}); for(const q of [[-.3,-.3],[.3,-.3],[-.3,.3],[.3,.3]])K.add(cylG(.02,.02,1.4,4),M4(q[0],-1.8,q[1]),0x6a4426,{ao:0});}});},
+};
+/* start the scene for a panel game. Returns null (the painted stall stays) if this game has none or it cannot be built */
+function tapScene(g){const kind=g&&TAPSET[g.name]; if(!kind||g.arena||MS)return null; if(!TOYM.matte&&!toyMats())return null;
+  const sc=new THREE.Scene(), W=window.innerWidth, H=window.innerHeight, c=new THREE.PerspectiveCamera(W<H?60:45,W/H,.5,260), host=$('#mini'); lights(sc);
+  const m={scene:sc,cam:c,update:null,dyn:[],spin:[],offs:[],end(){if(MS===m)MS=null; host.classList.remove('bd','bd-'+kind); freeScene(sc);}}; MS=m; let ok=false;
+  try{ok=TAPBUILD[kind](m,sc,c)!==false; if(W<H){c.position.multiplyScalar(1.25);}}catch(err){console.warn('tap scene',kind,err);} if(!ok){m.end(); return null;}
+  if(sc.sun){sc.sun.castShadow=toyShadows(); sc.sun.shadow.radius=2.6; sc.sun.shadow.bias=-.0012; sc.sun.shadow.normalBias=.03;} host.classList.add('bd','bd-'+kind); return m;}
+/* scenery for the five panel games that already had a small 3D stage of their own, told apart by their hint */
+function toyStageSet(hint,sc){const kind={'Tap left or right':'pier','Tap the balloons':'balloon','Tap to drop':'dock','Tap each note as it reaches the line':'drum','Sun if the light is on you, Moon if it is not':'lime','':'award'}[hint]; if(!kind)return;
+  const base=sc.children.find(o=>o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1), water=()=>{if(base)base.material=waterMat(0x1a9fd0,0x52d2ea);};
+  try{if(kind==='pier'){water(); toyScope(sc,-1.4,A=>{const {K,KE}=A; for(let i=0;i<7;i++){const sd=i%2?1:-1, x=sd*(13+i*2.2), z=-8-i*9; TP.sandbar(K,x,z,4.6,3.4,i); TP.palm(K,x-.6,z,3.2,.28,i,1.3); TP.palm(K,x+1.6,z+.6,2.6,.34,i+2,1.1);} for(let i=0;i<8;i++){const sd=i%2?1:-1; TP.buoyS(K,KE,sd*(5.5+(i%3)),4-i*7,[0xff4d4d,0xffc531,0xff5fa8][i%3]); TP.rock(K,sd*(8+i%4),-3-i*6.5,.7+(i%3)*.3,i,-.2);} for(let z=6;z>-80;z-=7)for(const sx of [-1,1]){K.at(sx*2.2,-.6,z,0); K.add(cylG(.18,.22,2.2,7),M4(0,1.1,0),[0x4f2d18,0x8a5a2b],{ao:0});}});}
+    else if(kind==='balloon'){if(base)base.material=gmat('cobble',0xd9a878,36,36); toyScope(sc,-1.4,A=>{const {K,KT,KE}=A; TP.tent(K,KT,-12,-11,0xff4d4d,1.6); TP.tent(K,KT,12,-11,0x2f8fff,1.6); TP.tent(K,KT,0,-19,0xffc531,2.0); TP.stall(K,KE,-9.5,-2.5,.8,0x35c98a); TP.stall(K,KE,9.5,-2.5,-.8,0xff5fa8); const L=[[-11,1],[-6.5,-6.5],[6.5,-6.5],[11,1]]; L.forEach((p,i)=>{TP.lamp(K,KE,p[0],p[1],4.4); if(i)TP.bulbs(K,KE,[L[i-1][0],4.3,L[i-1][1]],[p[0],4.3,p[1]],11);}); TP.teddy(K,-7.4,-.6,.5,1.3,0xc98f55); TP.planter(K,7.2,-.4,1); TP.cart(K,KE,-13,-4,.6,0xff4d4d); TP.bench(K,13,-3.5,-1.2);});}
+    else if(kind==='dock'){water(); toyScope(sc,-1.4,A=>{const {K,KG,KE}=A; K.at(0,0,0,0); K.add(rbox(13,.5,6.4,.15,2),M4(0,.72,0),[0x8f5e33,0xcf9f63],{ao:0}); for(let i=0;i<12;i++)K.add(boxG(.05,.52,6.3),M4(-6+i*1.09,.73,0),0x7a4e2a,{ao:0}); for(const q of [[-6,2.8],[6,2.8],[-6,-2.8],[6,-2.8],[0,2.8],[0,-2.8]])K.add(cylG(.2,.25,2.4,7),M4(q[0],.2,q[1]),[0x4f2d18,0x8a5a2b],{ao:0});
+        [[-4.6,1.0,.3],[-5.2,-.6,1.1],[4.4,1.2,.5],[5.3,-.4,.2]].forEach((q,i)=>TP.crate(K,q[0],q[1],q[2],.9+(i%2)*.2,.97)); TP.barrel(K,-3.4,-1.6,1,.97); TP.barrel(K,3.6,-1.8,1.1,.97); TP.lanternBoat(K,KE,-10,4,.6,1.4); TP.lanternBoat(K,KE,11,-3,2.4,1.3); TP.sandbar(K,-16,-16,6,4.4,1); TP.palm(K,-16.6,-16,3.6,.26,1,1.3); TP.palm(K,-14,-15.2,2.8,.34,3,1.1); TP.sandbar(K,17,-20,6,4,2); TP.lighthouse(K,17,-20,1.5); TP.buoyS(K,KE,-7,8,0xff4d4d); TP.buoyS(K,KE,8,9,0xffc531);});}
+    else if(kind==='drum'){water(); toyScope(sc,-1.4,A=>{const {K,KG,KE}=A; [[-11,-9],[11,-10],[0,-15]].forEach((q,i)=>{TP.sandbar(K,q[0],q[1],5.2,3.8,i); TP.palm(K,q[0]-1,q[1],3.4,.28,i*2,1.3); TP.palm(K,q[0]+1.6,q[1]+.5,2.7,.34,i+3,1.1);}); TP.speaker(K,KG,-10.6,-8,.5,1.1); TP.speaker(K,KG,11.4,-9,-.5,1.1); TP.gramophone(K,KG,.6,-14,.2,1); TP.buoyS(K,KE,-7,2,0xff4d4d); TP.buoyS(K,KE,7.5,3,0xffc531); [[-6,5.5,-9,0xff5fa8],[5,6.5,-10,0xffd23a],[0,7.5,-13,0x35c98a],[9,5,-7,0x2f8fff]].forEach((n,i)=>TP.note(n[0],n[1],n[2],n[3],1.2,i*1.7));});}
+    else if(kind==='award'){tapGround(sc,deckMat(0x8f5e33,0xb9793f,1.2,8),.012).position.z=30; toyScope(sc,0,A=>{const {K,KG,KT,KE}=A, red=[0x8a1020,0xd8344a]; [-12.4,-6.2,0,6.2,12.4].forEach((x,i)=>TP.curtain(KT,K,x,-2.7,0,6.4,12.5-(i%2)*.5,red)); for(const sx of [-1,1]){TP.curtain(KT,K,sx*14.5,1.2,-sx*.6,4.4,11.5,red); TP.rigLamp(K,KE,sx*10.5,-1.6,-sx*.35,8.5); TP.balloons(K,sx*8.2,1.6,4,sx+3); TP.balloons(K,sx*10.4,3.0,3,sx+6);}
+        for(let i=-8;i<=8;i++){K.at(i*1.5,0,5.6,0); KE.at(i*1.5,0,5.6,0); K.add(cylG(.2,.26,.22,8),M4(0,.11,0),0x17202e,{ao:0}); KE.add(sphG(.16,1),M4(0,.26,0,0,1,.6,1),[0xfff3b0,0xffd27a][Math.abs(i)%2],{ao:0,ph:i*1.3});}
+        const st=[]; for(let i=0;i<10;i++){const a=i/10*6.283+Math.PI/2, r=i%2?.9:2.1; st.push([Math.cos(a)*r,Math.sin(a)*r]);} for(const sx of [-1,1]){KG.at(sx*6.6,5.4,-2.2,0,.62); KG.add(flatG(st,.3,.06),M4(0,0,0,0,1,1,1,-Math.PI/2,0),[0xc9962e,0xffe27a],{ao:0}); KE.at(sx*6.6,5.4,-2.2,0,.62); for(let i=0;i<10;i++){const a=i/10*6.283; KE.add(sphG(.16,1),M4(Math.cos(a)*2.9,Math.sin(a)*2.9,.3),[0xfff3b0,0xff9fd0,0x9fe1ff][i%3],{ao:0,ph:i*1.1});}}});}
+    else if(kind==='lime'){toyScope(sc,-1.4,A=>{const {K,KT,KE}=A; A.gain=2.4; [-9,-3,3,9].forEach((x,i)=>TP.curtain(KT,K,x,-5.5,0,6.2,11-(i%3?0:.6),[0x7a1020,0xc8283c])); for(const sx of [-1,1]){TP.curtain(KT,K,sx*12.5,-1.5,-sx*.5,4,10,[0x7a1020,0xc8283c]); TP.rigLamp(K,KE,sx*9.5,-3.8,-sx*.4,8);} for(let i=-5;i<=5;i++){K.at(i*1.5,1.4,5.2,0); KE.at(i*1.5,1.4,5.2,0); K.add(cylG(.2,.26,.22,8),M4(0,.11,0),0x17202e,{ao:0}); KE.add(sphG(.16,1),M4(0,.26,0,0,1,.6,1),[0xfff3b0,0xffd27a][Math.abs(i)%2],{ao:0,ph:i*1.3});}});}}
+  catch(err){console.warn('stage set',kind,err);}}
 /* </TOY3D> */
 function buildWorld(id){
   const m=MAPS[id]||MAPS.island; curMap=id; MAPX=m;
@@ -2615,7 +2767,7 @@ function makeChar(i,parent){
   g.ph=Math.random()*6; g.run=0; g.jy=0; g.air=false; g.sc=parent||scene; g.sc.add(g); chars.add(g); return g;
 }
 function animChar(c,dt){
-  if(c.mx){const want=c.cheer>0?'Cheer':c.air?'Jump_Idle':c.run?'Running_A':'Idle'; if(want!==c.cur&&c.act[want]){const a=c.act[want],b=c.act[c.cur]; if(b)b.fadeOut(.15); a.reset().fadeIn(.15).play(); c.cur=want;}
+  if(c.mx){if(c.hit>0)c.hit-=dt; const want=c.hit>0&&!(c.cheer>0)?'Hit_A':c.cheer>0?'Cheer':c.air?'Jump_Idle':c.run?(c.walk?'Walking_A':'Running_A'):'Idle'; if(want!==c.cur&&c.act[want]){const a=c.act[want],b=c.act[c.cur]; if(b)b.fadeOut(.15); a.reset().fadeIn(.15).play(); c.cur=want;}
     c.mx.update(dt); c.fig.position.y=c.jy; return;}
   c.ph+=dt*(c.run?15:2.5); const s=Math.sin(c.ph), r=c.run?1:0;
   c.legL.rotation.x=s*.9*r; c.legR.rotation.x=-s*.9*r;
@@ -2758,7 +2910,8 @@ function drawResults(){
   const r=V.res, key=JSON.stringify(r); if(!r||key===resKey)return; resKey=key;
   $('#winLine').textContent=r.tie?'It’s a tie at the top':`${nameOf(r.rank[0])} wins the fair`;
   $('#bonusList').innerHTML=r.bonus.map(b=>`<li><b>${b[0]}</b>: ${b[1].map(nameOf).join(' and ')} +1 pearl (${b[2]})</li>`).join('');
-  $('#finalRank').innerHTML=r.rank.map((k,i)=>{const p=V.p[k]; return`<div class="row" style="--c:${CAST[p.i].c}"><span class="pos">${i+1}</span>${face(p.i)}
+  if(!r.tie&&pawns[r.rank[0]])pawns[r.rank[0]].cheer=1.1; setTimeout(()=>miniCheer('#results'),350);
+  $('#finalRank').innerHTML=r.rank.map((k,i)=>{const p=V.p[k]; return`<div class="row pop${i===0&&!r.tie?' win':''}" style="--c:${CAST[p.i].c};--i:${i}"><span class="pos">${i+1}</span>${face(p.i)}
     <b>${CAST[p.i].name}</b><span class="st"><i class="pl"></i>${p.pe}<i class="tk" style="margin-left:8px"></i>${p.t}</span></div>`;}).join('');
 }
 function drawLobby(){
@@ -3301,7 +3454,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=81; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=82; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -3362,7 +3515,7 @@ function miniSync(){
   else if(m.phase==='play'){{const q=$('#rdyPanel'); if(q)q.remove();}
     const k=myK(); if(k<0||(m.only&&!m.only.includes(k))){stage.innerHTML=`<p>${m.only?'The duel is under way':'Mini game in progress'}\u2026</p>`; return;}
     miniBusy=true; $('#mgSub').textContent=nameOf(k);
-    (async()=>{if(!g.arena&&!/countdown\(/.test(String(g.play))){stage.innerHTML=''; await countdown();} return g.play({k,i:V.p[k].i,seed:m.seed});})().then(async v=>{   /* every game opens with 3, 2, 1, GO! */if(!g.arena)await gameFinished(); miniBusy=false; if(!V||!V.mini||V.mini.mid!==m.mid)return; report(m.mid,k,v);
+    (async()=>{if(tapBd){tapBd.end(); tapBd=null;} tapBd=tapScene(g); if(!g.arena&&!/countdown\(/.test(String(g.play))){stage.innerHTML=''; await countdown();} return g.play({k,i:V.p[k].i,seed:m.seed});})().then(async v=>{if(tapBd){const b=tapBd; tapBd=null; setTimeout(()=>b.end(),1300);}   /* every game opens with 3, 2, 1, GO! */if(!g.arena)await gameFinished(); miniBusy=false; if(!V||!V.mini||V.mini.mid!==m.mid)return; report(m.mid,k,v);
       stage.innerHTML=`<div class="sub">Your score</div><div class="big">${fmt(g,v)}</div><p class="sub">Waiting for the other players…</p>`;});
   }
   else if(m.phase==='done'){$('#mgSub').textContent=m.fz?`Frenzy game ${m.fz} of 3: results`:'Results';
@@ -3426,7 +3579,7 @@ function miniStage(hint,pos,look){
   m.run=fn=>new Promise(res=>{m.update=dt=>{const r=fn(dt); if(r!==undefined){m.update=null; res(r);}};});
   m.end=()=>{m.offs.forEach(f=>f()); if(m.ctl){m.ctl.end(); m.ctl=null;} if(MS===m)MS=null; el.classList.remove('gl'); chars.forEach(ch=>{if(ch.sc===sc)chars.delete(ch);});
     freeScene(sc);};
-  MS=m; return m;
+  MS=m; toyStageSet(hint,sc); return m;
 }
 
 /* joystick: drag anywhere to steer, plus a jump button; arrow keys and space on a keyboard */
@@ -3498,7 +3651,7 @@ function arenaSet(G,sc,sh){
   if(toyArena(G,sc,sh,sea))return;
   const S=Math.max(26,e*5); (G.zs||[0]).forEach((z,i)=>{const pl=mesh(new THREE.PlaneGeometry(S,S),amat('ground-'+Q.ground,0,true),0,-1.38-i*.004,z,sc); pl.rotation.x=-Math.PI/2; pl.rotation.z=i%2?Math.PI:0; pl.castShadow=false; pl.renderOrder=1;});
 }
-let arenaRefit=null;
+let arenaRefit=null, tapBd=null;
 function arena(G){return async function(ctx){
   const mid=V&&V.mini?V.mini.mid:0, demo=ctx.demo;   /* a preview on the ready screen: every player is run by the computer, nothing is sent or scored, and it stops when told to */
   const sh=mkDeck(G.deck), cp=G.cam||[11.5,8.6,.6]; let kz=1;
@@ -3510,7 +3663,7 @@ function arena(G){return async function(ctx){
   const m=miniStage(G.hint,[0,cp[0]*kz,cp[1]*kz],[0,0,cp[2]*kz]), sc=m.scene, rng=rng32(ctx.seed); DECKG=G; if(G.draw)G.draw(sc,sh); else if(!G.noDeck)deckDraw(sc,sh,G.floor); DECKG=null;
   if(!G.dark&&!G.alone)arenaSet(G,sc,sh);
   if(G.dark){sc.background=new THREE.Color(0x03040a); sc.traverse(o=>{if(o.isLight)o.intensity*=.02; else if(o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1)o.visible=false;});}
-  const n=V.p.length, st=G.init(sc,rng,sh,n); st.zoom=f=>{m.cam.position.set(0,cp[0]*kz*f,cp[1]*kz*f); m.cam.lookAt(0,0,cp[2]*kz*f);}; st.cam=m.cam; st.camBase={p:[0,cp[0]*kz,cp[1]*kz],l:[0,0,cp[2]*kz]};
+  const n=V.p.length, st=G.init(sc,rng,sh,n); try{toyCourse(G,sc,st);}catch(err){console.warn('course',err);} st.zoom=f=>{m.cam.position.set(0,cp[0]*kz*f,cp[1]*kz*f); m.cam.lookAt(0,0,cp[2]*kz*f);}; st.cam=m.cam; st.camBase={p:[0,cp[0]*kz,cp[1]*kz],l:[0,0,cp[2]*kz]};
   // the phone was turned, or went full screen, after the game was set up: fit the platform to the new screen shape
   arenaRefit=()=>{if(!MS||MS.cam!==m.cam)return; const W=window.innerWidth,H=window.innerHeight; if(!m.cam.tp){m.cam.fov=W<H?60:45; m.cam.updateProjectionMatrix();} fit(); st.camBase.p[1]=cp[0]*kz; st.camBase.p[2]=cp[1]*kz; st.camBase.l[2]=cp[2]*kz; if(!m.cam.tp)st.zoom(1);};
   const avs=V.p.map((p,k)=>{const a=k/n*6.283+.6, s0=G.start?G.start(k,n,st):[Math.sin(a)*(G.ring||1.5),Math.cos(a)*(G.ring||1.5)],
@@ -3520,9 +3673,9 @@ function arena(G){return async function(ctx){
   if(!demo){window.__arenaMe=me; window.__st=st; net.hs=null; net.av={}; net.buf={}; pad(true,G.jump||G.dash||G.btn,G.btn||(G.dash?'Dash':'Jump'),G.split); if(G.dashes!=null)$('#jumpBtn').textContent='Dash '+G.dashes;}
   const hint=s=>{$('#hint').textContent=s;}, lives=()=>{if(G.lives)hint('Lives: '+me.lives);}; lives();
   let sb=null, sbT=0; if(G.board){sb=document.createElement('div'); sb.className='sboard'; $('#hint').parentNode.appendChild(sb);}
-  const out=(av,t,fell)=>{av.alive=false; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); hint(fell?'You fell off!':'You are out!');}};
+  const out=(av,t,fell)=>{av.alive=false; if(av.ch)av.ch.hit=.7; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); hint(fell?'You fell off!':'You are out!');}};
   if(G.view)G.view(m.cam,me,.016,st);   /* so the opening view is right during the countdown */
-  if(!demo)await countdown($('#n'));
+  if(!demo){arenaSweep(m,st,G); await countdown($('#n'));}
   let t=0,pubT=0,endT=-1,hudN=null,hudB=null;
   const body=dt=>{
     if(demo&&demo.stop)return 1;
@@ -5180,7 +5333,7 @@ const GAMES=[
     cv.width=r.width*d; cv.height=r.height*d; ctx.scale(d,d);
     const W=r.width,H=r.height,cs=getComputedStyle(document.documentElement),col=v=>cs.getPropertyValue(v).trim();
     const cBulb=col('--bulb'),cCoral=col('--coral'),cFoam=col('--foam');
-    let bx=W/2,score=0,objs=[],lastT=performance.now(),spawn=0; const t0=lastT,DUR=15000,BW=76;
+    let bx=W/2,score=0,objs=[],lastT=performance.now(),spawn=0; const t0=lastT,DUR=15000,BW=76; if(MS)MS.tc={get o(){return objs;},get x(){return bx;},W,H,BW};
     cv.onpointerdown=cv.onpointermove=e=>{bx=Math.min(W-BW/2,Math.max(BW/2,e.clientX-r.left));};
     return new Promise(res=>{(function f(now){
       const dt=Math.min(50,now-lastT)/1000; lastT=now; const el=now-t0; spawn-=dt;
@@ -5453,7 +5606,9 @@ $('#quitBtn').onclick=()=>{
   let room=null; try{room=window.claude&&window.claude.use?await window.claude.use('room'):null;}catch(e){}
   if(!room){const u=wsUrl(); if(u)try{(await wsOpen(u,4000)).close(); room=wsRoom(u);}catch(e){}}   // no artifact room service: use the room server, if this page has one
   net.room=room;
-  if(room){$('#hostBtn').disabled=false; $('#joinBtn').disabled=false; $('#netNote').textContent='Online play: one person hosts and shares the 4-letter code. Everyone opens this same page.';}
+  const netOn=()=>{$('#hostBtn').disabled=false; $('#joinBtn').disabled=false; $('#netNote').textContent='Online play: one person hosts and shares the 4-letter code. Everyone opens this same page.';};
+  if(!room){const u=wsUrl(); if(u)(async()=>{for(let i=0;i<6&&!net.room;i++){await sleep(1500+i*1000); try{(await wsOpen(u,8000)).close(); net.room=wsRoom(u); netOn();}catch(e){}}})();}   /* a slow start must not cost a phone its online play: keep trying for a while */
+  if(room){netOn();}
   else $('#netNote').textContent='Online play is not available in this view. You can still play solo.';
 })();
 </script>
