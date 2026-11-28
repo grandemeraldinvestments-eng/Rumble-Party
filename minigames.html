@@ -277,6 +277,13 @@ h1,h2{font-family:var(--display); font-weight:400; margin:0; text-wrap:balance; 
 .rank{width:100%; display:flex; flex-direction:column; gap:6px}
 .rank .row{display:flex; align-items:center; gap:10px; background:var(--rowbg); border:2px solid var(--ink); padding:8px 10px; text-align:left}
 .rank .row b{flex:1; min-width:0}
+.rank .row.pop{animation:rowIn .5s cubic-bezier(.2,1.5,.4,1) both; animation-delay:calc(var(--i,0)*.14s + .1s)}
+.rank .row.win{border-color:#b97a00; box-shadow:0 0 0 3px #ffc531,0 0 22px rgba(255,197,49,.7)}
+@keyframes rowIn{from{opacity:0; transform:translateY(22px) scale(.9)} to{opacity:1; transform:none}}
+.mconf{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:45}
+.mconf i{position:absolute; top:-16px; width:10px; height:14px; border-radius:2px; animation:confFall linear both}
+@keyframes confFall{from{transform:translate(0,0) rotate(0)} to{transform:translate(var(--x),106vh) rotate(var(--r))}}
+@media (prefers-reduced-motion:reduce){.rank .row.pop{animation:none} .mconf{display:none}}
 .rank .row .sc{color:var(--sub)}
 .rank .row .aw{font-weight:700; color:var(--bulb); min-width:3ch; text-align:right}
 .rank .row .st{display:flex; align-items:center; gap:4px; font-weight:700}
@@ -2308,7 +2315,7 @@ const INTRO={
     volcano:{icon:'spaces/E',head:'Eruption',line:'An eruption space sets off the volcano. Lava covers part of the board for 2 rounds.',focus:()=>FXP.volc,demo:'erupt'},
     melody:{icon:'maps/melody',head:'The Golden Note',line:MAPS.melody.note,focus:()=>FXP.metro},
     pinball:{icon:'maps/pinball',head:'High risk, high reward',line:MAPS.pinball.note.replace(/^High risk, high reward\.\s*/,''),focus:()=>({x:0,z:0,r:18,h:11})},
-    temple:{icon:'maps/temple',head:'The summit merchant',line:MAPS.temple.note,focus:()=>{const t=NODES[NODES.spots[0]]; return t?{x:t.x,z:t.z-3,r:19,h:11,az:.12}:null;}}},
+    temple:{icon:'maps/temple',head:'The summit merchant',line:MAPS.temple.note,focus:()=>{const t=NODES[NODES.spots[0]]; return t?{x:t.x,z:t.z-5,r:27,h:12,az:.05,ly:8}:null;}}},
   /* the parts of each length, in seconds */
   seq:{full:[['wide',3.2],['focus',4.2],['pearl',2.9],['start',1.4]],quick:[['focus',2.3],['pearl',1.8],['start',.9]],skip:[['start',.9]],replay:[['wide',2.2],['focus',3.6],['pearl',2.6],['back',1]]},
   LIMIT:21000, names:{full:'full',quick:'quick',skip:'skip'}};
@@ -2319,7 +2326,7 @@ function introPref(){let p='full'; try{p=localStorage.getItem('rumble-intro')||'
 /* where the camera is for one part of the flight, u running 0 to 1 through it. The same sums are used to record a film of it */
 function introPose(shot,u,I){const pt=cam.aspect<1, a=MAPX.a;
   if(shot==='wide'){const az=-1.0+u*.8, r=a*(pt?2.7:1.95)*(1-.2*u), h=a*(1.3-.45*u); return{p:[Math.sin(az)*r,h,Math.cos(az)*r],l:[0,0,0]};}
-  if(shot==='focus'){const f=I.focus, y=GY(f.x,f.z), az=(f.az==null?.95:f.az)+u*.5, r=(f.r||13)*(pt?1.3:1)-u*1.3; return{p:[f.x+Math.sin(az)*r,y+(f.h||9)-u*.7,f.z+Math.cos(az)*r],l:[f.x,y+1,f.z]};}
+  if(shot==='focus'){const f=I.focus, y=GY(f.x,f.z), az=(f.az==null?.95:f.az)+u*.5, r=(f.r||13)*(pt?1.3:1)-u*1.3; return{p:[f.x+Math.sin(az)*r,y+(f.h||9)-u*.7,f.z+Math.cos(az)*r],l:[f.x,y+(f.ly||1),f.z]};}
   if(shot==='pearl'){const n=NODES[I.pearl], q={x:(pearl.tx+n.x)/2,z:(pearl.tz+n.z)/2}, y=GY(q.x,q.z), az=-.25+u*.35, r=(pt?9.2:7.4)-u*1.7; return{p:[q.x+Math.sin(az)*r,y+8.2-u*1.6,q.z+Math.cos(az)*r],l:[q.x,y+.6,q.z]};}   /* from the south and as steep as the game camera, the one direction scenery is placed never to block */
   if(shot==='back')return{p:[camT.x,camGY+camD*.84,camT.z+camD*.8],l:[camT.x,camGY+.3,camT.z+.4]};
   const n=NODES[0], gy=GY(n.x,n.z), d=18; return{p:[n.x,gy+d*.84,n.z+d*.8],l:[n.x,gy+.3,n.z+.4]};}
@@ -2378,6 +2385,120 @@ function introSkipNow(){const I=IN; if(!I||I.done)return; const last=I.seq[I.seq
 function introLbl(){const b=$('#introBtn'); if(b)b.textContent='Board introduction: '+INTRO.names[introPref()];}
 /* start fetching a board's film the moment the board is chosen, so it is ready when the game starts */
 function introPreload(id){const c=INTRO.boards[id], el=$('#introVid'); if(!el||!c||!c.video||introPref()!=='full')return; el.preload='auto'; el.poster=c.video.poster||''; if(el.getAttribute('src')!==c.video.src){el.src=c.video.src; try{el.load();}catch(e){}}}
+/* ---------- mini game arenas: real scenery round the platform, built from the same kit as the boards ---------- */
+function waterMat(a,b){const k='water'+[a,b]; if(TOYM[k])return TOYM[k]; const A=hexC(a), B=hexC(b), v=c=>`vec3(${c.map(q=>q.toFixed(3)).join(',')})`;
+  const m=new THREE.ShaderMaterial({uniforms:{uN:{value:seaNoise()},uT:TOY.U.uT},vertexShader:'varying vec3 vW; void main(){vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w;}',
+    fragmentShader:`uniform sampler2D uN; uniform float uT; varying vec3 vW; void main(){vec2 p=vW.xz; float n1=texture2D(uN,p*.045+uT*vec2(.011,.007)).r, n2=texture2D(uN,p*.11-uT*vec2(.009,.015)).r, n3=texture2D(uN,p*.02+vec2(.3,.7)).r; float l=1.-smoothstep(0.,.045,abs(n1-n2)); vec3 c=mix(${v(A)},${v(B)},n3*.7+n1*.3)+l*.16; gl_FragColor=vec4(c,1.);}`});
+  m.keep=true; return TOYM[k]=m;}
+Object.assign(TP,{
+  pine(K,x,z,s,seed){K.at(x,0,z,seed||0,s||1); K.add(cylG(.16,.22,1.0,7),M4(0,.5,0),[0x6a4a2a,0x8a6238],{ao:.3,aoH:.5}); for(let i=0;i<3;i++){K.add(cylG(0,1.25-i*.3,1.5-i*.15,10),M4(0,1.5+i*.95,0),[0x1f6b3c,0x3f9a55],{ao:.2,aoH:2}); K.add(cylG(0,.62-i*.14,.62,10),M4(0,2.0+i*.95,0),0xf4f9ff,{ao:0});}},
+  snowman(K,x,z,turn,s){K.at(x,0,z,turn||0,s||1); K.add(sphG(.62,2),M4(0,.55,0),[0xdfeaf5,0xffffff],{ao:.2,aoH:.5}); K.add(sphG(.45,2),M4(0,1.38,0),0xffffff,{ao:0}); K.add(sphG(.33,2),M4(0,2.02,0),0xffffff,{ao:0}); K.add(cylG(0,.07,.34,6),M4(0,2.02,.42,0,1,1,1,Math.PI/2,0),0xff8c1a,{ao:0}); for(const sx of [-1,1]){K.add(sphG(.045,0),M4(sx*.12,2.12,.29),0x17202e,{ao:0}); K.add(cylG(.025,.035,.8,4),M4(sx*.62,1.5,0,0,1,1,1,0,-sx*1.0),0x6a4a2a,{ao:0});} K.add(cylG(.36,.36,.06,12),M4(0,2.3,0),0x17202e,{ao:0}); K.add(cylG(.24,.24,.36,12),M4(0,2.5,0),0x17202e,{ao:0}); K.add(torG(.3,.07,5,14),M4(0,1.74,0,0,1,1,1,Math.PI/2,0),0xe0364f,{ao:0});},
+  snowbank(K,x,z,s,seed){K.at(x,0,z,seed||0,s||1); for(let k=0;k<4;k++)K.add(sphG(.9,1),M4((hash2(k,seed,1)-.5)*1.6,-.1,(hash2(k,seed,2)-.5)*1.2,0,1+hash2(k,seed,3)*.5,.42+hash2(k,seed,4)*.2,1),[0xcfe2f5,0xffffff],{ao:0});},
+  igloo(K,x,z,turn,s){K.at(x,0,z,turn||0,s||1); K.add(sphG(1.7,2),M4(0,-.1,0,0,1,.8,1),[0xcfe2f5,0xffffff],{ao:.2,aoH:.6}); K.add(cylG(.75,.75,1.2,12),M4(0,.2,1.6,0,1,.9,1,Math.PI/2,0),[0xd9e8f7,0xffffff],{ao:0}); K.add(cylG(.5,.5,.1,12),M4(0,.16,2.21,0,1,.9,1,Math.PI/2,0),0x17304d,{ao:0}); for(let r=0;r<3;r++)K.add(torG(1.7*Math.cos(r*.42+.25),.03,4,22),M4(0,1.36*Math.sin(r*.42+.25)-.1,0,0,1,1,1,Math.PI/2,0),0xb9d0e6,{ao:0});},
+  gift(K,x,z,s,col,turn){K.at(x,0,z,turn||0,s||1); K.add(rbox(1,.9,1,.08,2),M4(0,.45,0),[col,col],{ao:.25,aoH:.4}); K.add(rbox(1.04,.92,.2,.03),M4(0,.46,0),0xfdf6e3,{ao:0}); K.add(rbox(.2,.92,1.04,.03),M4(0,.46,0),0xfdf6e3,{ao:0}); for(const sx of [-1,1])K.add(sphG(.2,1),M4(sx*.2,1.0,0,0,1.3,.7,.8),0xfdf6e3,{ao:0});},
+  block(K,x,z,s,col,turn){K.at(x,0,z,turn||0,s||1); K.add(rbox(1,1,1,.12,2),M4(0,.5,0),[col,col],{ao:.25,aoH:.4}); K.add(rbox(.62,.62,.04,.08),M4(0,.5,.5),0xfdf6e3,{ao:0}); K.add(rbox(.62,.04,.62,.08),M4(0,1.0,0),0xfdf6e3,{ao:0});},
+  conveyor(K,x,z,turn,len){K.at(x,0,z,turn||0); K.add(rbox(1.8,.5,len,.12,2),M4(0,.75,0),[0x566f8b,0x8a96a8],{ao:.2}); K.add(rbox(1.5,.1,len-.2,.04),M4(0,1.03,0),0x2a2e44,{ao:0}); for(let i=0;i<Math.floor(len/1.2);i++){K.add(boxG(1.5,.11,.1),M4(0,1.035,-len/2+.7+i*1.2),0x3a3f58,{ao:0}); } for(const q of [[-.7,-len/2+.5],[.7,-len/2+.5],[-.7,len/2-.5],[.7,len/2-.5]])K.add(cylG(.1,.13,.6,6),M4(q[0],.3,q[1]),0xffc531,{ao:.2});},
+  pipes(K,KG,x,z,turn,s){KG.at(x,0,z,turn||0,s||1); K.at(x,0,z,turn||0,s||1); const p=[[0,0,0],[0,2.2,0],[.3,2.9,0],[1,3.2,0],[3,3.2,0]]; KG.add(tubeG(p,.34,10,true),null,[0x2f8f6b,0x4fc79a],{ao:0}); for(const q of [[0,.5,0,0],[0,1.9,0,0],[2.2,3.2,0,1]])KG.add(cylG(.44,.44,.16,12),M4(q[0],q[1],q[2],0,1,1,1,0,q[3]?Math.PI/2:0),0xffc531,{ao:0}); K.add(cylG(.2,.2,.1,10),M4(0,1.2,.36,0,1,1,1,Math.PI/2,0),0xe0364f,{ao:0});},
+  robotArm(K,KG,KE,x,z,turn,s){K.at(x,0,z,turn||0,s||1); KG.at(x,0,z,turn||0,s||1); KE.at(x,0,z,turn||0,s||1); K.add(cylG(.8,.95,.5,14),M4(0,.25,0),[0x566f8b,0x8a96a8],{ao:.3,aoH:.3}); KG.add(sphG(.5,2),M4(0,.7,0),0xffc531,{ao:0}); KG.add(rbox(.5,2.4,.5,.16,2),M4(.5,1.7,0,0,1,1,1,0,-.45),[0xf2a81e,0xffc531],{ao:0}); KG.add(sphG(.38,2),M4(1.02,2.75,0),0x566f8b,{ao:0}); KG.add(rbox(.4,2.0,.4,.14,2),M4(1.8,3.15,0,0,1,1,1,0,-1.15),[0xf2a81e,0xffc531],{ao:0}); KG.add(sphG(.3,2),M4(2.7,3.56,0),0x566f8b,{ao:0}); for(const sz of [-1,1])K.add(rbox(.14,.8,.16,.05),M4(2.9,3.15,sz*.22,0,1,1,1,sz*.3,.2),0x2a2e44,{ao:0}); KE.add(sphG(.1,0),M4(0,.56,.82),0xff4d6a,{ao:0});},
+  gearG(r,n,h){const p=[]; for(let i=0;i<n*4;i++){const a=i/(n*4)*6.283, rr=(i%4<2)?r:r*.8; p.push([Math.cos(a)*rr,Math.sin(a)*rr]);} return flatG(p,h,.04);},
+  curtain(KT,K,x,z,turn,w,h,col){KT.at(x,0,z,turn||0); K.at(x,0,z,turn||0); const n=Math.max(3,Math.round(w/.9)); for(let i=0;i<n;i++)KT.add(cylG(.42,.52,h,8),M4(-w/2+w*(i+.5)/n,h/2,(i%2)*.16),[col[0],col[1]],{ao:.25,aoH:h*.6,sway:.05}); K.add(rbox(w+.4,.5,.9,.2,2),M4(0,h+.1,.1),[0xc9962e,0xffd45e],{ao:0}); for(let i=0;i<n;i++)K.add(sphG(.12,0),M4(-w/2+w*(i+.5)/n,h-.25,.5),0xffd45e,{ao:0});},
+  seats(K,x,z,turn,n){K.at(x,0,z,turn||0); for(let i=0;i<n;i++){const px=(i-(n-1)/2)*1.05; K.add(rbox(.9,.3,.8,.12,2),M4(px,.5,0),[0x8a1020,0xc8283c],{ao:.3,aoH:.4}); K.add(rbox(.9,1.0,.24,.12,2),M4(px,1.0,.42),[0x8a1020,0xd8344a],{ao:0}); K.add(rbox(.12,.5,.7,.04),M4(px-.5,.6,0),0x3a2a22,{ao:0});} K.add(rbox(.12,.5,.7,.04),M4((n-1)/2*1.05+.5,.6,0),0x3a2a22,{ao:0});},
+  rigLamp(K,KE,x,z,turn,h){K.at(x,0,z,turn||0); KE.at(x,0,z,turn||0); K.add(cylG(.1,.14,h,6),M4(0,h/2,0),0x2a2e44,{ao:.2}); K.add(rbox(1.9,.14,.14,.05),M4(0,h,0),0x2a2e44,{ao:0}); for(const sx of [-.7,0,.7]){K.add(cylG(.2,.28,.5,10),M4(sx,h-.3,.12,0,1,1,1,.7,0),0x17202e,{ao:0}); KE.add(cylG(.24,.24,.04,10),M4(sx,h-.5,.34,0,1,1,1,.7,0),[0xfff3b0,0xff9fd0,0x9fe1ff][Math.round(sx/.7)+1],{ao:0,ph:sx*3});}},
+  lanternBoat(K,KE,x,z,turn,s){K.at(x,0,z,turn||0,s||1); KE.at(x,0,z,turn||0,s||1); const o=[[0,-1.5],[.5,-1.1],[.62,0],[.5,1.1],[0,1.4],[-.5,1.1],[-.62,0],[-.5,-1.1]]; K.add(flatG(o,.34,.06),M4(0,-.12,0),[0x6e3f22,0xa8683a],{ao:0}); K.add(flatG(o.map(p=>[p[0]*.78,p[1]*.84]),.05,0),M4(0,.3,0),0x4f2d18,{ao:0}); K.add(cylG(.03,.03,1.1,5),M4(0,.85,-.5),0x2a2e44,{ao:0}); KE.add(rbox(.26,.32,.26,.08),M4(0,1.3,-.5),0xffd27a,{ao:0,ph:x});},
+  buoyS(K,KE,x,z,col){K.at(x,0,z,0); KE.at(x,0,z,0); K.add(sphG(.42,2),M4(0,.12,0,0,1,.8,1),[col,col],{ao:0}); K.add(cylG(.34,.34,.14,12),M4(0,.2,0),0xfdf6e3,{ao:0}); K.add(cylG(.04,.04,.9,5),M4(0,.75,0),0x2a2e44,{ao:0}); KE.add(sphG(.1,1),M4(0,1.24,0),0xfff3b0,{ao:0,ph:x+z});},
+  sandbar(K,x,z,rx,rz,seed){K.at(x,0,z,seed||0); K.add(sphG(1,3),M4(0,-.12,0,0,rx,.42,rz),[0xe2c684,0xf6e2aa],{ao:0}); K.add(sphG(1,2),M4(rx*.3,-.06,-rz*.1,0,rx*.55,.36,rz*.6),[0x6cbf4f,0x8ad65e],{ao:0});},
+  cannon(K,KG,x,z,turn,s){K.at(x,0,z,turn||0,s||1); KG.at(x,0,z,turn||0,s||1); K.add(rbox(.9,.36,1.3,.1,2),M4(0,.36,0),[0x6e3f22,0xa8683a],{ao:.3,aoH:.3}); for(const q of [[-.5,.42],[.5,.42],[-.5,-.42],[.5,-.42]])K.add(cylG(.24,.24,.14,10),M4(q[0],.24,q[1],0,1,1,1,0,Math.PI/2),0x4f2d18,{ao:0}); KG.add(latheG([[.26,0],[.3,.2],[.24,.4],[.2,1.5],[.26,1.6],[.2,1.62]],12),M4(0,.72,-.7,0,1,1,1,Math.PI/2+.12,0),[0x1b1d2b,0x3a3f58],{ao:0});},
+});
+const ARENA={
+  sea(A){const {K,KG,KT,KE,R}=A; A.base(waterMat(0x1a9fd0,0x52d2ea)); A.piles();
+    const b=[A.far(-.85,9),A.far(.75,10),A.far(-.1,13)]; TP.sandbar(K,b[0][0],b[0][1],6,4.4,1); TP.sandbar(K,b[1][0],b[1][1],5.4,4,2); TP.sandbar(K,b[2][0],b[2][1],7,3.6,3);
+    TP.palm(K,b[0][0]-1.2,b[0][1]-.6,3.4,.26,2.4,1.25); TP.palm(K,b[0][0]+1.6,b[0][1]+.4,2.8,.34,.6,1.1); TP.rock(K,b[0][0]+3.4,b[0][1]+1.4,.8,3,.1); TP.umbrella(K,b[0][0]-2.6,b[0][1]+1.8,0xff4d4d,0xfdf6e3,.16,.3); TP.towel(K,b[0][0]-1.2,b[0][1]+2.4,.3,0xffc531);
+    TP.palm(K,b[1][0]+1.4,b[1][1]-.8,3.6,.24,.4,1.3); TP.palm(K,b[1][0]-1.4,b[1][1],2.9,.32,2.9,1.1); TP.crate(K,b[1][0]+.2,b[1][1]+1.6,.4,.9,.28); TP.barrel(K,b[1][0]-2.4,b[1][1]+1.4,.9,.26); TP.surfboard(K,b[1][0]+2.8,b[1][1]+1.2,.5,0xff5fa8,0xfdf6e3,-.22);
+    TP.hut(K,b[2][0],b[2][1]-.4,.2,1.2,.5,.3); TP.palm(K,b[2][0]-3.2,b[2][1],3.2,.3,2.2,1.2); TP.palm(K,b[2][0]+3.4,b[2][1]-.2,3.5,.26,.8,1.25); TP.bush(K,b[2][0]+1.8,b[2][1]+1.2,.9,2);
+    [[-2.1,6,0xff4d4d],[1.9,5,0xffc531],[2.9,7.5,0xff5fa8],[-2.8,8.5,0xfdf6e3]].forEach(q=>{const p=A.at(q[0],q[1]); TP.buoyS(K,KE,p[0],p[1],q[2]);}); [[-1.4,4.6],[1.2,5.6],[3.0,5.2]].forEach((q,i)=>{const p=A.at(q[0],q[1]); TP.rock(K,p[0],p[1],.7+i*.2,i+4,-.25);});},
+  ship(A){const {K,KG,KT,KE,R}=A, e=A.e, S=e/5; A.base(waterMat(0x1a9fd0,0x52d2ea));
+    const hp=[[0,1.62],[.9,1.56],[1.5,1.2],[1.78,.4],[1.78,-.5],[1.52,-1.3],[1.0,-1.95],[.45,-2.4],[0,-2.62]].map(p=>[p[0]*e,p[1]*e]), out=smoothLine(hp.concat(hp.slice(1,-1).reverse().map(p=>[-p[0],p[1]])).concat([[0,1.62*e]]),3).slice(0,-1), wood=[0x8f5e33,0xcf9f63];
+    K.at(0,-.6,0,0); K.add(flatG(out.map(p=>[p[0]*.97,p[1]*.97]),1.3,.1),null,[0x4f2d18,0x7a4a2a],{ao:0}); K.at(0,.62,0,0); K.add(flatG(out.map(p=>[p[0]*.985,p[1]*.985]),.2,.03),null,[0xb9814c,0xd9a868],{ao:0});
+    K.at(0,.7,0,0); K.add(stripG(out.concat([out[0],out[1]]),.34,.85),null,wood,{ao:.2,aoH:.5}); KG.at(0,1.56,0,0); KG.add(tubeG(out.concat([out[0]]).map(p=>[p[0],0,p[1]]),.13,6,false),null,0xffc531,{ao:0});
+    for(let i=0;i<out.length;i+=4){const p=out[i]; if(Math.hypot(p[0],p[1])>e+1.2)for(let k=0;k<1;k++)K.add(boxG(.05,.86,.4),M4(p[0],.43,p[1],Math.atan2(p[0],p[1])),0x6a4426,{ao:0});}
+    for(let i=0;i<26;i++){const z=(-2.5+i*.165)*e, w=((u)=>{let b=0; for(let k=1;k<hp.length;k++){const a=hp[k-1], c=hp[k]; if((z-a[1])*(z-c[1])<=0){b=a[0]+(c[0]-a[0])*((z-a[1])/((c[1]-a[1])||1)); break;}} return b;})(); if(w>e*.3)K.add(boxG(w*1.9,.03,.05),M4(0,.24,z),0x8a5a2b,{ao:0});}
+    K.at(0,.86,0,0); KG.at(0,.86,0,0); KT.at(0,.86,0,0); const P=(x,z)=>[x*e,z*e];
+    {const q=P(0,-1.95); K.add(cylG(.22,.3,9,10),M4(q[0],4.5,q[1]),wood,{ao:.2,aoH:2}); K.add(cylG(.1,.1,6.4,6),M4(q[0],6.6,q[1],0,1,1,1,0,Math.PI/2),wood,{ao:0}); KT.add(rbox(5.6,3.2,.14,.06),M4(q[0],4.9,q[1]+.12),[0xfdf6e3,0xfff9ea],{ao:0,sway:.12}); for(let i=0;i<3;i++)KT.add(rbox(5.6,.5,.15,.04),M4(q[0],3.8+i*1.05,q[1]+.14),0xe0364f,{ao:0,sway:.12}); K.add(cylG(.7,.6,.5,12),M4(q[0],8.6,q[1]),wood,{ao:0}); KT.add(flatG([[0,0],[1.6,.35],[0,.7]],.03,0),M4(q[0],9.6,q[1],0,1,1,1,-Math.PI/2,0),0xe0364f,{ao:0,sway:.5});
+      K.add(cylG(.1,.16,3.6,7),M4(0,1.0,-2.75*e,0,1,1,1,-1.15,0),wood,{ao:0}); KG.add(sphG(.32,1),M4(0,1.78,-2.75*e-1.62),0xffc531,{ao:0});}
+    [[-1.42,.55,1.571],[1.42,.55,-1.571],[-1.36,-.75,1.45],[1.36,-.75,-1.45]].forEach(q=>{const p=P(q[0],q[1]); TP.cannon(K,KG,p[0],p[1],q[2],1.05*S+.2);});
+    [[-.95,1.25,.9],[.9,1.3,.8],[1.25,1.0,.7],[-.5,-1.75,.8]].forEach((q,i)=>{const p=P(q[0],q[1]); K.at(p[0],.86,p[1],i,q[2]); K.add(cylG(.42,.42,1.0,12),M4(0,.5,0),[0x8a5a2b,0xb9793f],{ao:.3,aoH:.4}); for(const y of [.2,.8])K.add(cylG(.45,.45,.08,12),M4(0,y,0),0x4a5568,{ao:0});});
+    [[.55,-1.72,.3],[-1.0,-1.45,1.1],[.2,1.32,.5]].forEach((q,i)=>{const p=P(q[0],q[1]); K.at(p[0],.86,p[1],q[2],.8); K.add(rbox(1,1,1,.08,2),M4(0,.5,0),[0x9a6a3a,0xc48d55],{ao:.3,aoH:.4}); K.add(rbox(1.04,.12,1.04,.03),M4(0,.5,0),0x6a4426,{ao:0});});
+    {const p=P(-1.0,.95); KG.at(p[0],.9,p[1],0); for(let i=0;i<3;i++)KG.add(torG(.5-i*.08,.1,6,16),M4(0,.1+i*.16,0,0,1,1,1,Math.PI/2,0),0xe9c38a,{ao:0}); const q=P(1.72,-.05); K.at(q[0],1.2,q[1],-Math.PI/2); K.add(torG(.42,.14,6,18),M4(0,0,0),0xff4d4d,{ao:0}); for(let i=0;i<4;i++)K.add(torG(.42,.145,6,5,.5),M4(0,0,0,0,1,1,1,0,i*1.571+.5),0xfdf6e3,{ao:0});}
+    KE.at(0,.86,0,0); KE.add(rbox(.3,.36,.3,.08),M4(0,1.7,1.5*e),0xffd27a,{ao:0}); K.at(0,.86,0,0); K.add(cylG(.04,.04,1.5,5),M4(0,.75,1.5*e),0x2a2e44,{ao:0});
+    [[-2.7,7],[2.5,8.5],[.3,-12]].forEach((q,i)=>{const p=A.at(q[0],q[1]); TP.rock(K,p[0],p[1],.9+i*.3,i+2,-.25);}); [[-2.3,10,0xff4d4d],[2.9,5.5,0xffc531]].forEach(q=>{const p=A.at(q[0],q[1]); TP.buoyS(K,KE,p[0],p[1],q[2]);}); const b=A.far(-1.0,15); TP.sandbar(K,b[0],b[1],5,3.6,4); TP.palm(K,b[0],b[1],3.3,.28,1.2,1.2); TP.palm(K,b[0]+1.8,b[1]+.6,2.6,.34,2.8,1.05);},
+  fair(A){const {K,KG,KT,KE}=A; let q=A.far(-.62,9); TP.tent(K,KT,q[0],q[1],0xff4d4d,1.35); q=A.far(.62,9); TP.tent(K,KT,q[0],q[1],0x2f8fff,1.35); q=A.far(0,11.5); TP.tent(K,KT,q[0],q[1],0x35c98a,1.5);
+    q=A.at(-1.25,4.4); TP.stall(K,KE,q[0],q[1],Math.atan2(-q[0],-q[1]),0xffc531); q=A.at(1.25,4.4); TP.stall(K,KE,q[0],q[1],Math.atan2(-q[0],-q[1]),0xff5fa8); q=A.at(-.3,5.2); TP.striker(K,KE,q[0],q[1],.2); q=A.at(.42,5.0); TP.cart(K,KE,q[0],q[1],-.5,0xff4d4d);
+    const L=[-1.9,-1.1,-.36,.36,1.1,1.9].map(a=>A.at(a,2.6)); L.forEach((p,i)=>{TP.lamp(K,KE,p[0],p[1],3.4); if(i&&A.clear((L[i-1][0]+p[0])/2,(L[i-1][1]+p[1])/2,1.6))TP.bulbs(K,KE,[L[i-1][0],3.3,L[i-1][1]],[p[0],3.3,p[1]],9);});
+    [[-2.25,3.4,3],[2.25,3.6,4],[-.75,6.4,5],[.9,6.6,3]].forEach((b,i)=>{const p=A.at(b[0],b[1]); TP.balloons(K,p[0],p[1],b[2],i+1);}); [[-2.6,2.0],[2.6,2.0],[-3.0,3.0],[3.0,3.0]].forEach((b,i)=>{const p=A.at(b[0],b[1]); if(i<2)TP.planter(K,p[0],p[1],i); else TP.bench(K,p[0],p[1],Math.atan2(-p[0],-p[1]));});
+    q=A.at(-1.62,4.0); TP.teddy(K,q[0],q[1],.9,1.1,0xc98f55); q=A.at(1.7,3.4); TP.crate(K,q[0],q[1],.4,.9); TP.barrel(K,q[0]+1.1,q[1]+.3,.9);
+    const cs=[0xff4d4d,0xffc531,0x2f8fff,0x35c98a,0xff5fa8], R=A.R; K.at(0,.02,0,0); for(let i=0;i<70;i++){const p=A.at((R()-.5)*6.283,1.2+R()*8); K.add(boxG(.18,.02,.1),M4(p[0],0,p[1],R()*6),cs[i%5],{ao:0});}},
+  theatre(A){const {K,KG,KT,KE}=A, red=[0x7a1020,0xc8283c]; A.floor(deckMat(0x2b2236,0x3b2f48,1.3,8));
+    [-.95,-.48,0,.48,.95].forEach((a,i)=>{const p=A.far(a,6.2); TP.curtain(KT,K,p[0],p[1],Math.atan2(-p[0],-p[1]),5.6,8.5-Math.abs(i-2)*.4,red);}); for(const sx of [-1,1]){let p=A.at(sx*1.75,4.2); TP.curtain(KT,K,p[0],p[1],Math.atan2(-p[0],-p[1]),3.2,7,red); p=A.at(sx*1.28,3.3); TP.rigLamp(K,KE,p[0],p[1],Math.atan2(-p[0],-p[1]),5.2);}
+    for(let i=-6;i<=6;i++){const p=A.at(Math.PI+i*.2,1.5); K.at(p[0],0,p[1],0); KE.at(p[0],0,p[1],0); K.add(cylG(.2,.26,.22,8),M4(0,.11,0),0x17202e,{ao:0}); KE.add(sphG(.16,1),M4(0,.26,0,0,1,.6,1),[0xfff3b0,0xffd27a][Math.abs(i)%2],{ao:0,ph:i*1.3});}
+    for(let r=0;r<2;r++)for(let i=-2;i<=2;i++){const a=Math.PI+i*(.36-r*.05), p=A.at(a,4.4+r*2.4); TP.seats(K,p[0],p[1],Math.atan2(p[0],p[1]),4+r);}
+    for(const sx of [-1,1]){const p=A.at(sx*.3,5.0); K.at(p[0],0,p[1],sx*.3); K.add(rbox(1.6,1.8,1.0,.12,2),M4(0,.9,0),[0x2a2233,0x4a3d5c],{ao:.3,aoH:.6}); KG.at(p[0],0,p[1],sx*.3); KG.add(sphG(.5,2),M4(0,2.2,0),[0xc9962e,0xffd45e],{ao:0});}},
+  night(A){const {K,KG,KT,KE}=A; A.base(waterMat(0x0f2460,0x1f4496)); A.piles(); const L=[-2.2,-1.3,-.45,.45,1.3,2.2].map(a=>A.at(a,1.9)); L.forEach((p,i)=>{K.at(p[0],0,p[1],0); K.add(cylG(.16,.2,1.5,7),M4(0,.5,0),[0x4f2d18,0x7a4a2a],{ao:0}); TP.lamp(K,KE,p[0],p[1],3.6);});
+    [[-1.0,6.5,.6],[1.1,7.5,-.8],[.2,10.5,1.4],[-2.2,5.5,2.2],[2.4,5.0,.4]].forEach((b,i)=>{const p=A.at(b[0],b[1]); TP.lanternBoat(K,KE,p[0],p[1],b[2],1.1+.15*(i%2));});
+    const R=A.R; for(let i=0;i<16;i++){const p=A.at((R()-.5)*5.2,3+R()*9); KE.at(p[0],.1,p[1],R()*6); KE.add(rbox(.34,.26,.34,.08),null,[0xffd27a,0xff9f6a,0xffe9a8][i%3],{ao:0,ph:i*1.7}); K.at(p[0],0,p[1],0); K.add(boxG(.44,.06,.44),M4(0,.02,0),0x6e3f22,{ao:0});}
+    for(let i=0;i<22;i++){const p=A.at((R()-.5)*6.283,1.5+R()*9); KE.at(p[0],1.6+R()*3,p[1],0); KE.add(sphG(.06,0),null,0xd8ff9a,{ao:0,ph:i*2.3});}
+    let q=A.far(-.8,12); TP.rock(K,q[0],q[1],2.2,2,-.3); TP.rock(K,q[0]+2,q[1]+1,1.3,5,-.3); TP.lighthouse(K,q[0],q[1],1.0); KE.at(q[0],0,q[1],0); q=A.far(.9,11); TP.rock(K,q[0],q[1],1.6,3,-.3); TP.buoyS(K,KE,q[0]-3,q[1]+3,0xff4d4d); q=A.at(2.0,8); TP.buoyS(K,KE,q[0],q[1],0xffc531);},
+  snow(A){const {K,KG,KT,KE}=A, R=A.R; [[-1.25,8],[-.78,10],[-.3,8.5],[.2,10.5],[.7,8.2],[1.2,9.5],[-1.75,6.5],[1.75,6.2],[-.55,12.5],[.5,13]].forEach((b,i)=>{const p=A.far(b[0],b[1]); TP.pine(K,p[0],p[1],1.5+hash2(i,3,1)*.7,i);});
+    [[-1.5,3.6],[1.4,3.9]].forEach((b,i)=>{const p=A.at(b[0],b[1]); TP.snowman(K,p[0],p[1],Math.atan2(-p[0],-p[1]),1.25);}); let q=A.far(.35,6.2); TP.igloo(K,q[0],q[1],Math.atan2(-q[0],-q[1]),1.3);
+    for(let i=0;i<18;i++){const a=(i/18)*6.283+R()*.2, p=A.at(a,1.6+R()*1.2+(Math.abs(Math.sin(a/2))>.92?1.2:0)); TP.snowbank(K,p[0],p[1],.9+R()*.6,i);} for(let i=0;i<10;i++){const p=A.at((R()-.5)*4.4,4.5+R()*5); TP.snowbank(K,p[0],p[1],1.2+R(),i+30);}
+    [[-.45,3.4,0x9fe1ff],[.55,3.2,0xc9e6ff],[-2.0,3.0,0x9fe1ff]].forEach((b,i)=>{const p=A.at(b[0],b[1]); TP.crystal(K,KE,p[0],p[1],1.1,b[2],i);}); [-.95,.95].forEach(a=>{const p=A.at(a,2.6); TP.lamp(K,KE,p[0],p[1],3.4);});
+    q=A.at(2.5,2.4); K.at(q[0],0,q[1],.6); K.add(rbox(.9,.12,2.0,.05),M4(0,.34,0),[0xb9793f,0xd9a868],{ao:0}); for(const sx of [-1,1])K.add(rbox(.1,.22,2.3,.05),M4(sx*.38,.14,0),0xe0364f,{ao:0});},
+  crater(A){const {K,KG,KT,KE}=A, R=A.R; A.base(lavaMat()); TOY.rock=[.46,.4,.46];
+    for(let i=0;i<16;i++){const a=-2.4+i*.32, p=A.far(a,4.6+hash2(i,2,2)*3.5+(Math.abs(a)<1.3?2:0)); TP.rock(K,p[0],p[1],1.8+hash2(i,1,3)*2.4,i,-.5);} for(let i=0;i<12;i++){const p=A.at((R()-.5)*6.283,1.4+R()*2.6); TP.rock(K,p[0],p[1],.5+R()*.6,i+20,-.3);}
+    [[-.9,4.2,0x7fe8ff],[.3,3.8,0xc9a6ff],[1.2,4.6,0xff8fd0],[-1.9,3.4,0xc9a6ff],[2.1,3.2,0x7fe8ff]].forEach((b,i)=>{const p=A.at(b[0],b[1]); TP.crystal(K,KE,p[0],p[1],1.2+.3*(i%2),b[2],i);});
+    let q=A.at(-.45,5.6); TP.arch(K,q[0],q[1],.3); q=A.at(.85,5.4); TP.pillar(K,q[0],q[1],3.2,2); q=A.at(1.5,3.6); TP.pillar(K,q[0],q[1],1.8,5); q=A.at(-1.45,4.4); TP.deadTree(K,q[0],q[1],1.2,2); TOY.rock=null;},
+  factory(A){const {K,KG,KT,KE}=A, R=A.R, cs=[0xff4d4d,0xffc531,0x2f8fff,0x35c98a,0xff5fa8,0x9b6bff];
+    [[-1.0,5.2,.9,0xffc531,.5],[-.55,4.4,.55,0xff4d4d,-.9],[1.05,5.0,.8,0x2f8fff,-.6],[.62,4.3,.5,0x35c98a,1.1]].forEach((b,i)=>{const p=A.at(b[0],b[1]), g=new Kit(); g.add(TP.gearG(2.2*b[2],10,.4),null,[b[3],b[3]],{ao:0}); g.add(cylG(.5*b[2],.5*b[2],.6,12),M4(0,.3,0),0x566f8b,{ao:0}); const gm=g.mesh(TOYM.gloss,true); gm.position.set(p[0],.1+i*.05,p[1]); world.add(gm); spin.push({o:gm,ax:'y',v:b[4]});});
+    let q=A.at(-1.5,3.4); TP.conveyor(K,q[0],q[1],Math.atan2(-q[0],-q[1])+1.571,6); TP.gift(K,q[0],q[1],.8,0xff5fa8,.4); K.at(q[0],1.08,q[1],0); q=A.at(1.5,3.4); TP.conveyor(K,q[0],q[1],Math.atan2(-q[0],-q[1])+1.571,6);
+    q=A.at(0,6.2); TP.pipes(K,KG,q[0]-2,q[1],0,1.3); TP.pipes(K,KG,q[0]+2,q[1],Math.PI,1.3); q=A.at(.3,3.6); TP.robotArm(K,KG,KE,q[0],q[1],Math.atan2(-q[0],-q[1])-1.2,1.3); q=A.at(-.25,3.4); TP.teddy(K,q[0],q[1],.4,1.3,0xc98f55);
+    for(let i=0;i<16;i++){const a=(R()-.5)*6.283, p=A.at(a,1.5+R()*3.2), k=i%3; if(k===0)TP.gift(K,p[0],p[1],.7+R()*.3,cs[i%6],R()*6); else if(k===1)TP.block(K,p[0],p[1],.7+R()*.3,cs[(i+2)%6],R()*6); else TP.crate(K,p[0],p[1],R()*6,.8);}
+    [[-2.0,2.2],[2.0,2.2]].forEach(b=>{const p=A.at(b[0],b[1]); K.at(p[0],0,p[1],0); KE.at(p[0],0,p[1],0); K.add(cylG(.12,.16,2.2,6),M4(0,1.1,0),[0xf2a81e,0xffc531],{ao:.2}); KE.add(sphG(.22,1),M4(0,2.36,0),0xff4d6a,{ao:0,ph:p[0]});});},
+  music(A){const {K,KG,KT,KE}=A, R=A.R; A.floor(deckMat(0xb47a44,0xd9a868,2.2,14)); K.at(0,.02,0,0); K.add(cylG(A.e+3.2,A.e+3.2,.06,48),null,0xa3264b,{ao:0}); K.add(torG(A.e+2.7,.07,4,56),M4(0,.06,0,0,1,1,1,Math.PI/2,0),0xe9bd55,{ao:0}); K.add(torG(A.e+3.2,.1,4,56),M4(0,.04,0,0,1,1,1,Math.PI/2,0),0x23305c,{ao:0});
+    let q=A.far(-.4,7.5); TP.piano(K,KG,KE,q[0],q[1],Math.atan2(-q[0],-q[1]),.9); q=A.far(.62,6.5); TP.drums(K,KG,q[0],q[1],Math.atan2(-q[0],-q[1]),.85); q=A.at(-1.4,4.6); TP.speaker(K,KG,q[0],q[1],Math.atan2(-q[0],-q[1]),1.2); q=A.at(1.5,4.4); TP.speaker(K,KG,q[0],q[1],Math.atan2(-q[0],-q[1]),1.2);
+    q=A.at(-2.0,4.0); TP.guitar(K,KG,q[0],q[1],Math.atan2(-q[0],-q[1]),.8); q=A.at(2.1,3.6); TP.xylophone(K,q[0],q[1],.4,.7); q=A.at(1.05,5.6); TP.gramophone(K,KG,q[0],q[1],-.6,.9);
+    [[-.7,5.5,0xff5fa8],[-.1,6.5,0xffd23a],[.5,5.2,0x35c98a],[1.2,4.6,0x2f8fff],[-1.5,4.2,0xc9a6ff]].forEach((b,i)=>{const p=A.at(b[0],b[1]); TP.note(p[0],4.5+i*.5,p[1],b[2],1.0,i*1.7);});
+    [[-2.6,2.6],[2.7,2.4],[-3.0,3.4],[3.0,3.2]].forEach((b,i)=>{const p=A.at(b[0],b[1]); [TP.records,TP.maracas][i%2](K,p[0],p[1],i,.9);}); q=A.at(3.14,2.6); TP.tamb(K,KG,q[0],q[1],.4,.8);},
+};
+const ARENAGAIN={theatre:2.6,night:1.5};
+const ARENALT={sea:[0xfff0d6,0xe8f4ff,0xd6c49a],ship:[0xfff0d6,0xe8f4ff,0xd6c49a],fair:[0xffe6c2,0xece4ff,0xe6b890],snow:[0xfff6ea,0xe6f2ff,0xcfe2f5],crater:[0xffd9b0,0xdccfff,0xffa06a],factory:[0xfff1d6,0xe6ecf5,0xb8c2d0],theatre:[0xffe2c0,0xcfc4ff,0x7a5a8c],night:[0xcfd8ff,0x9aa8ff,0x4a5a9c],music:[0xffe9c8,0xfff0e0,0xe6b890]};
+/* build the scenery for one mini game. Returns false, leaving the painted surround in place, if this game has its own world or anything goes wrong */
+function toyArena(G,sc,sh,base){
+  if(!TOYM.matte&&!toyMats())return false; if(!MS||MS.scene!==sc||G.zs)return false;   /* a course builds its own world */
+  const set=G.under==='ship'?'ship':(ARENA[G.arena]?G.arena:ARENA[G.set]?G.set:'sea'), long=!!(G.zs&&G.zs.length>1), e=long?(G.W?G.W/2:G.fit||5):(G.fit&&sh.k==='c'&&G.fit>sh.R?G.fit:(sh.k==='c'?sh.R:sh.h)), sq=sh.k!=='c';
+  const env=new THREE.Group(); env.position.y=-1.4; const w0=world, g0=GY, d0=TOY.dyn, s0=spin, u0=upright, r0=TOY.rock, dyn=[], sp=[], z0=long?Math.min(...G.zs)-14:0, z1=long?Math.max(...G.zs)+10:0;
+  const A={K:new Kit(),KG:new Kit(),KT:new Kit(),KE:new Kit(),e,R:rng32(Math.round(e*977)+(set.length*31)),
+    /* a place round the platform: a is the angle from the far side (0 is straight behind, pi is at the camera), d is how far outside the edge */
+    at(a,d){if(long){const t=((a/6.283)%1+1)%1, z=z1+(z0-z1)*((Math.abs(Math.sin(a*2.3))+t)%1), sx=Math.sin(a)>=0?1:-1; return[sx*(e+d),z];} const s=Math.sin(a), c=-Math.cos(a), r=sq?(e+d)/Math.max(Math.abs(s),Math.abs(c)):e+d; return[s*r,c*r];},
+    far(a,d){return this.at(a,d);},
+    clear(x,z,d){return sq?Math.max(Math.abs(x),Math.abs(z))>e+d:Math.hypot(x,z)>e+d;},
+    base(mat){if(base){base.material=mat; base.visible=true;}},
+    floor(mat){const f=new THREE.Mesh(new THREE.PlaneGeometry(260,260),mat); f.rotation.x=-Math.PI/2; f.position.y=.005; f.receiveShadow=true; f.noBake=true; env.add(f); if(base)base.visible=false;},
+    piles(){if(long)return; const n=sq?12:10; for(let i=0;i<n;i++){const a=i/n*6.283+.3, p=this.at(a,-.35); this.K.at(p[0],-.6,p[1],0); this.K.add(cylG(.17,.21,2.0,7),M4(0,1.0,0),[0x4f2d18,0x8a5a2b],{ao:0});}}};
+  let ok=true;
+  try{world=env; GY=()=>0; TOY.dyn=dyn; spin=sp; upright=[]; TOY.rock=null; ARENA[set](A);
+    /* a solid body under a platform that would otherwise float */
+    if(!G.top&&!G.noDeck&&!sh.hole&&!long){const c=[0x6a4426,0xa8683a]; A.K.at(0,0,0,0); if(sq)A.K.add(boxG(sh.h*2-.3,.95,sh.h*2-.3),M4(0,.48,0),c,{ao:0}); else A.K.add(cylG(sh.R-.15,sh.R-.3,.95,40),M4(0,.48,0),c,{ao:0});}
+    const gain=ARENAGAIN[set]||1; if(gain!==1)for(const k of [A.K,A.KG,A.KT])for(let i=0;i<k.C.length;i++)k.C[i]*=gain;   /* a dark hall: its scenery is painted brighter so it can still be seen */
+    env.add(A.K.mesh(TOYM.matte)); if(A.KG.tris)env.add(A.KG.mesh(TOYM.gloss,true)); if(A.KT.tris)env.add(A.KT.mesh(TOYM.thin)); if(A.KE.tris)env.add(A.KE.mesh(TOYM.glow,false,false));}
+  catch(err){ok=false; console.warn('arena',set,err);}
+  world=w0; GY=g0; TOY.dyn=d0; spin=s0; upright=u0; TOY.rock=r0;
+  if(!ok){freeScene(env); return false;}
+  sc.add(env); MS.dyn=dyn; MS.spin=sp; if(G.under)sc.traverse(o=>{if(o.isMesh&&o.material===AMAT['under-'+G.under])o.visible=false;});
+  const L=ARENALT[set], s=sc.sun, h=sc.hemi; if(s&&h&&L){s.color.setHex(L[0]); h.color.setHex(L[1]); h.groundColor.setHex(L[2]); s.shadow.radius=2.6; s.shadow.bias=-.0012; s.shadow.normalBias=.03;}
+  return true;}
+/* the results of a mini game arrive with a little ceremony: the rows pop in from first to last, the winner's row glows, confetti falls and the fanfare plays */
+function miniCheer(){const host=$('#mini'); if(!host)return; try{SFX.win();}catch(e){} const box=document.createElement('div'), cs=['#ff4d4d','#ffc531','#2f8fff','#35c98a','#ff5fa8','#9b6bff']; box.className='mconf'; let h='';
+  for(let i=0;i<46;i++)h+=`<i style="left:${(Math.random()*100).toFixed(1)}%;background:${cs[i%6]};animation-delay:${(Math.random()*.7).toFixed(2)}s;animation-duration:${(1.7+Math.random()*1.3).toFixed(2)}s;--r:${Math.round(Math.random()*720-360)}deg;--x:${Math.round(Math.random()*140-70)}px"></i>`;
+  box.innerHTML=h; host.appendChild(box); setTimeout(()=>box.remove(),3600);}
 /* </TOY3D> */
 function buildWorld(id){
   const m=MAPS[id]||MAPS.island; curMap=id; MAPX=m;
@@ -2798,7 +2919,7 @@ function frame(now){
     let wide=0, tq=tg; if(tg&&landAt>=0&&NODES[landAt]){const L=NODES[landAt]; wide=Math.hypot(L.x-tg.x,L.z-tg.z); tq={x:(tg.x+L.x)/2,z:(tg.z+L.z)/2};}
     if(tq){camT.x+=(tq.x-camT.x)*kk; camT.z+=(tq.z-camT.z)*kk;} camD+=((cz&&camMode!=='free'?19:Math.max(12.5,Math.min(24,wide*1.1+7)))-camD)*(1-Math.exp(-dt*2.5));
     camGY+=(GY(camT.x,camT.z)-camGY)*kk; cam.position.set(camT.x,camGY+camD*.84,camT.z+camD*.8); cam.lookAt(camT.x,camGY+.3,camT.z+.4);}
-  if(MS){if(MS.update)MS.update(dt*MSPEED); R.render(MS.scene,MS.cam);}
+  if(MS){if(MS.update)MS.update(dt*MSPEED); if(MS.dyn){for(const d of MS.dyn)d.f(d.o,T,dt); for(const q of MS.spin)q.o.rotation[q.ax]+=dt*q.v;} R.render(MS.scene,MS.cam);}
   else if($('#mini').hidden&&!(IN&&IN.vid&&IN.vid.cover))R.render(scene,cam);   /* nothing to draw while a film covers the screen */
 }
 
@@ -3180,7 +3301,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=80; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=81; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -3245,8 +3366,8 @@ function miniSync(){
       stage.innerHTML=`<div class="sub">Your score</div><div class="big">${fmt(g,v)}</div><p class="sub">Waiting for the other players…</p>`;});
   }
   else if(m.phase==='done'){$('#mgSub').textContent=m.fz?`Frenzy game ${m.fz} of 3: results`:'Results';
-    stage.innerHTML=`<div class="rank">${m.rows.map(r=>{const p=V.p[r.k]; return`<div class="row" style="--c:${CAST[p.i].c}"><span class="pos">${r.pl+1}</span>${face(p.i)}
-      <b>${CAST[p.i].name}</b><span class="sc">${fmt(g,r.sc)}${r.sc===999?'':' '+g.unit}</span>${m.prac?"":`<span class="aw">${r.aw>=0?"+":""}${r.aw}</span>`}</div>`;}).join('')}</div>`;}
+    stage.innerHTML=`<div class="rank">${m.rows.map(r=>{const p=V.p[r.k]; return`<div class="row pop${r.pl===0?' win':''}" style="--c:${CAST[p.i].c};--i:${r.pl}"><span class="pos">${r.pl+1}</span>${face(p.i)}
+      <b>${CAST[p.i].name}</b><span class="sc">${fmt(g,r.sc)}${r.sc===999?'':' '+g.unit}</span>${m.prac?"":`<span class="aw">${r.aw>=0?"+":""}${r.aw}</span>`}</div>`;}).join('')}</div>`; miniCheer();}
 }
 /* the award ceremony. The host sends who won what and the final order; each phone then plays the same show on its own:
    everyone walks on and lines up, the lights go down, a spotlight finds each award winner, a pearl comes down, they take it and dance,
@@ -3374,6 +3495,7 @@ function arenaSet(G,sc,sh){
   const set=SETS[G.set]?G.set:'sea', Q=SETS[set], e=(G.fit||sh.ext||5), sea=sc.children.find(o=>o.geometry&&o.geometry.type==='CircleGeometry'&&o.position.y<-1);
   if(Q.bg!=null)sc.background=new THREE.Color(Q.bg); if(Q.dim)sc.traverse(o=>{if(o.isLight)o.intensity*=Q.dim;});
   if(sea){if(Q.noBase)sea.visible=false; else if(Q.base)sea.material=gmat(Q.base[0],Q.base[1],Q.base[2],Q.base[2],Q.base[3]);}
+  if(toyArena(G,sc,sh,sea))return;
   const S=Math.max(26,e*5); (G.zs||[0]).forEach((z,i)=>{const pl=mesh(new THREE.PlaneGeometry(S,S),amat('ground-'+Q.ground,0,true),0,-1.38-i*.004,z,sc); pl.rotation.x=-Math.PI/2; pl.rotation.z=i%2?Math.PI:0; pl.castShadow=false; pl.renderOrder=1;});
 }
 let arenaRefit=null;
@@ -3908,7 +4030,7 @@ const BOMBA={set:'crater',floor:'rock',hint:'Pass the bomb',surv:true,max:104,bt
 /* Musical Chairs: chairs in the middle, one fewer than the players still in. While the music plays everyone is carried round
    the outside of a line; step over the line and you are out. The host stops the music at a moment nobody can see coming and
    decides who got to each chair first, so every phone agrees */
-const CHAIRS={top:'circus',set:'fair',floor:'carpet',hint:'Walk while the music plays',surv:true,max:112,ring:4.2,deck:{k:'c',R:5.5},RL:2.9,W:.55,H0:{ph:'arm',r:0,n:0,s:[],o:[]},
+const CHAIRS={arena:'music',top:'circus',set:'fair',floor:'carpet',hint:'Walk while the music plays',surv:true,max:112,ring:4.2,deck:{k:'c',R:5.5},RL:2.9,W:.55,H0:{ph:'arm',r:0,n:0,s:[],o:[]},
   pos(n,i,r){if(n<=1)return[0,0,0]; const a=i/n*6.283+r*.9, R=n===2?.9:n===3?1.2:1.45; return[Math.sin(a)*R,Math.cos(a)*R,a];},
   init(sc,rng,sh,n){const line=flatM(mesh(new THREE.RingGeometry(CHAIRS.RL-.1,CHAIRS.RL+.1,72),new THREE.MeshBasicMaterial({color:0xffffff}),0,.035,0,sc));
     return{sc,line,g:null,key:'',lph:'',o0:0,seatM:[],dt:.016,max:Math.max(1,n-1)*21+6};},

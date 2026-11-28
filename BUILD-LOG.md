@@ -675,6 +675,26 @@ Temple of the Golden Titan rebuilt to the Island standard. All seven boards are 
 
 Tested: Temple built and viewed on a desktop screen; a full three-round solo game (Barrel Barrage with players knocked back, Jungle vine, Golden idol all seen). Not tested: real phones.
 
+## Build 81
+Mini games: real 3D scenery round the platform, and a results ceremony.
+
+- Eighteen mini games that are played on a platform no longer stand on a flat painting. Each now has scenery built from the same kit as the boards, lit the same way, with soft shadows:
+  - Boom Hop: the deck of a ship, with rails, cannons, barrels, crates, a coil of rope, a life ring, a mast with a striped sail and a bowsprit, on moving water.
+  - Coconut Drop and Sumo Shove: a lagoon with sand bars, palms, a hut, rocks and buoys, and the platform on wooden piles.
+  - Ticket Grab, Paint Fight, Stomp, Trap Doors, Cannonball Kickoff and Snapshot Showdown: the fairground, with tents, stalls, a high striker, a cart, lamps strung with bulbs, balloons, planters, benches and confetti.
+  - Musical Chairs: a music room, on a rug, with a piano, drum kit, speakers, guitar, xylophone, gramophone and notes in the air.
+  - Spotlight: a theatre, with curtains, lighting rigs, footlights and rows of seats.
+  - Lantern Match and Ghost Hot Potato: a harbour at night, with lamp posts, boats carrying lanterns, lanterns afloat, fireflies and a lighthouse.
+  - Slippery Slope: a frozen lake, with pines, snowmen, an igloo, snow banks, ice crystals and a sled.
+  - Hot Planks, Crumble Deck and Hot Bomba: inside the volcano, on moving lava, with rocks, crystals and ruins.
+- If the scenery for a game cannot be built, the game falls back to its old painted surround and plays as before.
+- Mini game results: the rows pop in from first place to last, the winner's row glows gold, confetti falls and the fanfare plays.
+- The introduction on the Temple board now frames the Titan's head.
+
+Not changed in this build: the ten racing and climbing games that build their own course (Rail Riders, Tricycle Turbo, Marble Mayhem, Shortcut Circuit, Soapbox Surfers, Rapid Rafts, Vacuum Escape, Crater Crawl, Pixel Panic, Clockwork Climb), Conveyor Chaos and Hedge Maze, the eight tap-and-timing games (Bell Ringer, Ring Toss, Ticket Catch, Lighthouse, Crab Count, Pier Dash, Balloon Pop, Crate Stack), Drum Beater and the nine games with their own screens (Critter Wrangler to Limelight Shuffle). They play and look as before.
+
+Tested: all eighteen games started in practice on a desktop screen with no errors and looked at; two on a phone-sized screen; one played to its results. Rules, scoring and controls are untouched. Not tested: real phones, online play.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
