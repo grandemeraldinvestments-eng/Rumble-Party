@@ -1317,6 +1317,8 @@ function toyMats(){
   TOYM.matte=lam({},'matte'); TOYM.thin=lam({},'thin',true);
   const env=toyEnv();
   TOYM.gloss=new THREE.MeshStandardMaterial({vertexColors:true,color:0xbcbcbc,roughness:.26,metalness:0,envMap:env,envMapIntensity:.3}); TOYM.gloss.keep=true;
+  /* things that give light: bulbs, lava, neon. Unlit, and each one twinkles a little out of step with its neighbours */
+  TOYM.glow=new THREE.MeshBasicMaterial({vertexColors:true}); TOYM.glow.keep=true; TOYM.glow.onBeforeCompile=sh=>{sh.uniforms.uT=U.uT; sh.vertexShader=SWAYV+sh.vertexShader.replace('#include <color_vertex>','#include <color_vertex>\nvColor.xyz*=.74+.26*sin(uT*3.6+aSw.y*9.);');}; TOYM.glow.customProgramCacheKey=()=>'toy-glow';
   TOYM.pearl=new THREE.MeshStandardMaterial({color:0xb99cf5,emissive:0x7a55c7,emissiveIntensity:.4,roughness:.14,metalness:0,envMap:env,envMapIntensity:.55}); TOYM.pearl.keep=true;
   return TOYM;}
 /* what shiny things reflect: a small painted sky with a bright sun and two soft light boxes. Made once */
@@ -1330,10 +1332,12 @@ function toyEnv(){
     const pm=new THREE.PMREMGenerator(R); TOY.env=pm.fromScene(s,.03).texture; pm.dispose(); g.dispose();}
   catch(e){TOY.env=false;}
   return TOY.env||null;}
+/* the four kits a toy board builds into: matte, gloss, cloth and glowing */
+function toyKits(){toyMats(); return{K:TOY.K=new Kit(),KG:TOY.KG=new Kit(),KT:TOY.KT=new Kit(),KE:TOY.KE=new Kit()};}
 /* light for a map. Toy boards get a warm low sun, a cool fill and soft shadows; the rest keep the light they were built for */
 function toyShadows(){return !SMOOTH||(TOY.on&&TOY.shadow);}
-function toyRig(toy){const s=scene.sun, h=scene.hemi; if(!s||!h)return; TOY.on=!!toy;
-  if(toy){s.color.setHex(0xfff0d6); s.intensity=.74; s.position.set(-15,26,12); h.color.setHex(0xe8f4ff); h.groundColor.setHex(0xd6c49a); h.intensity=.68; s.shadow.radius=2.6; s.shadow.bias=-.0012; s.shadow.normalBias=.03;}
+function toyRig(toy){const s=scene.sun, h=scene.hemi; if(!s||!h)return; TOY.on=!!toy; const L=toy&&toy.light||{};   /* a board may tint its own light: {sun,sunI,sky,ground,skyI,from} */
+  if(toy){s.color.setHex(L.sun||0xfff0d6); s.intensity=L.sunI||.74; s.position.set(...(L.from||[-15,26,12])); h.color.setHex(L.sky||0xe8f4ff); h.groundColor.setHex(L.ground||0xd6c49a); h.intensity=L.skyI||.68; s.shadow.radius=2.6; s.shadow.bias=-.0012; s.shadow.normalBias=.03;}
   else{s.color.setHex(0xffffff); s.intensity=.6; s.position.set(12,26,14); h.color.setHex(0xffffff); h.groundColor.setHex(0x9fd3b0); h.intensity=.85; s.shadow.radius=1; s.shadow.bias=-.002; s.shadow.normalBias=0;}
   {const fine=window.matchMedia&&matchMedia('(pointer:fine)').matches, sz=fine?2048:1024; if(s.shadow.mapSize.x!==sz){s.shadow.mapSize.set(sz,sz); if(s.shadow.map){s.shadow.map.dispose(); s.shadow.map=null;}}}   /* phones draw their shadows at half the detail */
   toyShade();}
@@ -1353,6 +1357,7 @@ function toyGround(m,opt){
   const C=[far(A,oa,9),far(A,oa,4.2),[A.x,A.z],...N.slice(45).map(n=>[n.x,n.z]),[B.x,B.z],far(B,ob,4.2),far(B,ob,9)], cn=C.length-1, GS=6, G=[], at=q=>C[Math.max(0,Math.min(cn,q))];
   for(let i=0;i<=cn*GS;i++){const f=Math.min(i/GS,cn-1e-6),k=Math.floor(f),t=f-k; G.push([0,1].map(d=>cr(at(k-1)[d],at(k)[d],at(k+1)[d],at(k+2)[d],t)));}
   T.loop=L; T.chan=G; T.A=A; T.B=B;
+  {const Q=[[A.x,A.z],...N.slice(45).map(n=>[n.x,n.z]),[B.x,B.z]], qn=Q.length-1, qa=q=>Q[Math.max(0,Math.min(qn,q))]; T.cut=[]; for(let i=0;i<=qn*GS;i++){const f=Math.min(i/GS,qn-1e-6),k=Math.floor(f),t=f-k; T.cut.push([0,1].map(d=>cr(qa(k-1)[d],qa(k)[d],qa(k+1)[d],qa(k+2)[d],t)));}}   /* the short cut as one smooth line, fork to join */
   const dseg=(px,pz,a,b)=>{const dx=b[0]-a[0],dz=b[1]-a[1],l=dx*dx+dz*dz||1,t=clamp01(((px-a[0])*dx+(pz-a[1])*dz)/l); return Math.hypot(px-a[0]-dx*t,pz-a[1]-dz*t);};
   const dpoly=(P,closed,x,z)=>{let d=1e9; const n=P.length; for(let i=0;i<(closed?n:n-1);i++){const q=dseg(x,z,P[i],P[(i+1)%n]); if(q<d)d=q;} return d;};
   const inside=(x,z)=>{let c=false; for(let i=0,j=L.length-1;i<L.length;j=i++){const a=L[i],b=L[j]; if((a[1]>z)!==(b[1]>z)&&x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0])c=!c;} return c;};
@@ -1456,13 +1461,22 @@ function streamMat(){return new THREE.ShaderMaterial({transparent:true,depthWrit
   vertexShader:'attribute float aD; varying vec3 vW; varying float vD; void main(){vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; vD=aD; gl_Position=projectionMatrix*viewMatrix*w;}',
   fragmentShader:SEAFRAG+'void main(){vec4 c=seaCol(vD); c.a=min(1.,c.a+.1); gl_FragColor=c;}'});}
 
+/* a floor of planks for boards that stand on a deck: the planks are drawn by the material, so one flat slab is enough */
+function deckMat(a,b,pw,pl){const k='deck'+[a,b,pw,pl]; if(TOYM[k])return TOYM[k]; const m=new THREE.MeshLambertMaterial({color:0xffffff}), A=hexC(a), B=hexC(b), f=v=>v.toFixed(3); m.keep=true;
+  m.onBeforeCompile=sh=>{sh.vertexShader='varying vec3 vWp; varying float vNy;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvWp=(modelMatrix*vec4(transformed,1.)).xyz; vNy=normal.y;');
+    sh.fragmentShader='varying vec3 vWp; varying float vNy;\n'+sh.fragmentShader.replace('#include <color_fragment>',`
+      float row=floor(vWp.x/${f(pw)}), fx=fract(vWp.x/${f(pw)}), off=fract(sin(row*91.7)*437.5)*${f(pl)}, cell=floor((vWp.z+off)/${f(pl)}), fz=fract((vWp.z+off)/${f(pl)}), hh=fract(sin(row*12.9898+cell*78.233)*43758.5453);
+      vec3 wood=mix(vec3(${f(A[0])},${f(A[1])},${f(A[2])}),vec3(${f(B[0])},${f(B[1])},${f(B[2])}),hh);
+      float seam=clamp(max(smoothstep(.93,.985,fx)+smoothstep(.07,.015,fx),smoothstep(.988,.998,fz)+smoothstep(.012,.002,fz)),0.,1.);
+      diffuseColor.rgb*=wood*(1.-.4*seam)*(vNy<.5?.62:1.);`);};
+  m.customProgramCacheKey=()=>k; return TOYM[k]=m;}
 /* ---------- boardwalk: a path of wooden planks that follows the ground ---------- */
-function boardwalk(K,pts,hw,yAt,closed,tone){
+function boardwalk(K,pts,hw,yAt,closed,tone,gap){
   const n=pts.length, cum=[0]; for(let i=1;i<=(closed?n:n-1);i++){const a=pts[i-1],b=pts[i%n]; cum.push(cum[i-1]+Math.hypot(b[0]-a[0],b[1]-a[1]));}
   const tot=cum[cum.length-1], cnt=Math.max(1,Math.round(tot/.42)), step=tot/cnt, P=[]; let j=0;
   const at=d=>{d=Math.max(0,Math.min(tot-1e-6,d)); while(j<cum.length-2&&cum[j+1]<d)j++; while(j>0&&cum[j]>d)j--; const u=(d-cum[j])/((cum[j+1]-cum[j])||1),a=pts[j%n],b=pts[(j+1)%n]; return[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u];};
   const rail=d=>{const a=at(d-.05),b=at(d+.05),c=at(d),tx=b[0]-a[0],tz=b[1]-a[1],l=Math.hypot(tx,tz)||1; return{x:c[0],z:c[1],nx:-tz/l,nz:tx/l};};
-  const pos=[],col=[],idx=[], C=tone||WOOD, dk=hexC(WOODD);
+  const pos=[],col=[],idx=[], C=tone||WOOD, dk=hexC(gap||WOODD);
   for(let k=0;k<cnt;k++){const d0=k*step, d1=d0+step, rows=[[d0+.012,-.05,1],[d0+.05,0,0],[d1-.05,0,0],[d1-.012,-.05,1]], c=hexC(C[(k*7+((k*k)%3))%C.length]), jit=.94+.12*hash2(k,7,3), b=pos.length/3;
     for(const r of rows){const q=rail(r[0]); for(const a of [[-hw-.03,-.2,1],[-hw,0,0],[hw,0,0],[hw+.03,-.2,1]]){const x=q.x+q.nx*a[0], z=q.z+q.nz*a[0], y=yAt(q.x,q.z)+.07+r[1]+a[1], e=r[2]||a[2]; pos.push(x,y,z); col.push(mixn(c[0]*jit,dk[0],e*.75),mixn(c[1]*jit,dk[1],e*.75),mixn(c[2]*jit,dk[2],e*.75));}}
     for(let r=0;r<3;r++)for(let a=0;a<3;a++){const p=b+r*4+a,q=p+1,s=p+4,t=s+1; idx.push(p,s,q,q,s,t);}}
@@ -1492,12 +1506,12 @@ function capPaint(t,cv,im){const g=cv.getContext('2d'), S=cv.width, c=S/2, col=c
   const hg=g.createRadialGradient(c-S*.17,c-S*.21,S*.02,c-S*.17,c-S*.21,S*.3); hg.addColorStop(0,'rgba(255,255,255,.34)'); hg.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=hg; g.fillRect(0,0,S,S);
   g.strokeStyle='rgba(255,255,255,.62)'; g.lineWidth=S*.026; g.lineCap='round'; g.beginPath(); g.arc(c,c,S*.445,Math.PI*1.08,Math.PI*1.42); g.stroke();}
 function capMat(t){let m=TOY.caps[t]; if(m)return m; const cv=document.createElement('canvas'); cv.width=cv.height=256; const tx=new THREE.CanvasTexture(cv); tx.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy()); tx.keep=true;
-  m=TOY.caps[t]=new THREE.MeshStandardMaterial({map:tx,color:0xb8b8b8,roughness:.24,metalness:0,envMap:toyEnv(),envMapIntensity:.24}); m.keep=true; capPaint(t,cv,null);
+  m=TOY.caps[t]=new THREE.MeshStandardMaterial({map:tx,color:0xffffff,roughness:.24,metalness:0,envMap:toyEnv(),envMapIntensity:.24}); m.keep=true; capPaint(t,cv,null);
   if(SP[t]||t==='S'){const im=new Image(); im.onload=()=>{capPaint(t,cv,im); tx.needsUpdate=true;}; im.src='assets/spaces/'+t+'.webp';}
   return m;}
 function toySpaces(KG){const cg=capGeo(), bz=bezGeo();
   NODES.forEach((n,ni)=>{KG.at(n.x,n.y+.07,n.z); KG.add(bz,null,NODES.spots.includes(ni)?0xa77ff0:0xfff6e6,{ao:0});
-    const d=new THREE.Mesh(cg,capMat(n.t)); d.position.set(n.x,n.y+.07,n.z); d.castShadow=false; d.receiveShadow=true; d.noBake=true; world.add(d); n.disc=d; n.col=0xffffff; n.ic=null;});}
+    const d=new THREE.Mesh(cg,MAPX.secs?capMat(n.t).clone():capMat(n.t)); d.position.set(n.x,n.y+.07,n.z);   /* where spaces change colour (the volcano's lava) each has its own material */ d.castShadow=false; d.receiveShadow=true; d.noBake=true; world.add(d); n.disc=d; n.col=0xffffff; n.ic=null;});}
 /* the start deck beside GO, with its banner */
 function toyStart(K){const P=PLAT, y=GY(P.x,P.z), turn=Math.atan2(-P.tz,P.tx), so=(-P.tz*P.ox+P.tx*P.oz)>=0?1:-1; K.at(P.x,y,P.z,turn);   /* so: which way local z points out to sea */
   for(let i=0;i<9;i++)K.add(rbox(.42,.14,3.0,.045),M4(-1.76+i*.44,.21,0),WOOD[i%3],{ao:0,j:.05});
@@ -1529,14 +1543,15 @@ function toyStream(T){const G=T.chan, n=G.length, AC=[-2.5,-1.7,-.9,0,.9,1.7,2.5
 /* everything a toy board lays over its ground: called by buildWorld in place of the flat path, discs and start platform */
 function toyBoard(m){const T=TOY.T, K=TOY.K, N=NODES;
   N.forEach(n=>{n.y=GY(n.x,n.z);});
-  boardwalk(K,T.loop,1.0,GY,true);
-  if(m.sp.includes('T')){
+  const O=TOY.opt||{}; boardwalk(K,T.loop,1.0,GY,true,O.walk,O.gap);
+  if(!m.sp.includes('T')){const cut=T.cut.filter(p=>Math.hypot(p[0]-T.A.x,p[1]-T.A.z)>1.0&&Math.hypot(p[0]-T.B.x,p[1]-T.B.z)>1.0); boardwalk(K,cut,.92,GY,false,O.cut||O.walk,O.gap);}
+  else{
     const G=T.chan, cut=G.filter(p=>Math.hypot(p[0]-T.A.x,p[1]-T.A.z)>1.0&&Math.hypot(p[0]-T.B.x,p[1]-T.B.z)>1.0&&T.sD(p[0],p[1])>0);
     boardwalk(K,cut,.92,GY,false,[0xc48d55,0xb67f49,0xcf9a60]);
     toyBridge(K,T.A,m.fork,T); toyBridge(K,T.B,N.join,T);
     FXP.flood=grp(0,-.6,0); FXP.flood.add(toyStream(T)); FXP.spans=grp(0,0,0); FXP.spans.visible=false;}
   toyStart(K); toySpaces(TOY.KG);
-  const a=K.mesh(TOYM.matte), b=TOY.KG.mesh(TOYM.gloss,false), c=TOY.KT.mesh(TOYM.thin); world.add(a); world.add(b); if(TOY.KT.tris)world.add(c);
+  const a=K.mesh(TOYM.matte), b=TOY.KG.mesh(TOYM.gloss,false), c=TOY.KT.mesh(TOYM.thin); world.add(a); world.add(b); if(TOY.KT.tris)world.add(c); if(TOY.KE&&TOY.KE.tris)world.add(TOY.KE.mesh(TOYM.glow,false,false));
   TOY.stats={matte:K.tris,gloss:TOY.KG.tris,thin:TOY.KT.tris};}
 /* ---------- props: each is built with its feet at y=0 and placed with K.at ---------- */
 const TP={
@@ -1622,7 +1637,7 @@ function KFlag(KT,x,y,z,turn,w,h,col,down){const g=new THREE.BufferGeometry(), c
 /* ---------- Island: the first toy board ---------- */
 MAPS.island.toy=true;
 THEME.island=function(m){
-  toyMats(); const K=TOY.K=new Kit(), KG=TOY.KG=new Kit(), KT=TOY.KT=new Kit(), P=PLAT, N=NODES, rnd=rng32(4711);
+  const {K,KG,KT}=toyKits(), P=PLAT, N=NODES, rnd=rng32(4711); TOY.opt=null;
   const plan=[], put=(kind,x,z,...a)=>{plan.push([kind,x,z,a]);}, SH={palm:[1.0,.3],hut:[2.1,.36],rock:[1.1,.3],bush:[.95,.3],umbrella:[1.25,.22],castle:[.9,.3],crate:[.6,.3],barrel:[.5,.3],lighthouse:[1.6,.4],surfboard:[.5,.25],ball:[.4,.3],sign:[.4,.25],torch:[.35,.25],towel:[.9,.12]};
   const spots=N.spots.map(i=>{const o=pearlSide(i); return[N[i].x+o[0],N[i].z+o[1],i];});
   /* a palm may not put its crown over a space, or over a place the pearl stall can stand, as the camera sees it */
@@ -1668,6 +1683,113 @@ THEME.island=function(m){
   /* party flags by the village and the start */
   TP.bunting(K,KT,[7.6,GY(7.6,3.3),3.3],[11.2,GY(11.2,1.7)+.2,1.7],2.5,9);
   TP.bunting(K,KT,[P.x-3.0,GY(P.x-3.0,P.z+2.7),P.z+2.7],[P.x-2.0,GY(P.x,P.z)+1.1,P.z+1.4],2.2,4,2); TP.bunting(K,KT,[P.x+2.0,GY(P.x,P.z)+1.1,P.z+1.4],[P.x+4.7,GY(P.x+4.7,P.z+1.7),P.z+1.7],2.2,6,1);
+};
+/* ---------- Carnival: a fairground on a pier ---------- */
+Object.assign(TP,{
+  /* a striped show tent */
+  tent(K,KT,x,z,col,s){const y=GY(x,z), a=hexC(col), w=hexC(0xfdf6e3), st=(px,py,pz)=>(Math.floor((Math.atan2(pz,px)/6.2832+1)*12+.5)%2)?a:w; s=s||1; K.at(x,y,z,0,s);
+    K.add(latheG([[1.9,0],[1.9,1.5],[1.98,1.56]],24),null,st,{ao:.3,aoH:.9,face:true}); K.add(latheG([[2.15,1.5],[2.1,1.62],[1.2,2.6],[.5,3.25],[.06,3.6]],24),null,st,{ao:0,face:true});
+    K.add(torG(2.12,.09,6,24),M4(0,1.54,0,0,1,1,1,Math.PI/2,0),0xffc531,{ao:0}); K.add(rbox(.95,1.3,.14,.07),M4(0,.65,1.86),0x3a2a55,{ao:0}); K.add(rbox(1.15,.12,.18,.05),M4(0,1.36,1.88),0xffc531,{ao:0});
+    K.add(cylG(.05,.05,.9,6),M4(0,3.95,0),0x8f5e33,{ao:0}); K.add(sphG(.1,1),M4(0,4.42,0),0xffc531,{ao:0}); KFlag(KT,x,y+4.36*s,z,0,.6*s,.4*s,col);},
+  /* a prize stall with a striped awning and a row of bulbs */
+  stall(K,KE,x,z,turn,col){const y=GY(x,z); K.at(x,y,z,turn); KE.at(x,y,z,turn);
+    K.add(rbox(2.2,.9,.9,.07,2),M4(0,.45,0),[0xb9814c,0xd9a868],{aoH:.6}); K.add(rbox(2.34,.1,1.04,.04),M4(0,.93,0),0xfdf6e3,{ao:0}); K.add(rbox(2.2,1.25,.08,.04),M4(0,1.55,-.44),col,{ao:0});
+    for(const sx of [-1.08,1.08]){K.add(cylG(.06,.06,2.2,8),M4(sx,1.1,-.4),0xfdf6e3,{ao:.2}); K.add(cylG(.05,.05,1.25,8),M4(sx,1.5,.44),0xfdf6e3,{ao:0});}
+    for(let i=0;i<8;i++)K.add(rbox(.325,.09,1.5,.035),M4(-1.14+i*.325,2.22,.06,0,1,1,1,.3,0),i%2?col:0xfdf6e3,{ao:0});
+    [[-.7,0xff5fa8],[0,0xffc531],[.7,0x35c98a]].forEach(q=>{K.add(sphG(.17,1),M4(q[0],1.14,.05),q[1],{ao:0}); K.add(sphG(.11,1),M4(q[0],1.37,.05),q[1],{ao:0}); for(const e of [-.09,.09])K.add(sphG(.045,0),M4(q[0]+e,1.47,.05),q[1],{ao:0});});
+    for(let i=0;i<7;i++)KE.add(sphG(.06,0),M4(-1.14+i*.38,1.97,.8),[0xfff3b0,0xff9fd0,0x9fe1ff][i%3],{ao:0,ph:i*1.7});},
+  balloons(K,x,z,n,seed){const y=GY(x,z), cs=[0xff4d4d,0xffc531,0x2f8fff,0x35c98a,0xff5fa8,0xc9a6ff], sd=(seed||0)|0; K.at(x,y,z,seed||0); K.add(rbox(.34,.3,.34,.07),M4(0,.15,0),0x8f5e33,{aoH:.3});
+    for(let i=0;i<n;i++){const a=i*2.4+1, r=.22+.3*((i*7)%3)/2, h=2.3+((i*5)%4)*.3, bx=Math.cos(a)*r, bz=Math.sin(a)*r, c=cs[(i+sd)%6];
+      K.add(tubeG([[0,.3,0],[bx*.5,h*.55,bz*.5],[bx,h-.3,bz]],.012,3,false),null,0xfdf6e3,{ao:0,sway:(px,py)=>clamp01(py/2.6)*.5,ph:i});
+      K.add(sphG(.3,2),M4(bx,h,bz,0,1,1.18,1),(px,py,pz,nx,ny)=>{const k=1+.25*Math.max(0,ny); return[c>>16&255,c>>8&255,c&255].map(v=>Math.min(1,v/255*k));},{ao:0,sway:.5,ph:i}); K.add(sphG(.05,0),M4(bx,h-.37,bz),c,{ao:0,sway:.5,ph:i});}},
+  lamp(K,KE,x,z,h){const y=GY(x,z); h=h||3; K.at(x,y,z,0); K.add(latheG([[.17,0],[.1,.12],[.06,.3],[.05,h-.1],[.12,h-.04],[.12,h+.04]],8),null,[0x2b3350,0x4a5680]); KE.at(x,y,z,0); KE.add(sphG(.2,1),M4(0,h+.22,0),0xfff3c4,{ao:0,ph:x+z});},
+  /* a line of coloured bulbs strung between two points */
+  bulbs(K,KE,a,b,n){const pts=[], cs=[0xfff3b0,0xff9fd0,0x9fe1ff,0xb6f5d6]; for(let i=0;i<=8;i++){const t=i/8; pts.push([mixn(a[0],b[0],t),mixn(a[1],b[1],t)-.5*Math.sin(t*Math.PI),mixn(a[2],b[2],t)]);} K.at(0,0,0,0); K.add(tubeG(pts,.014,3,false),null,0x2b3350,{ao:0}); KE.at(0,0,0,0);
+    for(let i=0;i<n;i++){const t=(i+.5)/n; KE.add(sphG(.075,0),M4(mixn(a[0],b[0],t),mixn(a[1],b[1],t)-.5*Math.sin(t*Math.PI)-.07,mixn(a[2],b[2],t)),cs[i%4],{ao:0,ph:i*2.1+a[0]});}},
+  /* the high striker: hit the pad, ring the bell */
+  striker(K,KE,x,z,turn){const y=GY(x,z); K.at(x,y,z,turn); K.add(rbox(1,.3,1,.08,2),M4(0,.15,0),0xff4d4d,{aoH:.3}); for(let i=0;i<7;i++)K.add(rbox(.5,.5,.16,.05),M4(0,.55+i*.5,-.3),i%2?0xffc531:0xfdf6e3,{ao:i?0:.2});
+    K.add(sphG(.3,1),M4(0,4.2,-.3,0,1,.8,1),0xffc531,{ao:0}); K.add(rbox(.5,.16,.5,.06),M4(0,.38,.2),0x2f8fff,{ao:0}); K.add(cylG(.04,.04,1.1,6),M4(.75,.6,.3,0,1,1,1,0,-.5),0x8f5e33,{ao:.2}); K.add(rbox(.34,.26,.26,.07),M4(1.02,1.07,.3,0,1,1,1,0,-.5),0x7c8ea3,{ao:0});
+    KE.at(x,y,z,turn); KE.add(sphG(.08,0),M4(0,4.56,-.3),0xfff3b0,{ao:0});},
+  /* a rope rail on posts along a line of points */
+  rail(K,pts,skip){K.at(0,0,0,0); const post=latheG([[.09,-.1],[.08,.62],[.12,.66],[.12,.74],[.03,.82]],8); for(let i=0;i<pts.length;i++){const a=pts[i], b=pts[(i+1)%pts.length]; if(skip&&skip(a))continue; K.add(post,M4(a[0],GY(a[0],a[1]),a[1]),[0x8f5e33,0xcf9f63],{ao:.25,aoH:.3});
+      if(skip&&skip(b))continue; const q=[]; for(let k=0;k<=4;k++){const t=k/4; q.push([mixn(a[0],b[0],t),GY(a[0],a[1])+.58-.14*Math.sin(t*Math.PI),mixn(a[1],b[1],t)]);} K.add(tubeG(q,.03,4,false),null,0xf2e3c2,{ao:0});}},
+  /* a round painted mat with a star, to stand a ride on */
+  rug(K,x,z,r,c1,c2){K.at(x,GY(x,z)+.012,z,x); K.add(latheG([[r,0],[r,.03],[r-.06,.05],[.02,.05]],40),null,(px,py,pz)=>{const d=Math.hypot(px,pz)/r; return hexC(d>.86?c2:d>.62?c1:d>.56?c2:c1);},{ao:0,face:true}); const st=[]; for(let i=0;i<10;i++){const a=i*Math.PI/5, q=(i%2?.2:.46)*r; st.push([Math.cos(a)*q,Math.sin(a)*q]);} K.add(extG(st,.02,.012),M4(0,.062,0,0,1,1,1,-Math.PI/2,0),c2,{ao:0});},
+  /* a swing ride: chairs fly out from a turning top */
+  swing(K,x,z){const y=GY(x,z), g=new THREE.Group(), R2=new Kit(), w=hexC(0xfdf6e3), b=hexC(0x2f8fff), st=(px,py,pz)=>(Math.floor((Math.atan2(pz,px)/6.2832+1)*10+.5)%2)?b:w; g.position.set(x,y,z); g.noBake=true; world.add(g); K.at(x,y,z,0); R2.at(0,0,0,0);
+    K.add(latheG([[1.0,0],[.95,.25],[.4,.4],[.3,3.4],[.5,3.5]],16),null,(px,py,pz)=>py>.4&&Math.floor(py/.4)%2?[1,.3,.3]:w,{ao:.3,aoH:.5,face:true});
+    R2.add(latheG([[2.3,3.45],[2.25,3.6],[1.2,4.15],[.3,4.5],[.05,4.62]],20),null,st,{ao:0,face:true}); R2.add(torG(2.26,.07,6,24),M4(0,3.5,0,0,1,1,1,Math.PI/2,0),0xffc531,{ao:0}); R2.add(sphG(.13,1),M4(0,4.7,0),0xffc531,{ao:0});
+    for(let i=0;i<8;i++){const a=i/8*6.283, c=[0xff4d4d,0xffc531,0x35c98a,0xff5fa8][i%4], x0=Math.cos(a)*2.05, z0=Math.sin(a)*2.05, x1=Math.cos(a)*3.0, z1=Math.sin(a)*3.0; R2.add(tubeG([[x0,3.45,z0],[x1,1.75,z1]],.014,3,false),null,0xdfe6f2,{ao:0}); R2.add(rbox(.34,.1,.34,.04),M4(x1,1.68,z1,-a),c,{ao:0}); R2.add(rbox(.34,.34,.08,.04),M4(x1+Math.cos(a)*.15,1.86,z1+Math.sin(a)*.15,-a+Math.PI/2),c,{ao:0});}
+    g.add(R2.mesh(TOYM.matte)); spin.push({o:g,ax:'y',v:.9});},
+  /* a helter-skelter: a striped tower with a slide wound round it */
+  helter(K,KT,x,z,s){const y=GY(x,z), red=hexC(0xff4d4d), w=hexC(0xfdf6e3); s=s||1; K.at(x,y,z,0,s); K.add(latheG([[1.5,0],[1.45,.3],[1.3,.4],[.85,5.2],[1.15,5.3],[1.15,5.5]],22),null,(px,py,pz)=>(Math.floor((Math.atan2(pz,px)/6.2832+1)*6+py*.55)%2)?red:w,{ao:.3,aoH:1,face:true});
+    const sp=[]; for(let i=0;i<=44;i++){const t=i/44, a=t*Math.PI*5+.6, r=1.72-t*.72; sp.push([Math.cos(a)*r,.35+t*4.3,Math.sin(a)*r]);} K.add(tubeG(sp,.2,6,false),null,[0xf2b21e,0xffd45e],{ao:.2,aoH:1});
+    K.add(latheG([[1.25,5.5],[1.2,5.62],[.6,6.5],[.05,7.0]],18),null,[0x1f6fd6,0x4aa3ff],{ao:0}); K.add(rbox(.6,.9,.1,.05),M4(0,.75,1.42),0x3a2a55,{ao:0}); K.add(cylG(.04,.04,.7,5),M4(0,7.3,0),0x8f5e33,{ao:0}); KFlag(KT,x,y+7.6*s,z,0,.55*s,.36*s,0xffc531);},
+  /* a snack cart under a little striped roof */
+  cart(K,KE,x,z,turn,col){const y=GY(x,z); K.at(x,y,z,turn); K.add(rbox(1.3,.7,.8,.08,2),M4(0,.75,0),col,{ao:.2,aoH:.9}); K.add(rbox(1.36,.08,.86,.03),M4(0,1.12,0),0xfdf6e3,{ao:0}); for(const sx of [-.45,.45]){K.add(torG(.3,.07,6,14),M4(sx,.36,.44),0x2b3350,{ao:0}); K.add(cylG(.1,.1,.08,8),M4(sx,.36,.44,0,1,1,1,Math.PI/2,0),0xffc531,{ao:0});}
+    for(const sx of [-.58,.58])for(const sz of [-.33,.33])K.add(cylG(.025,.025,1.0,5),M4(sx,1.62,sz),0xfdf6e3,{ao:0}); for(let i=0;i<6;i++)K.add(rbox(.25,.07,1.0,.03),M4(-.625+i*.25,2.16,0),i%2?col:0xfdf6e3,{ao:0});
+    for(let i=0;i<7;i++)K.add(sphG(.13,0),M4(-.3+(i%3)*.3,1.24+Math.floor(i/3)*.14,(i%2)*.16-.08),0xfff3c4,{ao:0}); K.add(cylG(.03,.03,.5,5),M4(-.8,.95,0,0,1,1,1,0,.9),0x8f5e33,{ao:0});},
+  /* a giant plush bear, the top prize */
+  teddy(K,x,z,turn,s,col){const c=hexC(col||0xd9945a), l=[Math.min(1,c[0]*1.25),Math.min(1,c[1]*1.25),Math.min(1,c[2]*1.25)]; K.at(x,GY(x,z),z,turn,s||1); K.add(sphG(.62,2),M4(0,.62,0,0,1,1.05,.9),col||0xd9945a,{ao:.3,aoH:.5}); K.add(sphG(.36,1),M4(0,.56,.42,0,1,1,.5),()=>l,{ao:0}); K.add(sphG(.46,2),M4(0,1.52,0),col||0xd9945a,{ao:0});
+    for(const sx of [-.34,.34]){K.add(sphG(.17,1),M4(sx,1.9,0),col||0xd9945a,{ao:0}); K.add(sphG(.2,1),M4(sx*1.9,.85,.12,0,1,1.5,1,0,sx*1.1),col||0xd9945a,{ao:0}); K.add(sphG(.24,1),M4(sx*1.15,.2,.42,0,1,1,1.3),col||0xd9945a,{ao:.3,aoH:.3}); K.add(sphG(.055,0),M4(sx*.42,1.6,.4),0x17304d,{ao:0});}
+    K.add(sphG(.2,1),M4(0,1.42,.36,0,1,.8,.8),()=>l,{ao:0}); K.add(sphG(.06,0),M4(0,1.47,.52),0x17304d,{ao:0}); for(const sx of [-.17,.17])K.add(sphG(.13,1),M4(sx,1.1,.4,0,1.3,.9,.6),0xff4d4d,{ao:0}); K.add(sphG(.07,0),M4(0,1.1,.46),0xff4d4d,{ao:0});},
+  /* a tub of flowers */
+  planter(K,x,z,seed){const y=GY(x,z); K.at(x,y,z,seed); K.add(latheG([[.42,0],[.5,.36],[.46,.42],[.36,.42]],12),null,[0xe9dfc8,0xfdf6e3],{aoH:.3}); K.add(sphG(.4,1),M4(0,.5,0,0,1,.6,1),[0x2f8f45,0x6cc85a],{ao:0,sway:.08}); [0xff5fa8,0xffc531,0xffffff,0xc9a6ff,0xff4d4d].forEach((c,i)=>{const a=i*1.26+seed; K.add(sphG(.1,1),M4(Math.cos(a)*.24,.74+(i%2)*.06,Math.sin(a)*.24,0,1,.7,1),c,{ao:0,sway:.12}); K.add(sphG(.04,0),M4(Math.cos(a)*.24,.8+(i%2)*.06,Math.sin(a)*.24),0xffe27a,{ao:0,sway:.12});});},
+  bench(K,x,z,turn){K.at(x,GY(x,z),z,turn); for(let i=0;i<3;i++)K.add(rbox(1.5,.06,.16,.03),M4(0,.48,-.18+i*.18),WOOD[i],{ao:0}); for(let i=0;i<2;i++)K.add(rbox(1.5,.14,.06,.03),M4(0,.72+i*.2,-.3),WOOD[i+1],{ao:0}); for(const sx of [-.62,.62]){K.add(rbox(.08,.48,.5,.03),M4(sx,.24,0),0x2b3350,{aoH:.3}); K.add(rbox(.08,.6,.08,.03),M4(sx,.7,-.3),0x2b3350,{ao:0});}},
+  /* a merry-go-round that turns */
+  carousel(K,x,z){const y=GY(x,z), g=new THREE.Group(), R2=new Kit(), w=hexC(0xfdf6e3), p=hexC(0xff5fa8), st=(px,py,pz)=>(Math.floor((Math.atan2(pz,px)/6.2832+1)*10+.5)%2)?p:w; g.position.set(x,y,z); g.noBake=true; world.add(g);
+    K.at(x,y,z,0); K.add(latheG([[2.3,0],[2.3,.2],[2.15,.3],[.3,.3]],28),null,[0x2f8fff,0x6fb6ff],{ao:.3,aoH:.3}); R2.at(0,0,0,0);
+    R2.add(latheG([[.26,.3],[.22,2.6],[.4,2.7]],12),null,(px,py,pz)=>Math.floor(py/.3)%2?[1,.77,.19]:w,{ao:0,face:true}); R2.add(latheG([[2.5,2.56],[2.45,2.7],[1.4,3.3],[.5,3.62],[.05,3.8]],20),null,st,{ao:0,face:true}); R2.add(torG(2.46,.08,6,24),M4(0,2.6,0,0,1,1,1,Math.PI/2,0),0xffc531,{ao:0}); R2.add(sphG(.14,1),M4(0,3.88,0),0xffc531,{ao:0});
+    for(let i=0;i<6;i++){const a=i/6*6.283, hx=Math.cos(a)*1.6, hz=Math.sin(a)*1.6, up=.75+(i%2)*.3, c=[0xfdf6e3,0xffc531,0xc9a6ff][i%3], ry=-a+Math.PI/2+Math.PI/2;
+      R2.add(cylG(.03,.03,2.4,5),M4(hx,1.5,hz),0xffc531,{ao:0}); R2.add(rbox(.62,.3,.24,.1,2),M4(hx,up,hz,ry),c,{ao:0}); R2.add(rbox(.2,.42,.2,.08,2),M4(hx+Math.cos(ry)*.3,up+.28,hz-Math.sin(ry)*.3,ry,1,1,1,0,-.5),c,{ao:0});
+      R2.add(rbox(.26,.08,.26,.03),M4(hx,up+.18,hz,ry),[0xff4d4d,0x2f8fff,0x35c98a][i%3],{ao:0}); for(const lx of [-.2,.2])R2.add(cylG(.035,.03,.32,5),M4(hx+Math.cos(ry)*lx,up-.28,hz-Math.sin(ry)*lx),c,{ao:0});}
+    g.add(R2.mesh(TOYM.matte)); spin.push({o:g,ax:'y',v:.45});},
+  /* the big wheel. Its size and place are what the ride is drawn from, so they match the old wheel exactly */
+  ferris(x,z,sc){const y=GY(x,z), fw=new THREE.Group(), S0=new Kit(), W=new Kit(), E=new Kit(); fw.position.set(x,y,z); fw.scale.setScalar(sc); fw.noBake=true; world.add(fw); S0.at(0,0,0,0); W.at(0,0,0,0); E.at(0,0,0,0);
+    for(const sx of [-1,1])for(const sz of [-.5,.5])S0.add(tubeG([[sx*1.3,0,sz],[sx*.06,2.7,sz]],.075,6,false),null,[0xdfe6f2,0xffffff],{ao:.25,aoH:.6}); S0.add(rbox(3.2,.18,1.5,.07,2),M4(0,.09,0),0x2f8fff,{ao:0}); S0.add(cylG(.11,.11,1.3,10),M4(0,2.7,0,0,1,1,1,Math.PI/2,0),0xffc531,{ao:0}); fw.add(S0.mesh(TOYM.matte));
+    const wheel=new THREE.Group(); wheel.position.y=2.7; fw.add(wheel); const se={o:wheel,ax:'z',v:.25}; spin.push(se); FXP.wheel={x,z,y:2.7*sc,s:sc,sp:se};
+    for(const sz of [-.32,.32]){W.add(torG(2,.06,6,40),M4(0,0,sz),0xff5fa8,{ao:0}); W.add(torG(1.15,.04,5,28),M4(0,0,sz),0xfdf6e3,{ao:0}); for(let i=0;i<8;i++){const a=i*Math.PI/4+Math.PI/8; W.add(cylG(.028,.028,2,5),M4(Math.cos(a),Math.sin(a),sz,0,1,1,1,0,a-Math.PI/2),0xfdf6e3,{ao:0});} W.add(sphG(.26,1),M4(0,0,sz*1.3,0,1,1,.6),0xffc531,{ao:0});}
+    for(let i=0;i<8;i++){const a=i*Math.PI/4; W.add(cylG(.025,.025,.64,5),M4(Math.cos(a)*2,Math.sin(a)*2,0,0,1,1,1,Math.PI/2,0),0xfdf6e3,{ao:0});}
+    for(let i=0;i<24;i++){const a=i/24*6.283; E.add(sphG(.055,0),M4(Math.cos(a)*2,Math.sin(a)*2,.4),[0xfff3b0,0xff9fd0,0x9fe1ff][i%3],{ao:0,ph:i*1.3});}
+    wheel.add(W.mesh(TOYM.matte)); wheel.add(E.mesh(TOYM.glow,false,false));
+    const cc=[0xffc531,0x2f8fff,0xff4d4d,0x35c98a]; for(let i=0;i<8;i++){const a=i*Math.PI/4, c=new THREE.Group(), C=new Kit(); c.position.set(Math.cos(a)*2,Math.sin(a)*2,0); wheel.add(c); upright.push(c); C.at(0,0,0,0);
+      C.add(cylG(.02,.02,.3,4),M4(0,-.15,0),0xfdf6e3,{ao:0}); C.add(latheG([[.33,-.34],[.3,-.3],[.05,-.2]],10),null,0xfdf6e3,{ao:0}); C.add(rbox(.5,.3,.5,.09,2),M4(0,-.72,0),cc[i%4],{ao:0}); for(const sx of [-.2,.2])for(const sz of [-.2,.2])C.add(cylG(.018,.018,.3,4),M4(sx,-.46,sz),0xfdf6e3,{ao:0}); c.add(C.mesh(TOYM.matte));}},
+});
+MAPS.carnival.toy={light:{sun:0xffe6c2,sunI:.78,sky:0xece4ff,ground:0xe6b890,skyI:.66,from:[-16,24,13]}};
+THEME.carnival=function(m){
+  const {K,KG,KT,KE}=toyKits(), P=PLAT, N=NODES, rnd=rng32(2323); TOY.opt={walk:[0xe0566b,0xd24a60,0xea6a7c],gap:0x9c2f45,cut:[0xffc531,0xf2b21e,0xffd45e]};
+  const T=TOY.T=toyGround(m,{tide:false}), EDGE=4.3; T.walk=()=>0; T.land=(x,z)=>{const d=T.sD(x,z)+EDGE; return d>0?.3:Math.max(-2.1,SEA-.12+d*.5);};
+  /* the pier: one slab in the shape of the path, with round decks added where the tents and the start stand */
+  const out=loopOutline(EDGE), sh=new THREE.Shape(out.map(p=>new THREE.Vector2(p[0],p[1]))), dg=new THREE.ExtrudeGeometry(sh,{depth:.7,bevelEnabled:true,bevelThickness:.1,bevelSize:.12,bevelSegments:2,curveSegments:1}); dg.rotateX(Math.PI/2); dg.translate(0,-.1,0);
+  const dm=deckMat(0xc98f55,0xe3ab6c,.62,3.4), deck=new THREE.Mesh(dg,dm); deck.receiveShadow=true; deck.castShadow=false; deck.noBake=true; world.add(deck);
+  const pad=(x,z,r)=>{const q=new THREE.Mesh(new THREE.CylinderGeometry(r,r-.12,.8,36),dm); q.position.set(x,-.4,z); q.receiveShadow=true; q.castShadow=false; q.noBake=true; world.add(q); USED.push([x,z,r*.6]);};
+  const tents=[[-m.a*1.08,-m.b*1.12,0xff4d4d],[m.a*1.02,-m.b*1.2,0x2f8fff],[.5,-m.b*1.32,0x35c98a]]; tents.forEach(q=>pad(q[0],q[1],3.6)); pad(P.x,P.z+.3,3.4); pad(-m.a*1.22,m.b*.25,2.4); pad(m.a*1.2,m.b*.35,2.4);
+  world.add(seaMesh(T));
+  /* piles under it */
+  K.at(0,0,0,0); loopOutline(EDGE-.8).forEach((p,i)=>{if(i%7===0)K.add(cylG(.2,.24,2.6,8),M4(p[0],-1.5,p[1]),[0x6e4526,0x8f5e33],{ao:0});});
+  /* the rides */
+  let q=spot([[-m.a*.42,-m.b*.3],[-m.a*.45,m.b*.25],[m.a*.4,-m.b*.35],[0,-m.b*.45]],3.7); if(q){TP.rug(K,q[0],q[1],3.9,0x7b4fc9,0xffc531); TP.ferris(q[0],q[1],1.9);}
+  q=spot([[m.a*.42,m.b*.3],[m.a*.4,-m.b*.3],[-m.a*.4,m.b*.35],[0,m.b*.4]],2.7); if(q){TP.rug(K,q[0],q[1],2.9,0x18b7c9,0xfdf6e3); TP.carousel(K,q[0],q[1]);}
+  q=spot([[-m.a*.5,m.b*.3],[m.a*.45,-m.b*.3],[-m.a*.35,-m.b*.45],[m.a*.1,m.b*.45]],2.9); if(q){TP.rug(K,q[0],q[1],3.0,0xff5fa8,0xfdf6e3); TP.swing(K,q[0],q[1]);}
+  pad(m.a*.55,-m.b*1.28,2.6); TP.helter(K,KT,m.a*.55,-m.b*1.28,1); pad(-m.a*.5,-m.b*1.3,2.2); TP.teddy(K,-m.a*.5,-m.b*1.3,.2,1.7); TP.crate(K,-m.a*.5+1.7,-m.b*1.3+.6,.4,1.1); TP.barrel(K,-m.a*.5-1.6,-m.b*1.3+.8,1.1);
+  tents.forEach(t=>TP.tent(K,KT,t[0],t[1],t[2],1.3));
+  [[0xff5fa8,.3],[0x2f8fff,-.4],[0x35c98a,.6],[0xffc531,-.2]].forEach((c,i)=>{const h=spot([[m.a*.1,m.b*.12],[-m.a*.15,-m.b*.1],[m.a*.2,-m.b*.5],[-m.a*.2,m.b*.5],[-m.a*.62,-m.b*.55],[m.a*.6,m.b*.62]].slice(i),1.7); if(h&&!TP.hides(h[0],h[1],2.5,1.3))TP.stall(K,KE,h[0],h[1],c[1],c[0]);});
+  q=spot([[m.a*.72,-m.b*.62],[-m.a*.7,m.b*.6],[m.a*.15,m.b*.55]],1.2); if(q&&!TP.hides(q[0],q[1],4.4,.7))TP.striker(K,KE,q[0],q[1],.3);
+  /* smaller things wherever there is room: snack carts, benches, a bear */
+  [0xff4d4d,0x35c98a,0x2f8fff].forEach((c,i)=>{const h=spot([],1.3); if(h&&!TP.hides(h[0],h[1],2.3,1))TP.cart(K,KE,h[0],h[1],i*1.1-.6,c);});
+  for(let i=0;i<4;i++){const h=spot([],1.1); if(h&&!TP.hides(h[0],h[1],1,.9))TP.bench(K,h[0],h[1],i*1.57+.3);}
+  {const h=spot([],1.2); if(h&&!TP.hides(h[0],h[1],2.2,1))TP.teddy(K,h[0],h[1],.4,1.05,0xff8fc8);}
+  TP.balloons(K,-m.a*1.22,m.b*.25,7,1); TP.balloons(K,m.a*1.2,m.b*.35,7,3); TP.balloons(K,tents[0][0]+3,tents[0][1]+2.2,5,2); TP.balloons(K,tents[1][0]-3,tents[1][1]+2.4,5,4);
+  /* lamps round the edge, strung with bulbs along the back and sides, and a rope rail */
+  const ring=loopOutline(EDGE-.55), step=Math.max(1,Math.round(ring.length/22)), lamps=[]; ring.forEach((p,i)=>{if(i%step===0&&TP.free(p[0],p[1],.3))lamps.push(p);});
+  lamps.forEach((p,i)=>{TP.lamp(K,KE,p[0],p[1],3); const b=lamps[(i+1)%lamps.length]; if(p[1]<m.b*.2&&b[1]<m.b*.2&&Math.hypot(p[0]-b[0],p[1]-b[1])<11)TP.bulbs(K,KE,[p[0],2.95,p[1]],[b[0],2.95,b[1]],9);});
+  {const rr=loopOutline(EDGE-.25), st=Math.max(1,Math.round(rr.length/60)); TP.rail(K,rr.filter((p,i)=>i%st===0),p=>Math.hypot(p[0]-P.x,p[1]-P.z)<3.6||tents.some(t=>Math.hypot(p[0]-t[0],p[1]-t[1])<3.9));}
+  /* along the seaward edge, low things only, so nothing stands between the camera and a space */
+  {const fr=loopOutline(EDGE-1.5), st2=Math.max(1,Math.round(fr.length/34)); let k=0; fr.forEach((p,i)=>{if(i%st2||!TP.free(p[0],p[1],.5)||tents.some(t=>Math.hypot(p[0]-t[0],p[1]-t[1])<4.4))return; k++; if(k%3===0){const o=Math.atan2(-p[0],-p[1]); TP.bench(K,p[0],p[1],o);} else TP.planter(K,p[0],p[1],k*1.3); USED.push([p[0],p[1],.6]);});}
+  /* out on the water */
+  TP.boat(-m.a*1.5,m.b*.9,-.5,0xff4d4d,0xff4d4d); TP.boat(m.a*1.55,-m.b*.2,2.4,0x2f8fff,0x2f8fff); TP.boat(m.a*.3,m.b*1.75,.3,0xffc531,0xffc531); TP.buoy(-m.a*1.4,-m.b*.4,0xff4d4d); TP.buoy(m.a*1.45,m.b*1.0,0xffc531); TP.buoy(-m.a*.4,m.b*1.6,0xff5fa8);
+  TP.gull(-m.a*1.6,-m.b*1.2,7,7,.5,0); TP.gull(m.a*1.6,m.b*1.1,6,6.5,-.45,2);
+  PLAT&&TP.bulbs(K,KE,[P.x-2.0,GY(P.x,P.z)+3.45,P.z+1.4],[P.x+2.0,GY(P.x,P.z)+3.45,P.z+1.4],8);
 };
 /* ---------- the pearl stall: a big pink clam holding a glowing lavender pearl ----------
    One landmark on every board. It breathes open and shut, opens wide when the camera visits it or a pearl is bought, and when it
@@ -1834,7 +1956,7 @@ function introPreload(id){const c=INTRO.boards[id], el=$('#introVid'); if(!el||!
 function buildWorld(id){
   const m=MAPS[id]||MAPS.island; curMap=id; MAPX=m;
   if(world){scene.remove(world); freeScene(world);}
-  world=new THREE.Group(); scene.add(world); defParent=world; spin=[]; upright=[]; clouds=[]; boats=[]; FXP={tong:[],boost:0,erupt:0}; shownBurn=-2; COAST=null; USED=[]; MBATCH={}; GY=()=>0; TOY.dyn=[]; if(TOY.sea&&TOY.sea.sea)TOY.sea.sea.dispose(); TOY.sea=null; TOY.T=null; toyRig(!!m.toy);
+  world=new THREE.Group(); scene.add(world); defParent=world; spin=[]; upright=[]; clouds=[]; boats=[]; FXP={tong:[],boost:0,erupt:0}; shownBurn=-2; COAST=null; USED=[]; MBATCH={}; GY=()=>0; TOY.dyn=[]; if(TOY.sea&&TOY.sea.sea)TOY.sea.sea.dispose(); TOY.sea=null; TOY.T=null; toyRig(m.toy);
   NODES=buildGraph(m); NODES.forEach(n=>{n.y=0;}); introPreload(id); $('#gl').style.background=`url(assets/sky/${id in THEME?id:'island'}.webp) center top/cover no-repeat, linear-gradient(${m.sky[0]},${m.sky[1]} 60%)`;   // painted sky, with the plain gradient behind it until it loads
   if(!ICONS){const mk=d=>{const tx=tex(d), mt=new THREE.MeshBasicMaterial({map:tx,transparent:true}); tx.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy()); mt.keep=true; return mt;};
     ICONS={S:mk((g,s)=>label(g,s,'GO','#17304d',26)),
@@ -2632,7 +2754,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=74; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=75; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';

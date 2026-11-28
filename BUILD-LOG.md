@@ -587,6 +587,25 @@ Loading
 
 Tested: the full, quick and skip lengths on Island on a desktop and a phone screen; the rule and pearl shots on Carnival and Volcano; an online game with a host who skips and a joiner on full, and the other way round (both waited, both saw the same pearl space); the film path with a test film and with a missing film; Board overview; a full solo game. Not tested: real phones.
 
+## Build 75
+Carnival rebuilt to the Island standard, and the kit made ready for boards that are not islands.
+
+Kit
+- A board can now stand on a deck: the planks are drawn by the floor's own material, so one slab is enough.
+- Path styles: any colours for the planks of the main path and the short cut. The short cut is laid on boards without a tide.
+- A fourth kind of piece: things that give light (bulbs, later lava and neon). They are unlit and twinkle out of step.
+- Each board can tint its own sun and fill light.
+- Where spaces change colour during play (the volcano's lava) each space has its own material, so the old rule code still works.
+
+Carnival
+- A fairground on a wooden pier in the shape of the path, standing on piles in the sea, with a rope rail and lamps strung with coloured bulbs.
+- The big wheel is larger and keeps the ride exactly as it was (the ride is drawn from the wheel's own size and place). Bulbs round its rim, gondolas that stay upright.
+- A carousel and a swing ride that turn, a helter-skelter, three striped show tents, prize stalls with bulbs and prizes, snack carts, a giant bear, benches, flower tubs, balloon bunches, boats, buoys and gulls.
+- A red plank path with a yellow short cut. Rides stand on painted star mats that stay clear of the path.
+- Golden evening light.
+
+Tested: Carnival built and viewed on a desktop screen; game view; a full three-round solo game with no errors. Not tested: real phones.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
