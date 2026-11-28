@@ -1427,6 +1427,7 @@ function toyGround(m,opt){
       const fg=new THREE.BufferGeometry(); fg.setAttribute('position',new THREE.Float32BufferAttribute(fp,3)); fg.setAttribute('normal',new THREE.Float32BufferAttribute(fn,3)); fg.setAttribute('color',new THREE.Float32BufferAttribute(fc,3)); fg.setAttribute('aG',new THREE.Float32BufferAttribute(fa,2)); fg.setIndex(fi);
       const fm=new THREE.Mesh(fg,landMat(opt.pal)); fm.receiveShadow=false; fm.castShadow=false; fm.noBake=true; fm.frustumCulled=false; world.add(fm);}
     if(!opt.inland||POND.length)world.add(seaMesh(T)); return T;};
+  shopSpots(T);   /* the shops claim their ground before any scenery is placed */
   return T;}
 /* the ground's own material: sand, grass and rock are chosen for every pixel from how grassy, how steep and how high it is, so the
    edge of the grass is a clean line however coarse the mesh. Its `color` carries shade (r) and a slow tone (g), not a colour */
@@ -1540,7 +1541,7 @@ function capPaint(t,cv,im){const g=cv.getContext('2d'), S=cv.width, c=S/2, col=c
   else if(t==='-'){g.globalAlpha=.85; g.lineWidth=S*.075; g.beginPath(); g.moveTo(c-S*.15,c); g.lineTo(c+S*.15,c); g.stroke(); g.globalAlpha=1;}
   else if(t==='?'){g.font=`800 ${S*.5}px ${FONT}`; g.fillText('?',c,c+S*.03);}
   else if(t==='I'){g.beginPath(); for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,r=S*(i%2?.11:.25); g.lineTo(c+Math.cos(a)*r,c+S*.01+Math.sin(a)*r);} g.closePath(); g.fill();}
-  else if(t==='H'){g.beginPath(); g.roundRect(c-S*.17,c-S*.06,S*.34,S*.27,S*.04); g.fill(); g.lineWidth=S*.045; g.beginPath(); g.arc(c,c-S*.06,S*.1,Math.PI,0); g.stroke();}
+  else if(t==='H'){/* a little shop front: striped awning over a door */ g.fillRect(c-S*.19,c-S*.02,S*.38,S*.24); g.fillStyle=css; g.fillRect(c-S*.06,c+S*.06,S*.12,S*.16); for(let i=0;i<4;i++){g.fillStyle=i%2?'#ffd75e':'#fff'; g.beginPath(); g.moveTo(c-S*.23+i*S*.115,c-S*.17); g.lineTo(c-S*.23+(i+1)*S*.115,c-S*.17); g.lineTo(c-S*.23+(i+1)*S*.115,c-S*.03); g.arc(c-S*.23+(i+.5)*S*.115,c-S*.03,S*.0575,0,Math.PI); g.closePath(); g.fill();} g.fillStyle=ink;}
   else{g.font=`800 ${S*.3}px ${FONT}`; g.fillText({S:'GO',pvp:'VS',risk:'$',evt:'!',mov:'»'}[t]||{pvp:'VS',risk:'$',evt:'!',mov:'»'}[CAT[t]]||'',c,c+S*.02);}
   /* a painted shine, top left, like the gloss on a toy counter */
   const hg=g.createRadialGradient(c-S*.17,c-S*.21,S*.02,c-S*.17,c-S*.21,S*.3); hg.addColorStop(0,'rgba(255,255,255,.34)'); hg.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=hg; g.fillRect(0,0,S,S);
@@ -1590,7 +1591,7 @@ function toyBoard(m){const T=TOY.T, K=TOY.K, N=NODES;
     boardwalk(K,cut,.92,GY,false,[0xc48d55,0xb67f49,0xcf9a60]);
     toyBridge(K,T.A,m.fork,T); toyBridge(K,T.B,N.join,T);
     FXP.flood=grp(0,-.6,0); FXP.flood.add(toyStream(T)); FXP.spans=grp(0,0,0); FXP.spans.visible=false;}
-  toyStart(K); toySpaces(TOY.KG);
+  toyStart(K); toySpaces(TOY.KG); toyShops(m);
   const a=K.mesh(TOYM.matte), b=TOY.KG.mesh(TOYM.gloss,false), c=TOY.KT.mesh(TOYM.thin); world.add(a); world.add(b); if(TOY.KT.tris)world.add(c); if(TOY.KE&&TOY.KE.tris)world.add(TOY.KE.mesh(TOYM.glow,false,false));
   TOY.stats={matte:K.tris,gloss:TOY.KG.tris,thin:TOY.KT.tris};}
 /* ---------- props: each is built with its feet at y=0 and placed with K.at ---------- */
@@ -2298,7 +2299,7 @@ function toyFrame(dt){TOY.U.uT.value=T; if(PT.note&&PT.note.toy)PT.note.rotation
   if(dice&&dice.visible&&V&&V.ui){const f=V.ui.dface||0; if(f&&!dice.shown){dice.pop=.42;} dice.shown=f; if(dice.pop>0){dice.pop-=dt; const e=1-Math.max(0,dice.pop)/.42; dice.scale.setScalar(1+.38*Math.sin(e*Math.PI)*(1-e)); dice.position.y+=.5*Math.abs(Math.sin(e*Math.PI*2))*(1-e);} else{dice.scale.setScalar(1); if(!f)dice.position.y+=Math.sin(T*8)*.07;}}
   else if(dice){dice.shown=0; dice.pop=0;}
   if(mark&&mark.visible){const k=1+.06*Math.sin(T*6); mark.scale.set(k,k,1); if(mark.glow)mark.glow.material.opacity=.35+.25*Math.sin(T*6);}
-  kiteIdle(); pearlRing();
+  kiteIdle(); pearlRing(); shopFrame(dt);
   introHud();}
 /* ---------- models from Blender ----------
    Any prop built above can be swapped for a real model. Export it as .glb (Y up, metres, origin at its feet), put it in
@@ -2512,6 +2513,339 @@ function pearlNo(ui){const g=pawns[ui.noK]; if(!g||V.phase!=='board')return; g.h
 function pearlRing(){if(!TOY.on||!V||V.phase!=='board'||!NODES[pearl.at]){if(KX.ring)KX.ring.visible=false; return;}
   if(!KX.ring){const m=new THREE.Mesh(new THREE.RingGeometry(1.0,1.36,48),new THREE.MeshBasicMaterial({color:0xffd23d,transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide})); m.geometry.keep=true; m.material.keep=true; m.rotation.x=-Math.PI/2; m.noBake=true; m.castShadow=false; m.renderOrder=2; scene.add(m); KX.ring=m;}
   const n=NODES[pearl.at], r=KX.ring, shut=pearl.mv!=null; r.visible=!shut; r.position.set(n.x,n.y+.2,n.z); const k=1+.07*Math.sin(T*4); r.scale.set(k,k,1); r.material.opacity=.72+.26*Math.sin(T*4);}
+/* ---------- shops: a little building beside the path at each shop stop, with a shopkeeper behind the counter ----------
+   The stop itself is still a space on the path, so the movement code decides when a player has reached it. What stands beside it is the shop:
+   a floor, a counter facing the path, a back wall with shelves of goods, a canopy set back far enough that the game camera, which looks down
+   from the south, can always see the shopkeeper under it, and a sign. Each board dresses the same frame in its own way. */
+const SHOPX={list:[],dom:null,sel:-1,ask:null,seen:0,bought:0,sayT:0,w:0};
+/* where the shop for stop i stands: 3.25 from its space, on the clearest side, preferring the far side of the path so the shop front faces the camera */
+function shopSide(i){const n=NODES[i]; let best=[n.x,n.z-3.25,0], bd=-1e9;
+  for(const r of [3.25,3.9,4.6,5.4])for(let k=0;k<24;k++){const a=k/24*Math.PI*2, x=n.x+Math.sin(a)*r, z=n.z+Math.cos(a)*r; let d=1e9;
+    NODES.forEach((q,j)=>{if(j!==i)d=Math.min(d,Math.hypot(q.x-x,q.z-z));});
+    (NODES.spots||[]).forEach(s=>{const o=pearlSide(s); d=Math.min(d,Math.hypot(NODES[s].x+o[0]-x,NODES[s].z+o[1]-z)-.8);});
+    if(PLAT)d=Math.min(d,Math.hypot(PLAT.x-x,PLAT.z-z)-2.4);
+    for(const u of SHOPX.list)d=Math.min(d,Math.hypot(u.x-x,u.z-z)-2.2);
+    /* room first: a shop needs 2.3 clear all round and likes 2.7. With room found, it would rather face the camera (stand on the far side of the path) than stand close */
+    let cross=9; NODES.forEach((q,j)=>{if(j===i)return; const ux=x-n.x, uz=z-n.z, t=Math.max(0,Math.min(1,((q.x-n.x)*ux+(q.z-n.z)*uz)/(r*r))); cross=Math.min(cross,Math.hypot(q.x-n.x-ux*t,q.z-n.z-uz*t));});   /* how near the way from the stop to the door passes to any other space */
+    const sc=Math.min(d,2.7)*3-Math.max(0,2.3-d)*9-Math.max(0,1.5-cross)*8-(r-3.25)*1.0-Math.cos(a)*2.2-(TP.hides(x,z,3.3,1.7)?1.2:0);
+    if(sc>bd){bd=sc; best=[x,z,d];}}
+  return best;}
+/* called while the ground is being laid: choose the spots, flatten the ground there and keep other scenery off them */
+function shopSpots(T){SHOPX.list=[]; NODES.forEach((n,i)=>{if(n.t!=='H')return; const q=shopSide(i), th=Math.atan2(n.x-q[0],n.z-q[1]); SHOPX.list.push({i,x:q[0],z:q[1],th,fx:Math.sin(th),fz:Math.cos(th),room:q[2],far:Math.hypot(n.x-q[0],n.z-q[1])});
+    if(T&&T.pad&&T.raw)T.pad(q[0],q[1],2.1,Math.max(T.raw(n.x,n.z,true),T.raw(q[0],q[1],false),.12));   /* level with its stop, or with the bank it stands on if that is higher: never down in a channel */ USED.push([q[0],q[1],2.5]); USED.push([(q[0]+n.x)/2,(q[1]+n.z)/2,1.1]);});}
+/* shared parts, in the shop's own frame: the floor is at y=0 and the front, where the path is, is +z */
+const SH={
+  floor(K,col){K.add(rbox(3.5,.24,2.7,.08),M4(0,-.12,0),col,{ao:0});},
+  legs(K,S0,col,always){const d=Math.max(S0.lift,always||0); if(d<.15)return; for(const sx of [-1.5,1.5])for(const sz of [-1.1,1.1])K.add(cylG(.11,.13,d+.4,8),M4(sx,-(d+.4)/2-.12,sz),col,{ao:0}); if(d>.5)for(const sz of [-1.1,1.1])K.add(rbox(3.1,.12,.12,.04),M4(0,-d*.55,sz),col,{ao:0});},
+  counter(K,body,top){K.add(rbox(2.5,.84,.52,.07,2),M4(0,.42,.8),body,{ao:.3,aoH:.5}); K.add(rbox(2.74,.1,.7,.04),M4(0,.89,.8),top,{ao:0});},
+  back(K,col,h){h=h||2.6; K.add(rbox(3.2,h,.14,.05),M4(0,h/2,-1.2),col,{ao:.22,aoH:1.2}); for(const sx of [-1.53,1.53])K.add(rbox(.14,h,.86,.05),M4(sx,h/2,-.84),col,{ao:.22,aoH:1.2});},
+  shelves(K,col){for(const yy of [1.2,1.76])K.add(rbox(2.8,.07,.4,.02),M4(0,yy,-.95),col,{ao:0});},
+  posts(K,col,r){for(const sx of [-1.62,1.62])K.add(cylG(r||.075,r||.085,3.02,8),M4(sx,1.5,.4),col,{ao:.2,aoH:1});},
+  /* a canopy higher at the front than the back, ending well behind the counter */
+  roof(K,col,th){K.add(rbox(3.8,th||.13,2.06,.05),M4(0,2.86,-.55,0,1,1,1,-.2,0),col,{ao:0});},
+  /* a row of cloth flaps along the front edge of the canopy */
+  valance(KT,cols,n){n=n||8; const w=3.7/n; for(let i=0;i<n;i++){const x=-1.85+w*(i+.5), c=cols[i%cols.length]; KT.add(rbox(w*.98,.3,.03,.012),M4(x,2.9,.5,0,1,1,1,.12,0),c,{ao:0,sway:.04}); KT.add(cylG(w*.49,w*.49,.03,12),M4(x,2.75,.52,0,1,1,1,Math.PI/2+.12,0),c,{ao:0,sway:.06});}},
+  /* a string of bulbs across the front */
+  bulbs(K,KE,y,z,cols){const pts=[]; for(let i=0;i<=12;i++){const t=i/12; pts.push([-1.75+t*3.5,y-.16*Math.sin(t*Math.PI),z]);} K.add(tubeG(pts,.014,3,false),null,0x2b3350,{ao:0}); for(let i=1;i<12;i++)KE.add(sphG(.075,1),M4(pts[i][0],pts[i][1]-.07,z),cols[i%cols.length],{ao:0,ph:i*1.3});},
+  /* goods: every shop shows what it sells (dice, a magnet) among jars and parcels of its own */
+  goods(K,KG,cols){const y=1.235, y2=1.795, z=-.95;
+    K.add(rbox(.26,.26,.26,.06),M4(-1.08,y+.13,z,.5),0xfffaf0,{ao:0}); K.add(rbox(.24,.24,.24,.06),M4(-.82,y+.12,z+.06,-.3),0xffc531,{ao:0}); for(const q of [[-1.08,.28],[-.82,.26]])K.add(sphG(.035,1),M4(q[0],y+q[1],z+(q[0]<-1?0:.06)),0x17304d,{ao:0});
+    KG.add(torG(.13,.05,8,16,Math.PI),M4(-.36,y+.13,z),0xe5484d,{ao:0}); for(const sx of [-1,1])K.add(cylG(.05,.05,.11,8),M4(-.36+sx*.13,y+.07,z),0xe2e8f0,{ao:0});
+    const jar=latheG([[.01,0],[.1,0],[.12,.05],[.12,.22],[.07,.27],[.07,.31],[.085,.33],[.01,.33]],10);
+    KG.add(jar,M4(.1,y,z),cols[0],{ao:0}); KG.add(jar,M4(.38,y,z+.03,0,.85),cols[1],{ao:0}); K.add(rbox(.34,.26,.26,.04),M4(.86,y+.13,z,.2),cols[2],{ao:0}); K.add(rbox(.36,.05,.28,.02),M4(.86,y+.28,z,.2),0xfdf6e3,{ao:0});
+    K.add(rbox(.3,.3,.26,.04),M4(-1.0,y2+.15,z,-.2),cols[1],{ao:0}); KG.add(jar,M4(-.55,y2,z,0,1.1),cols[2],{ao:0}); KG.add(jar,M4(.95,y2,z,0,.9),cols[0],{ao:0});},
+  /* the sign: a board on two short posts above the canopy, with the word painted on a card set into it */
+  sign(K,S0,bg,fg,frame,word){K.add(rbox(2.0,.66,.1,.05),M4(0,3.5,.2),frame,{ao:0}); for(const sx of [-.7,.7])K.add(cylG(.04,.04,.34,6),M4(sx,3.13,.2),frame,{ao:0});
+    const cv=document.createElement('canvas'); cv.width=384; cv.height=112; const c=cv.getContext('2d'); c.fillStyle=bg; c.fillRect(0,0,384,112); c.strokeStyle=fg; c.globalAlpha=.55; c.lineWidth=6; c.strokeRect(8,8,368,96); c.globalAlpha=1; c.fillStyle=fg; c.font='800 78px '+FONT; c.textAlign='center'; c.textBaseline='middle'; c.fillText(word||'SHOP',192,60);
+    const t=new THREE.CanvasTexture(cv); t.anisotropy=4; const m=new THREE.Mesh(new THREE.PlaneGeometry(1.84,.52),new THREE.MeshBasicMaterial({map:t})); m.position.set(0,3.5,.256); m.castShadow=false; S0.g.add(m); const m2=new THREE.Mesh(m.geometry,m.material); m2.position.set(0,3.5,.144); m2.rotation.y=Math.PI; m2.castShadow=false; S0.g.add(m2);}   /* painted on both faces, so it can be read from behind as well */
+};
+/* each board's shop */
+const SHOPSTYLE={
+  /* Island: a whitewashed beach shack on stilts with a blue slatted roof, a striped awning, shells along the counter and a surfboard propped at the side */
+  island(K,KG,KT,KE,S0){const wood=[0xb98250,0xd9a56a], blue=hexC(0x2f8fff), blue2=hexC(0x5aa9ff);
+    SH.legs(K,S0,0x8f5e33,.3); SH.floor(K,wood); SH.back(K,[0xeadbb8,0xfff6e0]); SH.counter(K,[0xeadbb8,0xfff6e0],0x9b693a); SH.shelves(K,0x9b693a); SH.posts(K,[0x8f5e33,0xb98250]);
+    for(let i=0;i<6;i++)K.add(rbox(.21,.7,.03,.012),M4(-1.05+i*.42,.42,1.065),0x2f8fff,{ao:0});
+    SH.roof(K,(px,py,pz)=>Math.floor((pz+9)*4.5)%2?blue:blue2,.15); K.add(rbox(3.86,.1,.12,.04),M4(0,3.07,.47),0xffffff,{ao:0}); SH.valance(KT,[0x2f8fff,0xffffff]);
+    const sh=latheG([[.02,0],[.1,.012],[.12,.045],[.085,.085],[.035,.11],[.008,.118]],8); [[-1.1,0xffb8cf],[-.2,0xfff1dc],[.5,0xffc9a3],[1.1,0xffb8cf]].forEach((q,i)=>K.add(sh,M4(q[0],.94,1.02,i*1.3,1.5,1.5,1.2,.3,0),q[1],{ao:0}));
+    const st=[]; for(let i=0;i<10;i++){const a=i*Math.PI/5, r=i%2?.1:.25; st.push([Math.cos(a)*r,Math.sin(a)*r]);} K.add(extG(st,.05,.03),M4(1.36,3.5,.3,0,1,1,1,0,.3),0xff8a5c,{ao:0}); K.add(extG(st,.05,.03),M4(-1.38,3.42,.3,0,.8,.8,.8,0,-.4),0xffc531,{ao:0});
+    KG.add(torG(.3,.09,8,18),M4(1.62,1.55,-.55,Math.PI/2),(px,py)=>Math.floor((Math.atan2(py,px)+Math.PI)/(Math.PI/4))%2?[1,1,1]:[.9,.28,.3],{ao:0});
+    K.add(sphG(1,2),M4(-2.0,1.05,-.5,.3,.3,1.15,.06,-.16,0),(px)=>Math.abs(px)<.3?[1,.97,.9]:[1,.37,.63],{ao:0});
+    SH.goods(K,KG,[0x35c98a,0xff8a5c,0x2f8fff]); SH.sign(K,S0,'#2f8fff','#ffffff',0x9b693a);},
+  /* Carnival: a prize stall under a red and white canopy, lit with bulbs, hung with balloons and stocked with teddy bears */
+  carnival(K,KG,KT,KE,S0){const red=hexC(0xff4d4d), wh=hexC(0xfff6e6);
+    SH.legs(K,S0,0x7a3a4e); SH.floor(K,[0x7b4fc9,0x9a6fe0]); SH.back(K,(px)=>Math.floor((px+9)*2.4)%2?red:wh); SH.counter(K,(px)=>Math.floor((px+9)*2.4)%2?wh:red,0xffc531); SH.shelves(K,0xffc531); SH.posts(K,(px,py)=>Math.floor(py*3+px*2)%2?red:wh,.085);
+    SH.roof(K,(px)=>Math.floor((px+9)*2.1)%2?red:wh,.14); K.add(rbox(3.86,.12,.12,.05),M4(0,3.07,.47),0xffc531,{ao:0}); SH.valance(KT,[0xff4d4d,0xfff6e6]); SH.bulbs(K,KE,3.0,.56,[0xfff3b0,0xff9fd0,0x9fe1ff,0xb6f5d6]); SH.bulbs(K,KE,1.02,1.1,[0xfff3b0,0xffd24a]);
+    const ted=(x,y,z,c,s)=>{K.add(sphG(.2,1),M4(x,y+.2*s,z,0,s,s*1.05,s*.9),c,{ao:0}); K.add(sphG(.15,1),M4(x,y+.47*s,z,0,s),c,{ao:0}); for(const sx of [-1,1]){K.add(sphG(.06,1),M4(x+sx*.11*s,y+.6*s,z,0,s),c,{ao:0}); K.add(sphG(.07,1),M4(x+sx*.2*s,y+.25*s,z+.05,0,s),c,{ao:0});} K.add(sphG(.06,1),M4(x,y+.44*s,z+.12*s,0,s),0xfff1dc,{ao:0});};
+    ted(.2,1.795,-.95,0xd9945a,1); ted(-.2,1.795,-.92,0xff8fc8,.85); ted(.56,1.795,-.95,0x7fc8ff,.8);
+    [[1.72,0xff4d4d,3.7],[1.95,0xffc531,3.95],[1.6,0x2f8fff,4.1]].forEach(q=>{KG.add(sphG(.24,2),M4(q[0],q[2],.42,0,1,1.15,1),q[1],{ao:0}); K.add(tubeG([[q[0],q[2]-.27,.42],[1.66,3.3,.42],[1.62,3.02,.4]],.01,3,false),null,0xfdf6e3,{ao:0});});
+    for(let i=0;i<5;i++)KE.add(sphG(.09,1),M4(-1.6+i*.8,3.5+(i%2?.42:.46),.2),0xfff3b0,{ao:0,ph:i*1.1});
+    SH.goods(K,KG,[0xff5fa8,0x2f8fff,0x35c98a]); SH.sign(K,S0,'#ff4d4d','#ffe27a',0xffc531);},
+  /* Farm: a market stand of rough timber under thatch, with crates of produce out front, pots of flowers and a chalkboard */
+  farm(K,KG,KT,KE,S0){const tim=[0x8a5a2b,0xb98250];
+    SH.legs(K,S0,0x7a4e2a); SH.floor(K,[0xa87343,0xc99a66]); SH.back(K,(px,py)=>{const k=.9+.1*Math.sin(px*13); return[.72*k,.5*k,.3*k];}); SH.counter(K,tim,0xd9b27c); SH.shelves(K,0x7a4e2a); SH.posts(K,tim,.09);
+    SH.roof(K,(px,py,pz)=>{const k=.86+.14*Math.sin(px*24)*Math.sin(pz*5+px); return[.93*k,.76*k,.36*k];},.24); K.add(cylG(.11,.11,3.86,8),M4(0,3.1,.47,0,1,1,1,0,Math.PI/2),0xd9b24a,{ao:0}); SH.valance(KT,[0xe5484d,0xfff6e6],10);
+    const crate=(x,z,ry,fruit,n)=>{K.add(rbox(.62,.3,.5,.04),M4(x,.15,z,ry),0xc9975c,{ao:.2,aoH:.3}); K.add(rbox(.66,.07,.54,.02),M4(x,.3,z,ry),0x9b693a,{ao:0}); for(let i=0;i<n;i++)KG.add(sphG(.1,1),M4(x-.19+(i%3)*.19,.38+(i>2?.06:0),z-.1+Math.floor(i/3)*.18+(i%2)*.03),fruit,{ao:0});};
+    crate(-1.15,1.25,.15,0xe5484d,6); crate(-.4,1.3,-.1,0xff9a2e,5); crate(1.15,1.25,-.2,0x6bbf3a,6);
+    const pot=(x,z,c)=>{K.add(latheG([[.01,0],[.12,0],[.17,.22],[.19,.24],[.01,.24]],10),M4(x,0,z),0xc26a3d,{ao:.2,aoH:.2}); for(let i=0;i<5;i++){const a=i*1.26; K.add(sphG(.07,1),M4(x+Math.cos(a)*.09,.36+(i%2)*.05,z+Math.sin(a)*.09),c,{ao:0});} K.add(sphG(.12,1),M4(x,.27,z,0,1,.6,1),0x4fae3c,{ao:0});};
+    pot(.45,1.28,0xffd24a); pot(1.6,.95,0xff8fc8); pot(-1.65,.95,0xfff6e6);
+    for(let i=0;i<3;i++)KG.add(sphG(.13,1),M4(-.3+i*.3,1.92,-.95,0,1,.85,1),0xff9a2e,{ao:0}); K.add(latheG([[.01,0],[.16,0],[.2,.1],[.2,.34],[.11,.44],[.11,.52],[.01,.52]],12),M4(1.25,.94,.8),[0xcfd8e6,0xf3f6fa],{ao:0});
+    SH.goods(K,KG,[0xffd24a,0xe5484d,0x6bbf3a]); SH.sign(K,S0,'#2f5a3a','#f6f1dc',0x7a4e2a);},
+  /* Volcano: a merchant's hut of dark stone under a slab roof, with crystals growing out of it and lanterns that glow like the lava */
+  volcano(K,KG,KT,KE,S0){const st=[0x4a4048,0x7a6a6e], slab=[0x2e2830,0x4a4048];
+    SH.legs(K,S0,0x3a3238); K.add(rbox(3.6,.3,2.8,.12),M4(0,-.15,0),st,{ao:0}); SH.back(K,st,2.62);
+    for(let i=0;i<7;i++){const x=-1.4+i*.47, h=.5+hash2(i,3,1)*.25; K.add(rockG(i%5,1),M4(x,.3+h*.25,.82,i*1.3,.3,h*.62,.3),[0x4a4048,0x857478],{ao:.3,aoH:.5});} K.add(rbox(2.8,.12,.74,.05),M4(0,.9,.8),slab,{ao:0});
+    SH.shelves(K,0x2e2830); for(const sx of [-1.62,1.62])K.add(rbox(.26,3.02,.26,.07),M4(sx,1.51,.4),st,{ao:.2,aoH:1});
+    SH.roof(K,slab,.26); for(let i=0;i<5;i++)K.add(rockG((i+2)%5,1),M4(-1.5+i*.75,3.1-.2*(.5),.2-(i%2)*.6,i,.3,.16,.26),st,{ao:0});
+    const cry=(x,y,z,s,c,rz)=>{KE.add(cylG(.001,.11,.5,5),M4(x,y+.25*s,z,0,s,s,s,0,rz||0),c,{ao:0,ph:x*3}); KE.add(cylG(.001,.07,.32,5),M4(x+.1*s,y+.16*s,z+.04,0,s,s,s,.2,(rz||0)-.5),c,{ao:0,ph:x*3+1});};
+    cry(-1.2,.96,.82,1,0x7af0ff); cry(1.15,.96,.86,.8,0xff7ad9); cry(1.5,3.0,.1,1.3,0x7af0ff,-.2); cry(-1.5,3.0,-.2,1.1,0xb07cff,.25); cry(.1,1.8,-.95,.7,0xff7ad9); cry(.5,1.8,-.95,.55,0x7af0ff);
+    for(const sx of [-1.38,1.38]){K.add(tubeG([[sx,2.86,.44],[sx,2.5,.5]],.012,3,false),null,0x17131a,{ao:0}); K.add(rbox(.2,.06,.2,.02),M4(sx,2.5,.5),0x17131a,{ao:0}); KE.add(rbox(.16,.24,.16,.04),M4(sx,2.36,.5),0xffa53a,{ao:0,ph:sx}); K.add(rbox(.2,.05,.2,.02),M4(sx,2.22,.5),0x17131a,{ao:0});}
+    for(let i=0;i<6;i++)KE.add(rbox(.5,.02,.03,.005),M4(-1.2+i*.48+(i%2)*.1,.5+(i%3)*.12,1.07,0,1,1,1,0,(i%2?.5:-.4)),0xff7a10,{ao:0,ph:i});
+    SH.goods(K,KG,[0xff7a10,0x7af0ff,0xb07cff]); SH.sign(K,S0,'#2e2830','#ffb347',0x4a4048);},
+  /* Melody Mansion: a music shop with a keyboard for a counter, a canopy trimmed in gold, records on the wall and a gramophone horn */
+  melody(K,KG,KT,KE,S0){const cream=[0xf3e6c8,0xfffaf0], wal=[0x6e3f22,0x9a6238];
+    SH.legs(K,S0,0x6e3f22); SH.floor(K,[0x8a2f3f,0xb04a5a]); SH.back(K,cream); K.add(rbox(2.5,.84,.52,.07,2),M4(0,.42,.8),wal,{ao:.3,aoH:.5}); K.add(rbox(2.74,.1,.7,.04),M4(0,.89,.8),0xfffaf0,{ao:0});
+    for(let i=0;i<12;i++){K.add(rbox(.2,.5,.03,.01),M4(-1.14+i*.207,.5,1.065),0xfffaf0,{ao:0}); if(i%7!==2&&i%7!==6&&i<11)K.add(rbox(.11,.3,.04,.01),M4(-1.04+i*.207,.6,1.075),0x17131a,{ao:0});}
+    SH.shelves(K,0x6e3f22); SH.posts(K,[0xc9962e,0xffd45e],.07); SH.roof(K,[0x8a2f3f,0xb04a5a],.14); K.add(rbox(3.86,.12,.12,.05),M4(0,3.07,.47),0xffd45e,{ao:0}); SH.valance(KT,[0x17131a,0xfffaf0],12);
+    for(const q of [[-1.0,2.25,0xe5484d],[-.3,2.32,0xffc531],[.45,2.25,0x2f8fff],[1.1,2.32,0x35c98a]]){KG.add(cylG(.26,.26,.03,20),M4(q[0],q[1],-1.1,0,1,1,1,Math.PI/2,0),0x17131a,{ao:0}); K.add(cylG(.09,.09,.04,12),M4(q[0],q[1],-1.09,0,1,1,1,Math.PI/2,0),q[2],{ao:0});}
+    KG.add(latheG([[.03,0],[.05,.1],[.1,.26],[.22,.4],[.36,.46]],14),M4(1.0,1.05,.74,-.5,1,1,1,-1.0,0),[0xc9962e,0xffe27a],{ao:0}); K.add(rbox(.4,.16,.34,.04),M4(1.0,.99,.66),0x6e3f22,{ao:0});
+    const note=(x,y,z,c,s)=>{KE.add(sphG(.13,1),M4(x,y,z,0,s*1.25,s*.9,s,0,.35),c,{ao:0,ph:x}); KE.add(rbox(.04,.5,.04,.015),M4(x+.14*s,y+.25*s,z,0,s),c,{ao:0,ph:x}); KE.add(rbox(.2,.07,.04,.015),M4(x+.23*s,y+.47*s,z,0,s,s,s,0,-.5),c,{ao:0,ph:x});};
+    note(-1.45,3.3,.3,0xffd45e,1.1); note(1.25,3.36,.3,0xff9fd0,1.0); note(-1.9,2.5,.2,0x9fe1ff,.8);
+    SH.goods(K,KG,[0xc9962e,0x8a2f3f,0x2f8fff]); SH.sign(K,S0,'#fffaf0','#8a2f3f',0xc9962e);},
+  /* Pinball Paradise: an arcade prize counter in dark gloss and neon, under a lit marquee, with rows of silver balls for sale */
+  pinball(K,KG,KT,KE,S0){const dk=[0x1b1f5a,0x343a9a], pk=0xff4fd8, cy=0x35e0ff;
+    SH.legs(K,S0,0xb9c2d6); KG.add(rbox(3.5,.24,2.7,.08),M4(0,-.12,0),dk,{ao:0}); SH.back(KG,dk); KG.add(rbox(2.5,.84,.52,.07,2),M4(0,.42,.8),dk,{ao:.2,aoH:.5}); KG.add(rbox(2.74,.1,.7,.04),M4(0,.89,.8),0xffc531,{ao:0});
+    KE.add(rbox(2.3,.05,.03,.01),M4(0,.72,1.07),pk,{ao:0,ph:1}); KE.add(rbox(2.3,.05,.03,.01),M4(0,.16,1.07),cy,{ao:0,ph:2}); for(let i=0;i<5;i++)KE.add(sphG(.07,1),M4(-.9+i*.45,.44,1.08),i%2?0xffe27a:0xff4fd8,{ao:0,ph:i*1.5});
+    SH.shelves(KG,0xb9c2d6); for(const sx of [-1.62,1.62]){KG.add(cylG(.08,.09,3.02,10),M4(sx,1.5,.4),[0xb9c2d6,0xf2f5fa],{ao:0}); KE.add(sphG(.14,1),M4(sx,3.12,.4),sx<0?pk:cy,{ao:0,ph:sx});}
+    KG.add(rbox(3.8,.3,2.06,.1),M4(0,2.86,-.55,0,1,1,1,-.2,0),dk,{ao:0}); KE.add(rbox(3.7,.07,.05,.02),M4(0,2.96,.47),cy,{ao:0,ph:0}); SH.bulbs(K,KE,3.16,.5,[0xffe27a,0xff4fd8,0x35e0ff]);
+    for(let i=0;i<7;i++)KG.add(sphG(.1,1),M4(-.3+i*.21,1.9,-.95),0xdfe6f2,{ao:0}); for(let i=0;i<4;i++)KG.add(sphG(.1,1),M4(.1+i*.21,1.335,-.9),0xdfe6f2,{ao:0});
+    for(const sx of [-1,1]){KG.add(latheG([[.01,0],[.24,0],[.28,.08],[.28,.2],[.2,.28],[.01,.3]],14),M4(sx*1.3,3.2,-.3),sx<0?pk:cy,{ao:0}); KG.add(latheG([[.01,0],[.16,0],[.16,.06],[.01,.08]],12),M4(sx*1.3,3.5,-.3),0xfff6e6,{ao:0});}
+    const st=[]; for(let i=0;i<10;i++){const a=i*Math.PI/5+Math.PI/2, r=i%2?.11:.27; st.push([Math.cos(a)*r,Math.sin(a)*r]);} KE.add(extG(st,.04,.02),M4(0,4.05,.2),0xffe27a,{ao:0,ph:3});
+    SH.goods(K,KG,[0xff4fd8,0x35e0ff,0xffc531]); SH.sign(KG,S0,'#1b1f5a','#ffe27a',0xff4fd8);},
+  /* Temple: a jungle merchant's stand on carved stone blocks, roofed with big leaves, wound with vines, lit by lanterns and piled with gold */
+  temple(K,KG,KT,KE,S0){const stn=[0x9a947f,0xcfc8ad], bam=[0x8a7a3a,0xc9b25e], lf=[0x2f8f3a,0x7fd24a];
+    SH.legs(K,S0,0x8a846f); K.add(rbox(3.6,.34,2.8,.1),M4(0,-.17,0),stn,{ao:0}); for(let i=0;i<8;i++)K.add(rbox(.3,.06,.3,.02),M4(-1.4+i*.4,.0,1.2),i%2?0xc9962e:0x9a947f,{ao:0});
+    SH.back(K,(px,py)=>{const k=.88+.12*Math.sin(px*16); return[.62*k,.52*k,.3*k];}); for(let i=0;i<3;i++)K.add(rbox(.8,.84,.5,.08),M4(-.84+i*.84,.42,.8),stn,{ao:.3,aoH:.5}); for(let i=0;i<3;i++)K.add(rbox(.3,.3,.04,.02),M4(-.84+i*.84,.48,1.06,0,1,1,1,0,Math.PI/4),0xc9962e,{ao:0}); K.add(rbox(2.74,.12,.72,.05),M4(0,.9,.8),[0x6e5a3a,0x9a7f52],{ao:0});
+    SH.shelves(K,0x6e5a3a); SH.posts(K,bam,.09); for(const sx of [-1.62,1.62]){const v=[]; for(let i=0;i<=14;i++){const t=i/14, a=t*9; v.push([sx+Math.cos(a)*.13,.1+t*2.8,.4+Math.sin(a)*.13]);} K.add(tubeG(v,.03,4,false),null,0x3f9a3a,{ao:0}); for(let i=2;i<14;i+=3)K.add(sphG(.1,1),M4(v[i][0],v[i][1],v[i][2],i,1,.3,1.6),lf,{ao:0,sway:.05});}
+    K.add(rbox(3.6,.1,1.9,.04),M4(0,2.84,-.55,0,1,1,1,-.2,0),bam,{ao:0}); for(let i=0;i<9;i++)for(let j=0;j<2;j++){const x=-1.7+i*.42+(j?.2:0), z=-.1-j*.85; K.add(sphG(.5,1),M4(x,3.0-j*.17+.02*(i%3),z,(i%2?.25:-.25),.42,.07,1.15,-.28,0),lf,{ao:0,sway:.06});}
+    for(const sx of [-1.3,1.3]){K.add(tubeG([[sx,2.9,.46],[sx,2.56,.52]],.012,3,false),null,0x4a3a1a,{ao:0}); K.add(rbox(.2,.05,.2,.02),M4(sx,2.56,.52),0x6e3f22,{ao:0}); KE.add(sphG(.12,1),M4(sx,2.42,.52,0,1,1.2,1),0xffc94a,{ao:0,ph:sx}); K.add(rbox(.16,.04,.16,.02),M4(sx,2.28,.52),0x6e3f22,{ao:0});}
+    KG.add(sphG(.3,1),M4(1.05,.98,.8,0,1.2,.5,1),[0xc9962e,0xffd45e],{ao:0}); for(let i=0;i<7;i++)KG.add(cylG(.07,.07,.03,8),M4(1.05+Math.cos(i*.9)*.24,1.08-.02*i,.8+Math.sin(i*.9)*.2,i,1,1,1,.5,0),0xffe27a,{ao:0});
+    K.add(latheG([[.01,0],[.13,0],[.1,.1],[.14,.22],[.1,.4],[.14,.46],[.01,.52]],8),M4(0,1.795,-.95),[0xc9962e,0xffd45e],{ao:0});
+    SH.goods(K,KG,[0xc9962e,0x35c98a,0xb7b09c]); SH.sign(K,S0,'#8a846f','#ffe27a',0x6e5a3a);}
+};
+/* build every shop on this board. The buildings join the board's own meshes; the shopkeepers are separate so they can move */
+function toyShops(m){if(!SHOPX.list.length)return; const id=curMap in SHOPSTYLE?curMap:'island', K=TOY.K, KG=TOY.KG, KT=TOY.KT, KE=TOY.KE||(TOY.KE=new Kit());
+  SHOPX.list.forEach((S0,si)=>{const n=NODES[S0.i], gy=GY(S0.x,S0.z); S0.fy=Math.max(gy,n.y-.02)+.24; S0.lift=S0.fy-.24-gy;
+    S0.g=new THREE.Group(); S0.g.position.set(S0.x,S0.fy,S0.z); S0.g.rotation.y=S0.th; S0.g.noBake=true; world.add(S0.g);
+    for(const k of [K,KG,KT,KE])k.at(S0.x,S0.fy,S0.z,S0.th,1);
+    try{SHOPSTYLE[id](K,KG,KT,KE,S0);}catch(e){console.warn('shop',e);}
+    /* a mat on the path side of the counter, so the stop and the shop read as one place */
+    K.at(S0.x,S0.fy,S0.z,S0.th,1); K.add(rbox(1.5,.05,.5,.02),M4(0,.0,1.5),0xb04a5a,{ao:0});
+    for(let d=1.95;d<S0.far-1.1;d+=.46)K.add(rbox(1.1,.07,.4,.03),M4(0,-.2,d,0,1,1,1,0,0),[0xb98250,0xd9a56a],{ao:0,j:.06});
+    S0.keeper=shopKeeper(id,si); S0.keeper.position.set(0,0,.08); S0.g.add(S0.keeper);
+    S0.flag=shopKiteFlag(); S0.flag.position.set(1.9,2.62,.52); S0.g.add(S0.flag);});}
+/* a small kite hung out at the corner of the canopy on the rounds when the shop has one to sell */
+function shopKiteFlag(){const g=new THREE.Group(), B=[[0,.42,0],[.32,.1,0],[0,-.5,0],[-.32,.1,0]], F=[[0,3,1,0xff5fa2],[3,2,1,0x2f8fff]], pos=[], col=[], c=new THREE.Color();
+  F.forEach(f=>{c.setHex(f[3]); for(let j=0;j<3;j++){pos.push(...B[f[j]]); col.push(c.r,c.g,c.b);}}); const bg=new THREE.BufferGeometry(); bg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); bg.setAttribute('color',new THREE.Float32BufferAttribute(col,3)); bg.computeVertexNormals();
+  const m=new THREE.Mesh(bg,new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide,emissive:0x444444})); m.castShadow=false; g.add(m);
+  const s=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.5,4),new THREE.MeshBasicMaterial({color:0xffffff})); s.position.y=.66; s.castShadow=false; g.add(s); g.visible=false; return g;}
+
+/* ---------- the shopkeeper: Pouch the pelican ----------
+   One character on every board, in a different hat. He is built from a handful of soft shapes: an egg of a body in an apron, a round head, a big orange
+   bill whose lower half is the pouch he keeps the takings in, and two wings he talks with. Everything he does is a pose blended towards. */
+const KEEPFIT={island:{hat:'straw',band:0x2f8fff,acc:0xff5fa2},carnival:{hat:'boater',band:0xff4d4d,acc:0xff4d4d},farm:{hat:'straw',band:0xe5484d,acc:0xe5484d,wide:1},volcano:{hat:'helmet',band:0xffc531,acc:0xff7a10},
+  melody:{hat:'top',band:0xffd45e,acc:0x8a2f3f},pinball:{hat:'visor',band:0x35e0ff,acc:0xff4fd8},temple:{hat:'pith',band:0x6e5a3a,acc:0x35c98a}};
+function shopKeeper(id,si){toyMats(); const F=KEEPFIT[id]||KEEPFIT.island, root=new THREE.Group(), part=(fn,mat,sh)=>{const k=new Kit(); k.at(0,0,0,0); fn(k); const q=k.mesh(mat||TOYM.matte); q.castShadow=!!sh; return q;}, acc=hexC(F.acc), wh=[1,1,1], W=0xffffff;
+  const body=new THREE.Group(); root.add(body);
+  body.add(part(k=>{k.add(latheG([[.01,0],[.4,.02],[.57,.3],[.6,.62],[.52,.98],[.36,1.2],[.2,1.3],[.01,1.32]],20),null,(px,py,pz)=>pz>.2&&py<.86&&py>.12&&Math.abs(px)<.36?acc:py<.1?[.86,.89,.94]:wh,{ao:.2,aoH:.9});
+    k.add(rbox(.5,.06,.05,.02),M4(0,.9,.5),acc,{ao:0}); k.add(sphG(.05,1),M4(-.14,.6,.585),0xffe27a,{ao:0}); k.add(sphG(.05,1),M4(.14,.6,.585),0xffe27a,{ao:0});
+    for(const sx of [-1,1])k.add(sphG(.09,1),M4(sx*.1,1.12,.4,0,1.5,.8,.6,0,sx*.5),F.band,{ao:0}); k.add(sphG(.06,1),M4(0,1.12,.42),0xffe27a,{ao:0});},null,true));
+  const head=new THREE.Group(); head.position.set(0,1.38,.04); body.add(head);
+  head.add(part(k=>{k.add(sphG(.35,2),null,W,{ao:0}); for(let i=0;i<3;i++)k.add(cylG(.001,.06,.2,5),M4(-.06+i*.06,.3,-.14-(i%2)*.04,0,1,1,1,-.5,(i-1)*.3),W,{ao:0});
+    k.add(sphG(1,2),M4(0,-.02,.5,0,.15,.085,.42),[0xff8a1e,0xffc531],{ao:0}); k.add(sphG(.05,1),M4(0,-.07,.9),0xe26a10,{ao:0});},null,true));
+  const jaw=new THREE.Group(); jaw.position.set(0,-.06,.2); head.add(jaw); jaw.add(part(k=>{k.add(sphG(1,2),M4(0,-.1,.28,0,.155,.15,.36),[0xffb347,0xffd98a],{ao:0});}));
+  const eyes=new THREE.Group(); head.add(eyes); eyes.add(part(k=>{for(const sx of [-1,1]){k.add(sphG(.1,1),M4(sx*.15,.1,.28,0,1,1.15,.7),W,{ao:0}); k.add(sphG(.052,1),M4(sx*.15,.1,.345,0,1,1.15,.6),0x17304d,{ao:0}); k.add(sphG(.018,1),M4(sx*.15+.02,.125,.375),W,{ao:0});}}));
+  const hat=new THREE.Group(); hat.position.y=.27; head.add(hat); hat.add(part(k=>{const st=[0xe8c877,0xf6de9a];
+    if(F.hat==='straw'){const r=F.wide?.62:.5; k.add(cylG(r,r+.02,.04,18),M4(0,.02,0),st,{ao:0}); k.add(cylG(.25,.3,.24,14),M4(0,.15,0),st,{ao:0}); k.add(cylG(.305,.305,.08,14),M4(0,.08,0),F.band,{ao:0});}
+    else if(F.hat==='boater'){k.add(cylG(.46,.46,.04,18),M4(0,.02,0),0xfff6e6,{ao:0}); k.add(cylG(.29,.29,.2,16),M4(0,.13,0),(px,py,pz)=>Math.floor((Math.atan2(pz,px)+Math.PI)*2.55)%2?[1,.3,.3]:[1,.97,.9],{ao:0}); k.add(cylG(.3,.3,.03,16),M4(0,.24,0),0xfff6e6,{ao:0});}
+    else if(F.hat==='helmet'){k.add(latheG([[.39,-.06],[.385,.04],[.34,.16],[.24,.25],[.1,.3],[.01,.31]],18),null,[0xf0a81c,0xffd24a],{ao:0}); k.add(cylG(.44,.44,.04,16),M4(0,-.01,.04),0xffc531,{ao:0}); k.add(cylG(.09,.09,.08,10),M4(0,.14,.34,0,1,1,1,Math.PI/2,0),0xb9c2d6,{ao:0});}
+    else if(F.hat==='top'){k.add(cylG(.42,.42,.04,18),M4(0,.02,0),0x17131a,{ao:0}); k.add(cylG(.27,.25,.46,16),M4(0,.26,0),0x24202a,{ao:0}); k.add(cylG(.265,.265,.08,16),M4(0,.09,0),F.band,{ao:0});}
+    else if(F.hat==='visor'){k.add(cylG(.36,.36,.1,18),M4(0,.0,0),0x1b1f5a,{ao:0}); k.add(cylG(.4,.4,.025,18,),M4(0,-.03,.26,0,1,1,.7),F.band,{ao:0});}
+    else{k.add(latheG([[.38,-.04],[.375,.05],[.33,.17],[.23,.26],[.1,.31],[.01,.32]],18),null,[0xcdbb86,0xe6d8a8],{ao:0}); k.add(cylG(.5,.52,.04,18),M4(0,.0,.02,0,1,1,1.12),0xd9c796,{ao:0}); k.add(cylG(.38,.38,.06,16),M4(0,.05,0),F.band,{ao:0}); k.add(sphG(.05,1),M4(0,.31,0),0xd9c796,{ao:0});}}));
+  if(F.hat==='helmet'){const l=part(k=>{k.add(sphG(.07,1),M4(0,.41,.4),0xfff3b0,{ao:0});},TOYM.glow); l.castShadow=false; head.add(l);}
+  const wing=sd=>{const g=new THREE.Group(); g.position.set(sd*.5,1.0,.02); g.add(part(k=>{k.add(sphG(1,2),M4(sd*.06,-.36,0,0,.13,.44,.27),(px,py)=>py<-.55?[.72,.78,.87]:wh,{ao:0});})); body.add(g); return g;};
+  root.k={body,head,jaw,eyes,L:wing(-1),R:wing(1),mood:'idle',mt:0,talk:0,ph:si*2.1,blink:2+si,yaw:0,P:{}}; root.traverse(o=>{o.noBake=true;}); return root;}
+/* what each mood asks of the body: wings out to the side (lz, rz), wings forward (lx, rx), a bow, a head tilt, a hop */
+const KPOSE={idle:{lz:.12,rz:.12,lx:0,rx:0,bow:0,tilt:0,hop:0},wave:{lz:.12,rz:2.5,lx:0,rx:0,bow:0,tilt:.1,hop:0},talk:{lz:.5,rz:.5,lx:-.5,rx:-.5,bow:.04,tilt:0,hop:0},point:{lz:2.0,rz:.2,lx:.5,rx:0,bow:0,tilt:-.12,hop:0},
+  cheer:{lz:2.6,rz:2.6,lx:0,rx:0,bow:-.08,tilt:0,hop:1},shrug:{lz:1.15,rz:1.15,lx:-.3,rx:-.3,bow:.03,tilt:.28,hop:0},bye:{lz:.3,rz:2.4,lx:0,rx:0,bow:.3,tilt:0,hop:0}};
+function keeperFrame(S0,dt,active){const R=S0.keeper, k=R.k, P=KPOSE[k.mood]||KPOSE.idle, q=k.P, e=1-Math.exp(-dt*9); k.mt+=dt; for(const n in P)q[n]=(q[n]==null?P[n]:q[n])+(P[n]-(q[n]==null?P[n]:q[n]))*e;
+  const t=T+k.ph, wv=k.mood==='wave'||k.mood==='bye'?Math.sin(k.mt*11)*.35:0, fl=k.mood==='cheer'?Math.sin(k.mt*16)*.25:k.mood==='idle'?Math.max(0,Math.sin(t*.7)-.93)*4*Math.sin(t*18):0;
+  k.L.rotation.set(q.lx,0,-(q.lz+fl)); k.R.rotation.set(q.rx,0,q.rz+wv+fl);
+  k.body.position.y=Math.sin(t*2.2)*.02+q.hop*Math.abs(Math.sin(k.mt*8))*.22*Math.max(0,1-k.mt/1.4); k.body.rotation.x=q.bow+(k.mood==='bye'?Math.sin(Math.min(1,k.mt/.7)*Math.PI)*.15:0); k.body.rotation.z=Math.sin(t*1.1)*.02;
+  /* he watches whoever is nearest, and looks about when nobody is */
+  let yaw=Math.sin(t*.5)*.35, pit=0; if(V&&V.phase==='board'&&pawns.length){let bd=active?99:6.5, bp=null; for(const g of pawns){const d=Math.hypot(g.position.x-S0.x,g.position.z-S0.z); if(d<bd){bd=d; bp=g;}} if(bp){let a=Math.atan2(bp.position.x-S0.x,bp.position.z-S0.z)-S0.th; while(a>Math.PI)a-=6.283; while(a<-Math.PI)a+=6.283; yaw=Math.max(-1.1,Math.min(1.1,a)); pit=.08;}}
+  k.yaw+=(yaw-k.yaw)*Math.min(1,dt*5); k.head.rotation.set(pit+Math.sin(t*1.7)*.03,k.yaw,q.tilt);
+  if(k.talk>0){k.talk-=dt; k.jaw.rotation.x=.08+Math.abs(Math.sin(k.mt*13))*.36;} else k.jaw.rotation.x+=(0-k.jaw.rotation.x)*Math.min(1,dt*12);
+  k.blink-=dt; if(k.blink<0)k.blink=2.2+Math.random()*2.5; k.eyes.scale.y=k.blink<.12?.12:1;
+  if(S0.flag){const on=!!(V&&V.shelf&&V.shelf.kite>0&&V.phase==='board'); S0.flag.visible=on; if(on){S0.flag.rotation.z=Math.sin(T*2.3+k.ph)*.25; S0.flag.rotation.y=Math.sin(T*1.7+k.ph)*.5;}}}
+function keeperMood(S0,mood,talk){const k=S0.keeper.k; if(k.mood!==mood){k.mood=mood; k.mt=0;} if(talk)k.talk=talk;}
+/* ---------- a visit to the shop ----------
+   The host runs the visit and is the only one who changes tickets, bags or the shelf. Phones show it: the camera goes to the counter, the shopkeeper
+   says his piece, and the player whose visit it is gets the goods as cards to choose from. A tap only asks; nothing is paid for or handed over until
+   the host has checked the request against the shelf, the price and the bag. */
+const SHOPIDS=['twin','magnet','kite'];
+/* what the shopkeeper says. {name} is the player, {item} the item, {need} how many tickets short */
+const SHOPLINES={
+  greet:['Look who wandered into my little treasure trap!','Welcome, welcome! Wipe your feet and open your wallet.','A customer! Quick, everyone look expensive.','Step right up, {name}. The prices are small and so is my patience.','Ah, {name}! I was just dusting something you cannot live without.',
+    'Come in, come in. Looking is free. Everything else, sadly, is not.','Tickets in, treasures out. That is the whole business plan.','You look like someone who needs a second dice.','Careful, the bargains bite.','{name}! My favourite customer since about four seconds ago.',
+    'Do not mind the bill. I keep the change in it.','Open for business, and closed for refunds.','I had a feeling you would stop. I also had a sign.','Fresh stock today! Well, fresh-ish.','Good timing. I was about to start talking to the shelves again.','Pouch is the name. Guess where the tickets go.'],
+  island:['Sand in your shoes, tickets in your pocket. Perfect.','Everything here is waterproof. Mostly.','Surf is up and so are my prices. Kidding. A little.'],
+  carnival:['Step right up! Every purchase wins a prize: the thing you bought.','Roll up, roll up! No hoops, no ducks, just deals.','The popcorn is next door. The good decisions are right here.'],
+  farm:['Fresh from the field! The dice, I mean. Do not ask.','Morning, {name}. The hens say hello and buy something.','Home-grown bargains, picked at dawn.'],
+  volcano:['A warm welcome. Very warm. The floor is nearly lava.','Everything is hot today. It is the neighbourhood.','Buy quickly, before the stock melts.'],
+  melody:['Welcome! Everything here is in tune, including the prices.','Ah, a customer, right on the beat.','Take your time. Just not more than four bars.'],
+  pinball:['Ding ding ding! A customer! That is a bonus round for me.','No tilting the counter, please.','High scores are free. Everything else has a price tag.'],
+  temple:['Welcome, brave climber. The summit sells pearls. I sell short cuts.','Ancient treasures! Some of them are from last week.','Mind the vines. They are not for sale. I checked.'],
+  greetKite:['Psst. I have a Kite today. Do not tell the others.','Lucky you. One Kite blew in on the breeze this morning.','See that Kite? There is only the one. Just saying.','A Kite in stock! That happens about as often as my discounts.','Today only: one Kite. Tomorrow: probably none.'],
+  more:['Anything else? My bill has room for more tickets.','And something for the other pocket?','One more for the road?','Do not stop now, you are on a roll.','The shelves are looking at you.','Room in the bag for one more, I would say.'],
+  buy:['Sold! A pleasure doing business with your tickets.','Excellent choice. I would have picked it myself, if I had thumbs.','Wrapped, bagged and yours.','Ka-ching! My favourite sound.','Fine taste, {name}. Expensive taste comes later.','It is yours! No returns, no regrets.','Into the bag it goes.',
+    'A wise buy. I say that about all of them, but still.','Tickets received. Friendship confirmed.','Use it well. Or badly. It is yours now.'],
+  buy_twin:['Twin Dice! Twice the rolling, twice the blaming them.','Two dice. Double trouble for everyone else.'],
+  buy_magnet:['One Magnet. Point it away from me, please.','A Magnet! Somebody\'s tickets are about to go for a walk.'],
+  buy_kite:['The Kite! Hold on tight and wave to the others.','There goes my only Kite. Fly it somewhere good.','A Kite for {name}! The pearl stall will not know what hit it.','Up, up and away. And thank you for the tickets.'],
+  gift:['You stopped right on my doormat! That deserves a gift: a {item}.','A perfect landing! Here, a {item}, on the house.','Nobody ever lands exactly here. Take a {item}. You have earned it.','Bullseye! One free {item} for the sharpshooter.','Right on the mat! Have a {item}. Do not tell my accountant.'],
+  broke:['Oof! Those pockets are sounding a little empty!','You are {need} tickets short. I would lend you some, but I am a shopkeeper.','Ah. The window is free to look through.','Come back when your pockets jingle.','I take tickets, {name}. Not hopeful looks.','So close! Only {need} more tickets and we can talk.',
+    'Your wallet just sighed. I heard it.','No tickets, no treasure. I do not make the rules. Well, I do.','Win a mini game and come and see me.','Empty pockets today? The blue spaces are that way.','I have seen fuller pockets on a fish.','Not today, friend. But I believe in you, and in the next mini game.'],
+  full:['Your bag is stuffed! Use something first, then we will talk.','No room in that bag. I checked with my eyes.','Two items already? Leave some for the others.','That bag cannot take another thing. Come back lighter.','A full bag! What a lovely problem to have.','I would sell you more, but where would you put it? Do not answer that.'],
+  sold:['Sold out of what you are after! Fresh stock next round.','The shelves are bare. Business has been too good.','You have the tickets, I have no stock. Tragic. Next round!'],
+  cant:['Nice try. That one needs more tickets.','Not that one, not today.','That one is out of reach for now.'],
+  pass:['Just browsing? Suit yourself.','Window shopping. A noble sport.','No? The shelves and I will be here.'],
+  bye:['Just looking? The looking is free. The leaving hurts.','Off you go. The shop will miss your tickets.','Come back soon. Bring friends. Bring their tickets.','No sale? I will just be here. Dusting. Alone.','Safe travels! Mind the red spaces.','Next time, {name}. I can wait. I am a pelican.','Bye for now! The bargains will still bite later.','Until the next lap!'],
+  byeBuy:['Thank you! Come again, and again, and again.','A pleasure. Tell the others I am expensive.','Off you go, and good luck out there!','Bye, {name}! Spend it wisely. Then come and spend more.','A fine day\'s shopping. For me, mostly.','Go and get them! Then come back.','Mind the step, and the other players.','See you next lap, big spender.']
+};
+function shopLine(kind,v){let L=SHOPLINES[kind]||SHOPLINES.greet; if(kind==='greet'&&SHOPLINES[S.map]&&Math.random()<.4){L=SHOPLINES[S.map]; kind=S.map;}
+  const last=S.sl||(S.sl={}); let i=rand(0,L.length-1); if(L.length>1&&i===last[kind])i=(i+1)%L.length; last[kind]=i; return L[i].replace(/\{(\w+)\}/g,(m,k)=>v&&v[k]!=null?v[k]:'');}
+/* the host's side of a visit. landed: the player's move ended exactly on the stop, which earns a gift before the shelves */
+async function shopVisit(p,landed){
+  const u=S.ui, at=p.pos, key=(S.tn||0)+':'+at; if(p.sv===key)return; p.sv=key;   /* once a turn at each shop, however the player comes back to it */
+  const sf=shelf(), g=gen, n=u.shopN=(u.shopN||0)+1, name=nm(p); let buys=0, paid=0;
+  const can=id=>sf[id]>0&&p.t>=ITEMS[id].cost&&p.it.length<RARITY.bag&&(id!=='kite'||kiteOk(p));
+  const why=id=>sf[id]<=0?'Sold out':id==='kite'&&p.it.includes('kite')?'One at a time':p.it.length>=RARITY.bag?'Bag is full':p.t<ITEMS[id].cost?`Need ${ITEMS[id].cost-p.t} more`:'';
+  const set=(st,mood,line,buy)=>{u.shop={n,k:p.k,at,st,mood,line:line||(u.shop&&u.shop.n===n?u.shop.line:''),buy:buy?{id:buy.id,free:buy.free?1:0,n:++buys}:null};};
+  u.num=-1; u.follow=p.k; say(`${name} stops at the shop.`); set('in','wave',shopLine(sf.kite>0&&kiteOk(p)?'greetKite':'greet',{name}));
+  await sleep(p.cpu?1500:1300); if(gen!==g)return;
+  if(landed&&p.it.length<RARITY.bag){const id=pickItem('gift',p); grant(p,id); set('buy','cheer',shopLine('gift',{name,item:ITEMS[id].name}),{id,free:1}); say(`${name} stopped right at the shop door: a free ${ITEMS[id].name}!`); await sleep(2600); if(gen!==g)return;}
+  const short=()=>Math.min(...SHOPIDS.filter(id=>sf[id]>0).map(id=>ITEMS[id].cost-p.t).filter(v=>v>0),99);
+  if(p.it.length>=RARITY.bag){set('no','shrug',shopLine('full',{name})); say(`${name}'s bag is full.`); await sleep(p.cpu?1700:2300);}
+  else if(!SHOPIDS.some(can)){const stock=SHOPIDS.some(id=>sf[id]>0&&p.t<ITEMS[id].cost); set('no','shrug',shopLine(stock?'broke':'sold',{name,need:short()})); say(stock?`${name} cannot afford anything today.`:'The shop has nothing left this round.'); await sleep(p.cpu?1700:2400);}
+  else if(p.cpu){const before=p.t, b=cpuShop(p); if(b){paid=before-p.t; set('buy','cheer',shopLine(Math.random()<.5?'buy_'+b:'buy',{name,item:ITEMS[b].name}),{id:b}); say(`${name} buys a ${ITEMS[b].name}.`); await sleep(1900);} else{set('no','talk',shopLine('pass',{name})); await sleep(1100);}}
+  else for(;;){
+    const list=SHOPIDS.filter(id=>sf[id]>0||id!=='kite');   /* the staples stay on show when they sell out; the Kite is only there when there is one */
+    set('open',paid?'point':'talk',paid?shopLine('more',{name}):'');
+    askX={shop:{items:list.map(id=>({id,cost:ITEMS[id].cost,stock:sf[id],ok:can(id),why:why(id)})),bal:p.t,bag:p.it.length}};
+    const c=await ask(p.k,'Leave the shop',...list.map(id=>ITEMS[id].name)); if(gen!==g)return;
+    if(c===0||p.cpu)break; const id=list[c-1];
+    if(!can(id)){set('open','shrug',shopLine('cant',{name,item:ITEMS[id].name})); await sleep(1300); if(gen!==g)return; continue;}   /* the shelf, the price and the bag are checked here, so a late or repeated tap buys nothing */
+    p.t-=ITEMS[id].cost; p.sp=(p.sp||0)+ITEMS[id].cost; paid+=ITEMS[id].cost; sf[id]--; grant(p,id);
+    set('buy','cheer',shopLine(Math.random()<.5?'buy_'+id:'buy',{name,item:ITEMS[id].name}),{id}); say(`${name} buys a ${ITEMS[id].name}.`); await sleep(1900); if(gen!==g)return;
+    if(!SHOPIDS.some(can))break;
+  }
+  if(gen!==g)return; set('out','bye',shopLine(paid?'byeBuy':'bye',{name})); await sleep(p.cpu?1200:1500); if(gen!==g)return; u.shop=null; say('');
+}
+
+/* ---------- what the phones show ---------- */
+const SHOPCSS=`
+#shopSay{position:fixed; z-index:6; max-width:min(78vw,340px); padding:9px 14px 10px; background:#fffdf4; border:3px solid var(--ink); border-radius:18px; box-shadow:0 4px 0 var(--ink); font-family:var(--body); font-weight:700; font-size:1rem; line-height:1.25; color:var(--ink); text-align:center; transform:translate(-50%,-100%); pointer-events:none; transition:opacity .2s}
+#shopSay:after{content:''; position:absolute; left:50%; bottom:-11px; width:16px; height:16px; margin-left:-8px; background:#fffdf4; border-right:3px solid var(--ink); border-bottom:3px solid var(--ink); transform:rotate(45deg)}
+#shopSay.pop{animation:shSay .32s cubic-bezier(.2,1.6,.4,1)}
+@keyframes shSay{from{transform:translate(-50%,-100%) scale(.6); opacity:0} to{transform:translate(-50%,-100%) scale(1); opacity:1}}
+#shopUI{position:fixed; left:0; right:0; bottom:0; z-index:5; padding:8px max(10px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px)); background:linear-gradient(rgba(23,48,77,0),rgba(23,48,77,.55) 26%); display:flex; flex-direction:column; gap:8px; animation:shUp .28s ease-out}
+@keyframes shUp{from{transform:translateY(40px); opacity:0} to{transform:none; opacity:1}}
+#shopUI .shHead{display:flex; align-items:center; gap:8px; justify-content:center; flex-wrap:wrap}
+#shopUI .shPill{display:inline-flex; align-items:center; gap:6px; padding:4px 12px; background:#fffdf4; border:3px solid var(--ink); border-radius:999px; box-shadow:0 3px 0 var(--ink); font-family:var(--display); font-size:1rem; color:var(--ink)}
+#shopUI .shBal{font-size:1.25rem; background:linear-gradient(#fff7d1,#ffe07a)}
+#shopUI .shBal .tk{transform:scale(1.25)}
+#shopUI .shBal.bump{animation:chipPop .34s ease-out}
+#shopUI .shRow{display:flex; gap:10px; overflow-x:auto; padding:4px 2px 8px; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch; justify-content:safe center}
+#shopUI .shCard{flex:0 0 auto; width:min(40vw,168px); scroll-snap-align:center; display:grid; grid-template-columns:auto 1fr; grid-template-areas:'pic name' 'pic cost' 'desc desc' 'note note'; gap:2px 9px; align-items:center; text-align:left; padding:9px 10px 8px; background:linear-gradient(#fffdf4,#fff1cf); border:3px solid var(--ink); border-radius:18px; box-shadow:0 5px 0 var(--ink); color:var(--ink); transition:transform .12s}
+#shopUI .shCard .shPic{grid-area:pic; width:46px; height:46px; display:grid; place-items:center; background:#fff; border:2px solid var(--ink); border-radius:12px}
+#shopUI .shCard .shPic svg{width:36px; height:36px}
+#shopUI .shCard b{grid-area:name; font-family:var(--display); font-weight:400; font-size:1.05rem; line-height:1.05}
+#shopUI .shCard .shCost{grid-area:cost; display:inline-flex; align-items:center; gap:5px; font-family:var(--display); font-size:1.2rem}
+#shopUI .shCard small{grid-area:desc; font-size:.78rem; line-height:1.2; color:var(--dim); min-height:2.4em}
+#shopUI .shCard em{grid-area:note; font-style:normal; font-weight:800; font-size:.74rem; letter-spacing:.02em; text-transform:uppercase; color:#1f8a5b}
+#shopUI .shCard.no{background:linear-gradient(#f1f3f7,#dfe4ec); filter:saturate(.5)}
+#shopUI .shCard.no em{color:#c2372f}
+#shopUI .shCard.rare{background:linear-gradient(#fff6ff,#f1d9ff)}
+#shopUI .shCard{position:relative}
+#shopUI .shCard.rare:before{content:'RARE'; position:absolute; top:-11px; right:10px; padding:1px 8px; background:#8b5cf6; color:#fff; border:2px solid var(--ink); border-radius:999px; font-family:var(--display); font-size:.7rem}
+#shopUI .shCard.sel{transform:translateY(-6px); box-shadow:0 5px 0 var(--ink),0 0 0 4px var(--sun)}
+#shopUI .shCard.shake{animation:shNo .3s}
+#shopUI .shCard.got{animation:shGot .55s ease-out}
+@keyframes shNo{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes shGot{30%{transform:translateY(-14px) scale(1.07)}100%{transform:none}}
+#shopUI .shActs{display:flex; gap:10px}
+#shopUI .shActs .btn{flex:1; min-height:50px}
+#shopUI .shActs #shLeave{flex:0 0 34%}
+#shopUI.watch .shActs{display:none}
+#shopUI.watch .shCard{width:min(30vw,124px); padding:6px 8px}
+#shopUI.watch .shCard small{display:none}
+#shopUI.busy .shCard,#shopUI.busy .shActs{pointer-events:none; opacity:.75}
+#game.shopping #panel{visibility:hidden}
+body.shopping #ptag{visibility:hidden}
+.shFly{position:fixed; left:0; top:0; width:44px; height:44px; margin:-22px 0 0 -22px; z-index:70; pointer-events:none}
+.shFly svg{width:44px; height:44px}
+@media (max-width:480px){#shopUI .shRow{gap:7px; justify-content:center} #shopUI .shCard{width:calc((100vw - 40px)/3); grid-template-columns:1fr; grid-template-areas:'pic' 'name' 'cost' 'desc' 'note'; justify-items:center; text-align:center; padding:9px 5px 7px} #shopUI .shCard small{font-size:.72rem; min-height:4.8em} #shopUI .shCard b{font-size:1rem}}
+@media (max-height:500px){#shopUI{flex-direction:row; align-items:flex-end; gap:8px} #shopUI .shHead{flex-direction:column; align-items:flex-start; flex:0 0 auto} #shopUI .shRow{flex:1; padding-bottom:4px} #shopUI .shCard{width:132px; padding:6px 8px 5px} #shopUI .shCard small{display:none} #shopUI .shCard .shPic{width:36px; height:36px} #shopUI .shCard .shPic svg{width:28px; height:28px}
+  #shopUI .shActs{flex-direction:column; flex:0 0 150px} #shopUI .shActs #shLeave{flex:1} #shopUI .shActs .btn{min-height:42px; font-size:1.05rem}}
+`;
+function shopDom(){const X=SHOPX; if(X.dom)return X.dom; const st=document.createElement('style'); st.textContent=SHOPCSS; document.head.appendChild(st);
+  const say=document.createElement('div'); say.id='shopSay'; say.hidden=true; document.body.appendChild(say);
+  const ui=document.createElement('div'); ui.id='shopUI'; ui.hidden=true; ui.innerHTML='<div class="shHead"><span class="shPill shWho"></span><span class="shPill shBal"></span><span class="shPill shBag"></span></div><div class="shRow"></div><div class="shActs"><button class="btn" id="shBuy"></button><button class="btn alt" id="shLeave">Leave</button></div>'; document.body.appendChild(ui);
+  return X.dom={say,ui,who:ui.querySelector('.shWho'),bal:ui.querySelector('.shBal'),bag:ui.querySelector('.shBag'),row:ui.querySelector('.shRow'),buy:ui.querySelector('#shBuy'),leave:ui.querySelector('#shLeave')};}
+/* the goods as cards. Called when the host asks the shopper to choose; every other phone gets the same cards to watch, with nothing to press */
+function shopAsk(a){const X=SHOPX, D=shopDom(), mine=a.k===myK(), items=a.shop.items; X.ask=a; X.sel=mine?items.findIndex(q=>q.ok):-1;
+  D.ui.className=mine?'':'watch'; D.who.textContent=mine?'Your tickets':nameOf(a.k)+' is shopping'; D.bal.innerHTML=`<i class="tk"></i>${a.shop.bal}`; D.bag.textContent=`Bag ${a.shop.bag} of ${RARITY.bag}`;
+  D.row.innerHTML=items.map((q,i)=>{const I=ITEMS[q.id]; return `<button class="shCard${q.ok?'':' no'}${q.id==='kite'?' rare':''}" data-i="${i}"${mine?'':' tabindex="-1"'}><span class="shPic">${I.svg}</span><b>${I.name}</b><span class="shCost"><i class="tk"></i>${q.cost}</span><small>${I.desc}</small><em>${q.why||(q.stock===1?'Last one!':q.stock+' in stock')}</em></button>`;}).join('');
+  const cards=[...D.row.children], show=()=>{cards.forEach((c,i)=>c.classList.toggle('sel',i===X.sel)); const q=items[X.sel]; D.buy.disabled=!q||!q.ok; D.buy.textContent=q?(q.ok?`Buy ${ITEMS[q.id].name} for ${q.cost}`:q.why):'Pick something';};
+  cards.forEach((c,i)=>{c.onclick=()=>{if(!mine)return; X.sel=i; show(); if(!items[i].ok){c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); SFX.bump();} else SFX.hop();};});
+  D.buy.onclick=()=>{const q=items[X.sel]; if(!mine||!q||!q.ok)return; D.ui.classList.add('busy'); answer(a.id,X.sel+1);};
+  D.leave.onclick=()=>{if(!mine)return; D.ui.classList.add('busy'); answer(a.id,0);};
+  show(); if(mine&&X.sel>=0&&cards[X.sel].scrollIntoView)cards[X.sel].scrollIntoView({inline:'center',block:'nearest'});}
+/* once a frame while the board is showing */
+function shopSync(ui,dt){const X=SHOPX, s=ui.shop, D=X.dom;
+  const a=ui.ask&&ui.ask.shop?ui.ask:null; if(D){D.ui.hidden=!a; if(!a)X.ask=null;}
+  if(!s){if(X.cur){X.cur=null; X.key=''; if(D)D.say.hidden=true; $('#game').classList.remove('shopping'); document.body.classList.remove('shopping'); for(const q of X.list)if(q.keeper)keeperMood(q,'idle');} return;}
+  const S0=X.list.find(q=>q.i===s.at); if(!S0||!S0.keeper)return; const dom=shopDom(), key=s.n+':'+s.st+':'+s.line+':'+(s.buy?s.buy.n:0);
+  if(key!==X.key){const first=!X.cur||X.vis!==s.n; X.key=key; X.cur=S0; X.vis=s.n; $('#game').classList.add('shopping'); document.body.classList.add('shopping');
+    keeperMood(S0,s.mood,s.line&&s.line!==X.line?Math.min(2.8,.6+s.line.length*.04):0);
+    if(s.line&&s.line!==X.line){dom.say.textContent=s.line; dom.say.hidden=false; dom.say.classList.remove('pop'); void dom.say.offsetWidth; dom.say.classList.add('pop'); if(V.phase==='board')tone(first?660:520,.07,'triangle',.04,first?990:700);} X.line=s.line;
+    if(first){X.buyN=0; if(V.phase==='board')seq([988,1319],110,'triangle',.045); if(s.k===myK())camMode='follow';}
+    if(s.buy&&s.buy.n!==X.buyN){X.buyN=s.buy.n; shopBought(S0,s);}}
+  /* the camera stands back on the path side, a little to one side so the shopper is not in the way. While the cards are up it stands further back and looks lower, which lifts the whole shop clear of them */
+  if(s.k===myK()||camMode!=='free'){shopViewFind(S0); const q=shopPose(S0,S0.view||SHOPCAM[0],!!a); camWant(q[0],q[1],q[2],q[3],q[4],q[5],3.4);}
+  /* the speech bubble sits over the shopkeeper's head */
+  if(!dom.say.hidden){const [x,y]=screenPos(new THREE.Vector3(S0.x+S0.fx*.1,S0.fy+2.55,S0.z+S0.fz*.1)), W=window.innerWidth, hw=Math.min(W*.39,170)+8; dom.say.style.left=Math.max(hw,Math.min(W-hw,x))+'px'; const sc=$('#score'), top=(sc?sc.getBoundingClientRect().bottom:60)+dom.say.offsetHeight+16; dom.say.style.top=Math.max(top,y)+'px';}}   /* never over the scoreboard */
+/* where the camera could stand, in order of preference: az is how far round from straight in front (radians), k how close, h how high.
+   The first one with a clear view of the shopkeeper and the counter is used; trees, tents and other shops are in the way of some of them. */
+const SHOPCAM=[{az:.19,k:1,h:1},{az:-.19,k:1,h:1},{az:.5,k:1,h:1},{az:-.5,k:1,h:1},{az:.85,k:1,h:1.05},{az:-.85,k:1,h:1.05},{az:.19,k:.66,h:1.45},{az:-.45,k:.66,h:1.45},{az:.6,k:.66,h:1.45},{az:0,k:.5,h:1.9}];
+function shopPose(S0,c,cards){const pt=cam.aspect<1, low=window.innerHeight<=500, D=(cards?(pt?10.4:low?11.5:10.6):(pt?9.4:8.2))*c.k, H=(cards?(pt?4.8:4.2):(pt?4.4:3.5))*c.h, drop=cards?(pt?2.3:low?1.7:1.25):(pt?.7:.3), cs=Math.cos(c.az), sn=Math.sin(c.az), dx=S0.fx*cs+S0.fz*sn, dz=-S0.fx*sn+S0.fz*cs;
+  return[S0.x+dx*D,S0.fy+H,S0.z+dz*D,S0.x,S0.fy+1.4-drop*c.k,S0.z];}
+/* one candidate is tried each frame, so the search never holds a frame up for long. The answer is kept for the rest of the game on this board */
+function shopViewFind(S0){const st=S0.vs||(S0.vs={i:0,bh:9,done:false,ms:0}); if(st.done)return; const X=SHOPX, t0=performance.now(); if(!X.rc){X.rc=new THREE.Raycaster(); X.o=new THREE.Vector3(); X.d=new THREE.Vector3();}
+  const c=SHOPCAM[st.i], q=shopPose(S0,c,true); let hits=0; X.rc.camera=cam; X.rc.near=.3;
+  for(const t of [[S0.x,S0.fy+1.4,S0.z],[S0.x+S0.fx*.8,S0.fy+.7,S0.z+S0.fz*.8]]){X.o.set(q[0],q[1],q[2]); X.d.set(t[0],t[1],t[2]).sub(X.o); const len=X.d.length(); X.rc.set(X.o,X.d.normalize()); X.rc.far=len-2.8;   /* anything that close to the counter is the shop itself */
+    try{if(X.rc.intersectObject(world,true).length)hits++;}catch(e){}}
+  if(hits<st.bh){st.bh=hits; S0.view=c;} st.i++; st.ms+=performance.now()-t0; if(!hits||st.i>=SHOPCAM.length)st.done=true;}
+/* a purchase the host has confirmed: sparkles on the counter, the card jumps, and the item flies to its new owner's scoreboard card */
+function shopBought(S0,s){const I=ITEMS[s.buy.id]; toyPuff(S0.x+S0.fx*.8,S0.fy+1.2,S0.z+S0.fz*.8,s.buy.free?0xb6f5d6:0xffe27a,9,1.3); if(!I||document.hidden)return;
+  const D=SHOPX.dom, chip=$('#score').children[s.k], card=D&&!D.ui.hidden?[...D.row.children].find(c=>SHOPX.ask&&SHOPX.ask.shop.items[+c.dataset.i]&&SHOPX.ask.shop.items[+c.dataset.i].id===s.buy.id):null;
+  if(card){card.classList.remove('got'); void card.offsetWidth; card.classList.add('got');} if(D){D.bal.classList.remove('bump'); void D.bal.offsetWidth; D.bal.classList.add('bump');}
+  if(!chip||!chip.animate)return; const r=chip.getBoundingClientRect(), f=card?card.getBoundingClientRect():null, [sx,sy]=f?[f.left+30,f.top+30]:screenPos(new THREE.Vector3(S0.x+S0.fx*.8,S0.fy+1.3,S0.z+S0.fz*.8)), e=document.createElement('div'); e.className='shFly'; e.innerHTML=I.svg; document.body.appendChild(e);
+  const an=e.animate([{transform:`translate(${sx}px,${sy}px) scale(.6)`,opacity:0},{transform:`translate(${sx}px,${sy-70}px) scale(1.5) rotate(-12deg)`,opacity:1,offset:.35},{transform:`translate(${r.left+r.width/2}px,${r.top+r.height/2}px) scale(.5) rotate(20deg)`,opacity:1}],{duration:900,easing:'cubic-bezier(.45,0,.25,1)',fill:'both'});
+  an.onfinish=()=>{e.remove(); if(chip.isConnected){chip.classList.remove('pop'); void chip.offsetWidth; chip.classList.add('pop');}};}
+/* the shopkeepers are alive whether or not anyone is shopping */
+function shopFrame(dt){const X=SHOPX; if(!X.list.length||!TOY.on)return; const live=V&&V.phase==='board'&&V.ui?V.ui.shop:null; if(!live&&X.cur){X.cur=null; X.key=''; if(X.dom){X.dom.say.hidden=true; X.dom.ui.hidden=true;} const g=$('#game'); if(g)g.classList.remove('shopping'); document.body.classList.remove('shopping'); for(const q of X.list)if(q.keeper)keeperMood(q,'idle');}
+  for(const q of X.list)if(q.keeper)keeperFrame(q,dt,!!live&&live.at===q.i);}
 /* ====================================================================================================
    Board introductions (Build 74)
    Before the first turn every player is shown the board: a flight over it with its name, the one rule that makes this board
@@ -3001,7 +3335,7 @@ window.addEventListener('keydown',e=>{if(chanceSkip&&(e.key===' '||e.key==='Ente
 function hideInfo(){$('#spInfo').hidden=true; if(mark)mark.visible=false;}
 function spaceInfo(i){
   const n=NODES[i], amt=V.round>=V.rounds?6:3, me=V.p[myK()];
-  let t={H:'Item shop: buy an item when you pass. Land here and you get one free.',S:'Gate: win 10 tickets every time you pass.','+':`Blue space: win ${amt} tickets.`,'-':`Red space: lose ${amt} tickets.`,'?':'Chance space: a random event.',I:'Item space: a free item for your bag.'}[n.t];
+  let t={H:'Shop stop: everyone who passes is stopped at the shop beside it and can buy. Stop exactly here and the shopkeeper gives you an item as well.',S:'Gate: win 10 tickets every time you pass.','+':`Blue space: win ${amt} tickets.`,'-':`Red space: lose ${amt} tickets.`,'?':'Chance space: a random event.',I:'Item space: a free item for your bag.'}[n.t];
   if(!t&&SP[n.t]){t=`${SP[n.t][0]}: ${SP[n.t][1]}`; if(n.t==='J'&&V.pot!=null)t+=` The pot holds ${V.pot}.`; if(n.t==='V'&&V.harv!=null)t+=` Worth ${V.harv} tickets now.`;}
   if(n.hot)t='Scorched by lava for now: lose 3 tickets. '+(t||'');
   if(n.bridge)t+=' On the bridge shortcut.'; if(n.next.length>1)t+=' The path forks here.';
@@ -3022,7 +3356,7 @@ function sync(dt){
   if(shownGid!==V.gid||pawns.length!==V.p.length)setupBoard();
   if(shownScreen!==want)show(want);
   $('#game').hidden=V.phase!=='board'||introT>.9;
-  const ui=V.ui; kiteSync(ui,dt);
+  const ui=V.ui; kiteSync(ui,dt); shopSync(ui,dt);
   V.p.forEach((p,k)=>{
     const g=pawns[k]; if(kitePawn(g,p,k,dt))return;   /* in the air under a Kite: the film has the piece */
     if(g.ride>0&&FXP.wheel){g.ride-=dt*SPEED; const w=FXP.wheel, a=T*5; g.position.set(w.x+Math.cos(a)*2*w.s,.28+w.y-1+Math.sin(a)*2*w.s,w.z+.6); g.run=0; g.air=true; if(g.ride<=0){g.position.y=.28; g.air=false;} return;}
@@ -3100,7 +3434,7 @@ function renderAsk(){
   const a=V.ui.ask, box=V.phase==='mini'?$('#mgActs'):V.phase==='results'?$('#resActs'):$('#acts'), key=a?a.id+':'+V.phase:'';
   if(key===askShown)return; askShown=key; for(const id of ['#acts','#mgActs','#resActs'])$(id).innerHTML='';
   if(pickTxt||landAt>=0){pickTxt=''; landAt=-1; hudKey='';}
-  if(!a)return;
+  if(!a)return; if(a.shop){shopAsk(a); return;}   /* the shop has its own sheet of cards */
   if(a.k!==myK()){const d=document.createElement('div'); d.className='wait'; d.textContent=`Waiting for ${nameOf(a.k)}…`; box.appendChild(d); return;}
   a.l.forEach((l,i)=>{const b=document.createElement('button'), [t,sub]=l.split('|'); b.className='btn'+(i?' alt':''); b.id='act'+i; b.textContent=t; const itm=Object.values(ITEMS).find(x=>x.name===t); if(itm)b.insertAdjacentHTML('afterbegin',itm.svg);
     if(sub){const sm=document.createElement('small'); sm.textContent=sub; b.appendChild(sm);}
@@ -3389,7 +3723,7 @@ async function moveP(p,n){
   while(n>0){
     S.ui.num=n; const nx=NODES[p.pos].next; await stepTo(p,nx.length>1?await branch(p,nx,n):nx[0]); n--;
     if(p.pos===0){gain(p,10); say('Lap bonus: +10 tickets.');}
-    if(NODES[p.pos].t==='H'){S.ui.num=-1; if(n===0){say(`${nm(p)} landed on the item shop: a free item!`); await sleep(700); await giveItem(p);} else await shopStop(p);}   /* pass the shop and you can buy; land on it and you are given one */
+    if(NODES[p.pos].t==='H')await shopVisit(p,n===0);   /* the shop stops everyone who passes; the steps still to walk wait until they leave. Stopping exactly at its door earns a gift too */
     await pearlStop(p);   /* passing the stall and stopping exactly on it are the same thing here */
   }
   await sleep(240); S.ui.num=-1;   // let the pawn finish its last stride before the space resolves
@@ -3420,18 +3754,7 @@ async function useItem(p,idx){
   if(id==='magnet'){const v=S.p.filter(o=>o!==p).sort((a,b)=>b.t-a.t)[0], amt=Math.min(5,v.t); gain(v,-amt); gain(p,amt); say(`Magnet pulls ${amt} tickets from ${nm(v)}.`); await sleep(1200); return 1;}
   await kiteFly(p); return 1;
 }
-async function shop(p){
-  const sf=shelf(), ids=['twin','magnet','kite'].filter(id=>p.t>=ITEMS[id].cost&&sf[id]>0&&(id!=='kite'||kiteOk(p))); say('Item shop. Pick an item, or skip.'); S.ui.follow=p.k;
-  askX={pick:1,start:-1,info:[...ids.map(id=>`${ITEMS[id].name}, ${ITEMS[id].cost} tickets. ${ITEMS[id].desc}`),null]};
-  const c=await ask(p.k,...ids.map(id=>`${ITEMS[id].name}|${ITEMS[id].cost} tickets`),'Skip');
-  if(c<ids.length){p.t-=ITEMS[ids[c]].cost; p.sp=(p.sp||0)+ITEMS[ids[c]].cost; sf[ids[c]]--; grant(p,ids[c]);}
-}
-async function shopStop(p){
-  if(p.cpu){const b=cpuShop(p); if(b){say(`${nm(p)} buys a ${ITEMS[b].name} at the shop.`); await sleep(1000);} return;}
-  if(p.it.length>=2){say('Item shop, but your bag is full.'); await sleep(900); return;}
-  if(p.t<ITEMS.twin.cost){say('Item shop. Not enough tickets to buy anything.'); await sleep(900); return;}
-  await shop(p);
-}
+/* the shop visit itself is shopVisit, with the shop buildings */
 function cpuShop(p){
   if(p.it.length>=RARITY.bag)return null; let id=null; const sf=shelf();
   if(p.t>=price()+ITEMS.kite.cost&&sf.kite>0&&kiteOk(p))id='kite';
@@ -3662,7 +3985,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=83; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=84; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -5699,14 +6022,14 @@ const GUIDE=[
    <li>${sw('#ff4d4d','')}<span><b>Red</b>Lose 3 tickets.</span></li>
    <li>${sw('#ffc531','?',1)}<span><b>Chance</b>Spin for a random event: win or lose tickets, swap places, bonus steps.</span></li>
    <li>${sw('#35c98a','*')}<span><b>Item</b>A free item for your bag.</span></li>
-   <li>${sw('#9b6bff','$')}<span><b>Shop</b>Buy an item when you pass. Land on it and you get one free.</span></li>
+   <li>${sw('#9b6bff','$')}<span><b>Shop</b>You stop at the shop whenever you pass it, then walk on. Stop exactly at its door and you are given an item too.</span></li>
    <li>${sw('#ffffff','GO',1)}<span><b>Gate</b>Win 10 tickets every time you pass it.</span></li></ul>
    <p class="lede">Every map also has its own special spaces. Tap any space on the board to see what it does. In the final round, blue and red spaces count double.</p>`],
  ['Items',`<ul class="legend">
    <li><span class="sw" style="background:#fff">${ITEMS.twin.svg}</span><span><b>Twin Dice, ${ITEMS.twin.cost} tickets</b>Roll two dice this turn.</span></li>
    <li><span class="sw" style="background:#fff">${ITEMS.magnet.svg}</span><span><b>Magnet, ${ITEMS.magnet.cost} tickets</b>Take 5 tickets from the richest rival.</span></li>
    <li><span class="sw" style="background:#fff">${ITEMS.kite.svg}</span><span><b>Kite, ${ITEMS.kite.cost} tickets</b>Fly straight to the pearl stall. Rare: the shop has one only now and then, and you can carry one at a time.</span></li></ul>
-   <p class="lede">Buy items when you pass a purple shop space, or land on it for a free one. Your bag holds 2.</p>`],
+   <p class="lede">The shop's shelf is refilled every round and shared by all the shops: 3 Twin Dice, 2 Magnets and, now and then, one Kite. Your bag holds 2.</p>`],
  ['Mini games and the finish',`<ul class="legend">
    <li><span><b>Game controller.</b>In walk-around games the left stick or d-pad runs and A jumps or dashes. Everywhere else the left stick or d-pad moves a box between the buttons and A presses the boxed one. B opens the map, Start opens the menu, and the right stick scrolls or pans the board.</span></li>
    <li><span><b>Shared-deck games.</b>Walk into other players to shove them, do not fall off the edge, and the last one standing ends the game.</span></li>

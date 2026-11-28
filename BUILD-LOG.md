@@ -775,6 +775,41 @@ Checked
 - Fifteen platform games: a player was walked straight at the rim. The twelve wall games held them; the three fall games dropped them.
 - Screenshots of the flight on the Island (desktop) and the Temple (phone).
 
+## Build 84
+Shops: a building beside the path at every shop stop, a shopkeeper, and a proper shop screen.
+
+The buildings
+- Each of the three shop stops on every board now has a shop standing beside it: a floor, a counter facing the path, a back wall with shelves of goods (the dice and the magnet it sells are among them), a canopy, a sign and a doormat. The stop itself is still a space on the path, now marked with a little shop front.
+- Seven designs, one per board. Island: a whitewashed beach shack with a blue slatted roof, a striped awning, shells along the counter, a life ring and a surfboard. Carnival: a red and white prize stall with bulbs, balloons and teddy bears. Farm: a timber market stand under thatch, with crates of produce, pots of flowers and a chalkboard sign. Volcano: a dark stone hut under a slab roof, with glowing crystals and lanterns. Melody Mansion: a music shop with a keyboard for a counter, records on the wall and a gramophone horn. Pinball Paradise: an arcade prize counter in dark gloss and neon under a lit marquee, with silver balls on the shelves. Temple: a jungle stand on carved stone, roofed with big leaves, wound with vines, lit by lanterns and piled with gold.
+- Where a shop stands is worked out for each stop: clear of every other space and of the pearl stall, on its own side of the path, and facing the game camera where there is room (20 of the 21 do; the sign is painted on both faces for the one that cannot). The ground is levelled under it, a boardwalk joins it to its stop when it has to stand further off, and on the Pinball ramp it stands on stilts at the height of the ramp.
+- The canopy is set back so the camera, which looks down from the south, can always see the shopkeeper under it.
+- When the shop has a Kite to sell that round, a small kite is hung out at the corner of the canopy.
+
+The shopkeeper
+- Pouch the pelican keeps every shop, in a different hat on each board: straw hat, striped boater, wide farm hat, miner's helmet, top hat, arcade cap, pith helmet. He is an original character built for this game.
+- He is always doing something: he bobs, blinks, flaps now and then and turns his head to watch whoever is nearest. In a visit he waves hello, talks with his bill, points at the shelves, cheers a sale, shrugs at empty pockets and bows goodbye.
+- About 120 lines of his own, picked by the host so every phone shows the same one, never the same line twice running: greetings (some for each board, some for the rounds he has a Kite), a nudge to buy more, thanks for a sale, a line for each item, a gift line, twelve ways of saying you cannot afford it, a full bag, sold out, and goodbyes for buyers and for browsers.
+
+Shopping
+- Everyone who passes a shop is stopped there, and walks on afterwards with the steps they had left. This is the board's movement code, one stop per turn per shop, not a check of how near the piece is. It works on both ways round each board, and a Kite flight does not set it off.
+- Stopping exactly at the shop door still earns a free item, now handed over by the shopkeeper, and the shelves open afterwards.
+- The camera goes to the counter. It tries up to ten places to stand and uses the first with a clear view, so a tree, a tent or another shop is not left in the way.
+- The goods are shown as cards: picture, name, price in tickets, what it does, how many are left ("Last one!"), and why not when you cannot have it ("Need 3 more", "Sold out", "Bag is full", "One at a time"). Your tickets and how full your bag is are shown above them. Tap a card to choose it, then Buy, as many times as the bag allows, or Leave.
+- Nothing is paid for or handed over until the host has checked the request against the shelf, the price and the bag. A request for something the player cannot have buys nothing.
+- Every other phone sees the same visit: the camera, the shopkeeper's words and the cards, with nothing to press.
+- A confirmed purchase: the shopkeeper cheers, sparkles on the counter, the card jumps and the item flies to the buyer's scoreboard card.
+- If the shopper leaves the game or does not answer, the first answer is "Leave", so the visit ends, their remaining steps are walked and the game goes on.
+- Computer players shop here too, and only here.
+- Phones: upright, three cards fit across; sideways, the cards, the balance and the buttons sit in one row. A controller can press everything.
+
+Prices and stock (all in the one item table, `RARITY`)
+- Twin Dice 5 tickets, 3 a round. Magnet 8 tickets, 2 a round. Kite 25 tickets, 1 on about one round in four, and never past the game's Kite limit. The shelf is shared by all three shops and refilled each round.
+
+Checked
+- A visit played through on the Island, Carnival, Temple and Volcano boards: stopped with steps in hand, two purchases, the walk finished; stopping exactly (gift, then shelves, leaving for free); arriving with no tickets; a forged request refused.
+- Two phones online: the joined player shopped while the host watched, both ended in the same state; then the shopper closed the game mid-visit and the game went on 1.5 seconds later.
+- All 21 shops photographed from the counter and from the game camera; the shop screen photographed upright and sideways at phone size.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
