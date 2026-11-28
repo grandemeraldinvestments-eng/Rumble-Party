@@ -606,6 +606,20 @@ Carnival
 
 Tested: Carnival built and viewed on a desktop screen; game view; a full three-round solo game with no errors. Not tested: real phones.
 
+## Build 76
+Farm rebuilt to the Island standard.
+
+Kit
+- Ground that is not an island: land in every direction, with low hills rolling away to the horizon and trees on them. Ponds anywhere the ground is low. Each board names its own colours for soil, grass and rock.
+- A smooth dirt track as a path style.
+
+Farm
+- Rolling countryside. The path is a dirt track that rises and falls; the short cut is a plank walk.
+- A windmill whose sails turn stands behind the middle of the board, a red barn with a silo in its yard, a paddock with cows, fields of crops and pumpkins with a scarecrow, an orchard along the back, a duck pond at the front with ducks that paddle.
+- Inside the path: fruit trees, a tractor, hay bales, a well, sheep and hens. A white rail fence follows the outside of the path, with flower meadows and bushes around.
+
+Tested: Farm built and viewed on a desktop screen; game view; a full three-round solo game. Not tested: real phones.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**

@@ -1356,7 +1356,7 @@ function toyGround(m,opt){
   const A=N[m.fork], B=N[N.join], oa=outN(m.fork), ob=outN(N.join), far=(n,o,d)=>[n.x+o[0]*d,n.z+o[1]*d];
   const C=[far(A,oa,9),far(A,oa,4.2),[A.x,A.z],...N.slice(45).map(n=>[n.x,n.z]),[B.x,B.z],far(B,ob,4.2),far(B,ob,9)], cn=C.length-1, GS=6, G=[], at=q=>C[Math.max(0,Math.min(cn,q))];
   for(let i=0;i<=cn*GS;i++){const f=Math.min(i/GS,cn-1e-6),k=Math.floor(f),t=f-k; G.push([0,1].map(d=>cr(at(k-1)[d],at(k)[d],at(k+1)[d],at(k+2)[d],t)));}
-  T.loop=L; T.chan=G; T.A=A; T.B=B;
+  T.loop=L; T.chan=G; T.A=A; T.B=B; T.pal=opt.pal;
   {const Q=[[A.x,A.z],...N.slice(45).map(n=>[n.x,n.z]),[B.x,B.z]], qn=Q.length-1, qa=q=>Q[Math.max(0,Math.min(qn,q))]; T.cut=[]; for(let i=0;i<=qn*GS;i++){const f=Math.min(i/GS,qn-1e-6),k=Math.floor(f),t=f-k; T.cut.push([0,1].map(d=>cr(qa(k-1)[d],qa(k)[d],qa(k+1)[d],qa(k+2)[d],t)));}}   /* the short cut as one smooth line, fork to join */
   const dseg=(px,pz,a,b)=>{const dx=b[0]-a[0],dz=b[1]-a[1],l=dx*dx+dz*dz||1,t=clamp01(((px-a[0])*dx+(pz-a[1])*dz)/l); return Math.hypot(px-a[0]-dx*t,pz-a[1]-dz*t);};
   const dpoly=(P,closed,x,z)=>{let d=1e9; const n=P.length; for(let i=0;i<(closed?n:n-1);i++){const q=dseg(x,z,P[i],P[(i+1)%n]); if(q<d)d=q;} return d;};
@@ -1367,7 +1367,8 @@ function toyGround(m,opt){
   for(let j=0;j<CH;j++)for(let i=0;i<CW;i++){const x=X0+i*CS,z=Z0+j*CS,d=dpoly(L,true,x,z); sd[j*CW+i]=inside(x,z)?d:-d; gd[j*CW+i]=opt.tide?dpoly(G,false,x,z):99;}
   const sD=bil(sd,CW,CH,X0,Z0,CS), gD=bil(gd,CW,CH,X0,Z0,CS); T.sD=sD; T.gD=gD;
   const PATCH=opt.patch||[], PLAT_=opt.plateau||[], MESA=opt.mesa||[], BEACH=opt.beach||[];
-  const landE=(x,z)=>{let e=sD(x,z)+3.7+1.5*vnoise(x*.14+3.1,z*.14+7.7,5); for(const p of PATCH)e=smax(e,p[2]-Math.hypot(x-p[0],z-p[1]),1.6); return e;};
+  const POND=opt.pond||[];
+  const landE=(x,z)=>{if(opt.inland)return 9; let e=sD(x,z)+3.7+1.5*vnoise(x*.14+3.1,z*.14+7.7,5); for(const p of PATCH)e=smax(e,p[2]-Math.hypot(x-p[0],z-p[1]),1.6); return e;};
   const shoreH=e=>e<0?Math.max(-2.2,SEA+e*.42):SEA+(L0-SEA)*sstep(0,2.4,e);
   const bump=(q,x,z)=>q[3]*sstep(1,.3,Math.hypot(x-q[0],z-q[1])/q[2]);
   const plateau=(x,z)=>{let h=0; for(const q of PLAT_)h+=bump(q,x,z); return h;};
@@ -1381,45 +1382,54 @@ function toyGround(m,opt){
     return c;};
   const pads=[];
   T.pad=(x,z,r,h)=>{pads.push([x,z,h==null?base(x,z,true):h,r]);};
-  const base=(x,z,walk)=>{const h=landH(x,z), c=chan(x,z,walk); return c>0?mixn(h,Math.min(FLOOR,h),c):h;};
+  const base=(x,z,walk)=>{let h=landH(x,z); const c=chan(x,z,walk); if(c>0)h=mixn(h,Math.min(FLOOR,h),c); for(const q of POND){const d=Math.hypot(x-q[0],z-q[1])+(fbm(x*.5,z*.5,61)-.5)*.6; if(d<q[2])h=mixn(h,SEA-q[3],sstep(q[2],q[2]*.45,d));} return h;};
   const HT=(x,z,walk)=>{let h=base(x,z,walk); for(const p of pads){const w=sstep(p[3]+.9,p[3],Math.hypot(x-p[0],z-p[1])); if(w>0)h=mixn(h,p[2],w);} return h;};
   T.raw=HT; T.landE=landE;
   /* how grassy a spot is: sand near the shore, in the channel and on the open beaches the board names */
-  T.grassAt=(x,z)=>{let g=sstep(1.9,2.9,landE(x,z)+(fbm(x*.5,z*.5,3)-.5)*1.3); if(opt.tide)g*=sstep(1.15,2.0,gD(x,z)); for(const b of BEACH)g*=sstep(.75,1.15,Math.hypot((x-b[0])/b[2],(z-b[1])/b[3])+(fbm(x*.4,z*.4,21)-.5)*.3); return g;};
+  T.grassAt=(x,z)=>{let g=sstep(1.9,2.9,landE(x,z)+(fbm(x*.5,z*.5,3)-.5)*1.3); if(opt.tide)g*=sstep(1.15,2.0,gD(x,z)); for(const b of BEACH)g*=sstep(.75,1.15,Math.hypot((x-b[0])/b[2],(z-b[1])/b[3])+(fbm(x*.4,z*.4,21)-.5)*.3); for(const q of POND)g*=sstep(q[2]*.92,q[2]*1.2,Math.hypot(x-q[0],z-q[1])+(fbm(x*.5,z*.5,61)-.5)*.6); return g;};
   /* bake: after this the ground is fixed, and heights come from a fine grid */
   T.bake=()=>{
     const ST=.25, W=Math.round((-X0*2-2)/ST)+1, H=Math.round((-Z0*2-2)/ST)+1, x0=X0+1, z0=Z0+1, tg=new Float32Array(W*H), wg=new Float32Array(W*H);
     for(let j=0;j<H;j++)for(let i=0;i<W;i++){const x=x0+i*ST,z=z0+j*ST; tg[j*W+i]=HT(x,z,false); wg[j*W+i]=near(x,z)<2?HT(x,z,true):tg[j*W+i];}
     const tB=bil(tg,W,H,x0,z0,ST), wB=bil(wg,W,H,x0,z0,ST), inb=(x,z)=>x>x0&&x<-x0&&z>z0&&z<-z0;
     const isl=opt.islets||[], islH=(x,z)=>{let h=-2.2; for(const q of isl){const dx=x-q[0],dz=z-q[1],th=Math.atan2(dz,dx),d=Math.hypot(dx,dz)/(q[2]*(1+.16*Math.sin(th*3+q[0])+.08*Math.sin(th*5+q[1]))); h=Math.max(h,d<1?SEA+(q[3]-SEA)*sstep(1,.25,d):SEA-(d-1)*q[2]*.45);} return h;};
-    T.islH=islH; T.land=(x,z)=>inb(x,z)?Math.max(tB(x,z),isl.length?islH(x,z):-9):islH(x,z); T.walk=(x,z)=>inb(x,z)?wB(x,z):islH(x,z);
+    /* inland boards: beyond the fine ground, low hills roll away to the horizon */
+    const farH=(x,z)=>L0+3.2*fbm(x*.028+4,z*.028,77)*sstep(27,62,Math.max(Math.abs(x),Math.abs(z)*1.25));
+    T.islH=islH; T.land=(x,z)=>inb(x,z)?Math.max(tB(x,z),isl.length?islH(x,z):-9):opt.inland?farH(x,z):islH(x,z); T.walk=(x,z)=>inb(x,z)?wB(x,z):opt.inland?farH(x,z):islH(x,z);
     /* the mesh: one vertex per grid point, skipping the deep sea bed nobody can see */
     const pos=new Float32Array(W*H*3), nor=new Float32Array(W*H*3), col=new Float32Array(W*H*3), ag=new Float32Array(W*H*2), idx=[], sh=opt.shade||[], gh=(i,j)=>tg[Math.max(0,Math.min(H-1,j))*W+Math.max(0,Math.min(W-1,i))];
     for(let j=0;j<H;j++)for(let i=0;i<W;i++){const o=j*W+i, x=x0+i*ST, z=z0+j*ST, h=tg[o], hx=(tg[j*W+Math.min(W-1,i+1)]-tg[j*W+Math.max(0,i-1)])/(2*ST), hz=(tg[Math.min(H-1,j+1)*W+i]-tg[Math.max(0,j-1)*W+i])/(2*ST), l=Math.hypot(hx,1,hz);
-      pos.set([x,h,z],o*3); nor.set([-hx/l,1/l,-hz/l],o*3); ag[o*2]=h>SEA-.05?T.grassAt(x,z):0; ag[o*2+1]=sstep(.75,1.5,Math.hypot(gh(i+2,j)-gh(i-2,j),gh(i,j+2)-gh(i,j-2))/(4*ST));   /* how rocky: steep ground, measured wide so cliff edges come out smooth */ let ao=1; for(const s of sh){const d=Math.hypot(x-s[0],z-s[1]); if(d<s[2])ao*=1-s[3]*sstep(s[2],s[2]*.35,d);} col.set([ao,fbm(x*.21,z*.21,31),1],o*3);}
+      pos.set([x,h,z],o*3); nor.set([-hx/l,1/l,-hz/l],o*3); ag[o*2]=h>SEA-.05?T.grassAt(x,z):0; ag[o*2+1]=sstep(.75,1.5,Math.hypot(gh(i+2,j)-gh(i-2,j),gh(i,j+2)-gh(i,j-2))/(4*ST));   /* how rocky: steep ground, measured wide so cliff edges come out smooth */ let ao=1; for(const s of sh){const d=Math.hypot(x-s[0],z-s[1]); if(d<s[2])ao*=1-s[3]*sstep(s[2],s[2]*.35,d);} col.set([ao,opt.inland?mixn(fbm(x*.07,z*.07,31),fbm(x*.21,z*.21,31),sstep(0,5,Math.min(-x0-Math.abs(x),-z0-Math.abs(z)))):fbm(x*.21,z*.21,31),1],o*3);}   /* inland, the shade of the grass runs on into the far hills with no seam */
     for(let j=0;j<H-1;j++)for(let i=0;i<W-1;i++){const a=j*W+i,b=a+1,c=a+W,d=c+1; if(Math.max(tg[a],tg[b],tg[c],tg[d])<-1.7)continue; if(Math.abs(tg[a]-tg[d])<Math.abs(tg[b]-tg[c]))idx.push(a,c,d,a,d,b); else idx.push(a,c,b,b,c,d);}   /* split each square along its flatter diagonal, which keeps ridges and cliff tops from going jagged */
     const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); g.setAttribute('normal',new THREE.BufferAttribute(nor,3)); g.setAttribute('color',new THREE.BufferAttribute(col,3)); g.setAttribute('aG',new THREE.BufferAttribute(ag,2)); g.setIndex(new THREE.Uint32BufferAttribute(idx,1));
-    const q=new THREE.Mesh(g,landMat()); q.receiveShadow=true; q.castShadow=false; q.noBake=true; q.frustumCulled=false; world.add(q); T.mesh=q;
+    const q=new THREE.Mesh(g,landMat(opt.pal)); q.receiveShadow=true; q.castShadow=false; q.noBake=true; q.frustumCulled=false; world.add(q); T.mesh=q;
     if(isl.length)world.add(isletMesh(isl,T));
-    world.add(seaMesh(T)); return T;};
+    if(opt.inland){const FS=3, FN=81, fp=[], fn=[], fc=[], fa=[], fi=[], xa=-x0-3.4, za=-z0-3.4, hh=(x,z)=>Math.abs(x)<-x0&&Math.abs(z)<-z0?HT(x,z,false)-.12:farH(x,z);
+      for(let j=0;j<FN;j++)for(let i=0;i<FN;i++){const x=(i-40)*FS, z=(j-40)*FS, h=hh(x,z), hx=(hh(x+1,z)-hh(x-1,z))/2, hz=(hh(x,z+1)-hh(x,z-1))/2, l=Math.hypot(hx,1,hz); fp.push(x,h,z); fn.push(-hx/l,1/l,-hz/l); fc.push(1,fbm(x*.07,z*.07,31),1); fa.push(1,0);}
+      for(let j=0;j<FN-1;j++)for(let i=0;i<FN-1;i++){const x=(i-40)*FS, z=(j-40)*FS; if(x>-xa&&x+FS<xa&&z>-za&&z+FS<za)continue; const a=j*FN+i,b=a+1,c=a+FN,d=c+1; fi.push(a,c,b,b,c,d);}
+      const fg=new THREE.BufferGeometry(); fg.setAttribute('position',new THREE.Float32BufferAttribute(fp,3)); fg.setAttribute('normal',new THREE.Float32BufferAttribute(fn,3)); fg.setAttribute('color',new THREE.Float32BufferAttribute(fc,3)); fg.setAttribute('aG',new THREE.Float32BufferAttribute(fa,2)); fg.setIndex(fi);
+      const fm=new THREE.Mesh(fg,landMat(opt.pal)); fm.receiveShadow=false; fm.castShadow=false; fm.noBake=true; fm.frustumCulled=false; world.add(fm);}
+    if(!opt.inland||POND.length)world.add(seaMesh(T)); return T;};
   return T;}
 /* the ground's own material: sand, grass and rock are chosen for every pixel from how grassy, how steep and how high it is, so the
    edge of the grass is a clean line however coarse the mesh. Its `color` carries shade (r) and a slow tone (g), not a colour */
-function landMat(){
-  if(TOYM.land)return TOYM.land;
+const LANDP={island:{id:'isl',sand:[.90,.76,.52],wet:[.74,.60,.40],ga:[.33,.62,.25],gb:[.50,.74,.27],ra:[.66,.48,.33],rb:[.84,.66,.45],deep:[.20,.58,.66]},
+  farm:{id:'farm',sand:[.66,.47,.30],wet:[.50,.36,.24],ga:[.27,.58,.20],gb:[.60,.80,.30],ra:[.56,.40,.26],rb:[.74,.56,.36],deep:[.20,.50,.56]}};
+function landMat(P){P=P||LANDP.island; const key='land-'+P.id, v=a=>`vec3(${a.map(q=>q.toFixed(3)).join(',')})`;
+  if(TOYM[key])return TOYM[key];
   const m=new THREE.MeshLambertMaterial({vertexColors:true}); m.keep=true;
   m.onBeforeCompile=sh=>{
     sh.vertexShader='attribute vec2 aG; varying float vG; varying float vWy; varying float vNy;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvG=aG.x; vWy=position.y; vNy=aG.y;');
     sh.fragmentShader='varying float vG; varying float vWy; varying float vNy;\n'+sh.fragmentShader.replace('#include <color_fragment>',`
       float gm=smoothstep(.47,.53,vG), wet=1.-smoothstep(${(SEA+.03).toFixed(2)},${(SEA+.34).toFixed(2)},vWy);
-      vec3 sand=mix(vec3(.90,.76,.52),vec3(.74,.60,.40),wet)*(.93+.14*vColor.g);
-      vec3 grass=mix(vec3(.33,.62,.25),vec3(.50,.74,.27),vColor.g);
-      vec3 rock=mix(vec3(.66,.48,.33),vec3(.84,.66,.45),smoothstep(-.4,1.7,vWy))*(.95+.05*sin(vWy*19.+vColor.g*6.));
+      vec3 sand=mix(${v(P.sand)},${v(P.wet)},wet)*(.93+.14*vColor.g);
+      vec3 grass=mix(${v(P.ga)},${v(P.gb)},vColor.g);
+      vec3 rock=mix(${v(P.ra)},${v(P.rb)},smoothstep(-.4,1.7,vWy))*(.95+.05*sin(vWy*19.+vColor.g*6.));
       vec3 base=mix(sand,grass,gm)*(1.-.2*smoothstep(.30,.47,vG)*(1.-gm));
       base=mix(base,rock,smoothstep(.42,.58,vNy));
-      base=mix(base,vec3(.20,.58,.66),.85*smoothstep(${(SEA-.05).toFixed(2)},${(SEA-1.3).toFixed(2)},vWy));
+      base=mix(base,${v(P.deep)},.85*smoothstep(${(SEA-.05).toFixed(2)},${(SEA-1.3).toFixed(2)},vWy));
       diffuseColor.rgb*=base*vColor.r;`);};
-  m.customProgramCacheKey=()=>'toy-land'; return TOYM.land=m;}
+  m.customProgramCacheKey=()=>key; if(P===LANDP.island)TOYM.land=m; return TOYM[key]=m;}
 /* small islands out at sea, all in one mesh with the same material as the main ground */
 function isletMesh(isl,T){const pos=[],nor=[],col=[],ag=[],idx=[], RG=10, SG=26;
   for(const q of isl){const b=pos.length/3, R=q[2]*1.75; pos.push(q[0],T.islH(q[0],q[1]),q[1]); nor.push(0,1,0); col.push(1,.5,1); ag.push(q[3]>.5?1:0,0);
@@ -1428,7 +1438,7 @@ function isletMesh(isl,T){const pos=[],nor=[],col=[],ag=[],idx=[], RG=10, SG=26;
     for(let s=0;s<SG;s++)idx.push(b,b+1+(s+1)%SG,b+1+s);
     for(let r=0;r<RG-1;r++)for(let s=0;s<SG;s++){const a=b+1+r*SG+s, c=b+1+r*SG+(s+1)%SG, d=a+SG, e=c+SG; idx.push(a,c,d,c,e,d);}}
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3)); g.setAttribute('color',new THREE.Float32BufferAttribute(col,3)); g.setAttribute('aG',new THREE.Float32BufferAttribute(ag,2)); g.setIndex(idx);
-  const q=new THREE.Mesh(g,landMat()); q.receiveShadow=true; q.castShadow=false; q.noBake=true; q.frustumCulled=false; return q;}
+  const q=new THREE.Mesh(g,landMat(T.pal)); q.receiveShadow=true; q.castShadow=false; q.noBake=true; q.frustumCulled=false; return q;}
 
 /* ---------- the sea ----------
    One flat sheet. Its colour comes from how deep the ground is underneath (read from a picture of the ground's height), so it is
@@ -1470,6 +1480,12 @@ function deckMat(a,b,pw,pl){const k='deck'+[a,b,pw,pl]; if(TOYM[k])return TOYM[k
       float seam=clamp(max(smoothstep(.93,.985,fx)+smoothstep(.07,.015,fx),smoothstep(.988,.998,fz)+smoothstep(.012,.002,fz)),0.,1.);
       diffuseColor.rgb*=wood*(1.-.4*seam)*(vNy<.5?.62:1.);`);};
   m.customProgramCacheKey=()=>k; return TOYM[k]=m;}
+/* a smooth track pressed into the ground: dirt roads and trodden paths */
+function trackPath(K,pts,hw,yAt,closed,ca,cb){const n=pts.length, pos=[], col=[], idx=[], A=hexC(ca), B=hexC(cb), X=[-hw-.12,-hw*.72,0,hw*.72,hw+.12], Y=[-.06,.05,.07,.05,-.06], D=[1,.35,0,.35,1], m=closed?n:n-1;
+  for(let i=0;i<=m;i++){const p=pts[i%n], a=pts[(i-1+n)%n], b=pts[(i+1)%n], tx=(closed||i<m?b[0]:p[0])-(closed||i>0?a[0]:p[0]), tz=(closed||i<m?b[1]:p[1])-(closed||i>0?a[1]:p[1]), l=Math.hypot(tx,tz)||1, nx=-tz/l, nz=tx/l, v=.9+.2*fbm(p[0]*.6,p[1]*.6,5);
+    for(let k=0;k<5;k++){const x=p[0]+nx*X[k], z=p[1]+nz*X[k]; pos.push(x,yAt(x,z)+Y[k],z); col.push(mixn(A[0],B[0],D[k])*v,mixn(A[1],B[1],D[k])*v,mixn(A[2],B[2],D[k])*v);}}
+  for(let i=0;i<m;i++)for(let k=0;k<4;k++){const p=i*5+k,q=p+1,s=p+5,t=s+1; idx.push(p,s,q,q,s,t);}
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('color',new THREE.Float32BufferAttribute(col,3)); g.setIndex(idx); g.computeVertexNormals(); orientUp(g); K.at(0,0,0); K.add(g,null,null,{ao:0}); g.dispose();}
 /* ---------- boardwalk: a path of wooden planks that follows the ground ---------- */
 function boardwalk(K,pts,hw,yAt,closed,tone,gap){
   const n=pts.length, cum=[0]; for(let i=1;i<=(closed?n:n-1);i++){const a=pts[i-1],b=pts[i%n]; cum.push(cum[i-1]+Math.hypot(b[0]-a[0],b[1]-a[1]));}
@@ -1543,7 +1559,7 @@ function toyStream(T){const G=T.chan, n=G.length, AC=[-2.5,-1.7,-.9,0,.9,1.7,2.5
 /* everything a toy board lays over its ground: called by buildWorld in place of the flat path, discs and start platform */
 function toyBoard(m){const T=TOY.T, K=TOY.K, N=NODES;
   N.forEach(n=>{n.y=GY(n.x,n.z);});
-  const O=TOY.opt||{}; boardwalk(K,T.loop,1.0,GY,true,O.walk,O.gap);
+  const O=TOY.opt||{}; if(O.track)trackPath(K,T.loop,1.0,GY,true,O.track[0],O.track[1]); else boardwalk(K,T.loop,1.0,GY,true,O.walk,O.gap);
   if(!m.sp.includes('T')){const cut=T.cut.filter(p=>Math.hypot(p[0]-T.A.x,p[1]-T.A.z)>1.0&&Math.hypot(p[0]-T.B.x,p[1]-T.B.z)>1.0); boardwalk(K,cut,.92,GY,false,O.cut||O.walk,O.gap);}
   else{
     const G=T.chan, cut=G.filter(p=>Math.hypot(p[0]-T.A.x,p[1]-T.A.z)>1.0&&Math.hypot(p[0]-T.B.x,p[1]-T.B.z)>1.0&&T.sD(p[0],p[1])>0);
@@ -1790,6 +1806,87 @@ THEME.carnival=function(m){
   TP.boat(-m.a*1.5,m.b*.9,-.5,0xff4d4d,0xff4d4d); TP.boat(m.a*1.55,-m.b*.2,2.4,0x2f8fff,0x2f8fff); TP.boat(m.a*.3,m.b*1.75,.3,0xffc531,0xffc531); TP.buoy(-m.a*1.4,-m.b*.4,0xff4d4d); TP.buoy(m.a*1.45,m.b*1.0,0xffc531); TP.buoy(-m.a*.4,m.b*1.6,0xff5fa8);
   TP.gull(-m.a*1.6,-m.b*1.2,7,7,.5,0); TP.gull(m.a*1.6,m.b*1.1,6,6.5,-.45,2);
   PLAT&&TP.bulbs(K,KE,[P.x-2.0,GY(P.x,P.z)+3.45,P.z+1.4],[P.x+2.0,GY(P.x,P.z)+3.45,P.z+1.4],8);
+};
+/* ---------- Farm: a small piece of countryside ---------- */
+Object.assign(TP,{
+  /* a round-topped fruit tree */
+  tree(K,x,z,s,seed,fruit){const y=GY(x,z); K.at(x,y-.05,z,seed,s||1); K.add(tubeG([[0,0,0],[.05,.8,0],[-.04,1.5,.03]],t=>.2-.07*t,7),null,[0x7a4e2a,0xa87343],{aoH:.6,ao:.34});
+    [[0,2.3,0,1.05],[.62,1.95,.2,.72],[-.6,2.0,-.15,.74],[.1,2.0,-.62,.68],[-.1,2.05,.6,.66]].forEach((q,i)=>K.add(sphG(1,2),M4(q[0],q[1],q[2],seed+i,q[3],q[3]*.86,q[3]),[0x2f8f45,0x74cc5a],{ao:0,sway:.1,ph:i}));
+    if(fruit)for(let i=0;i<9;i++){const a=i*2.4+seed, e=.5+((i*7)%5)*.18; K.add(sphG(.12,1),M4(Math.cos(a)*Math.cos(e)*1.08,2.15+Math.sin(e)*.8-.25,Math.sin(a)*Math.cos(e)*1.08),fruit,{ao:0,sway:.1});}},
+  /* a far-off round tree for the horizon: few triangles */
+  farTree(K,x,z,s){K.at(x,GY(x,z),z,x,s); K.add(cylG(.16,.22,1.2,5),M4(0,.6,0),0x7a4e2a,{ao:.3}); K.add(sphG(1,1),M4(0,2.0,0,0,1,1.1,1),[0x2f8a43,0x62bd52],{ao:0});},
+  barn(K,x,z,turn,s){const y=GY(x,z); K.at(x,y,z,turn,s||1); const red=(px,py,pz)=>{const k=.95+.05*Math.sin(px*13); return[.86*k,.2*k,.18*k];};
+    K.add(rbox(4.2,2.3,3.2,.08,2),M4(0,1.15,0),red,{ao:.22,aoH:1.2}); for(const sx of [-2.1,2.1])K.add(extG([[-1.62,0],[1.62,0],[1.1,.95],[0,1.5],[-1.1,.95]],.1,.04),M4(sx,2.3,0,Math.PI/2),0xd9342e,{ao:0});
+    for(const sg of [-1,1]){K.add(rbox(4.7,.14,1.5,.06,2),M4(0,2.78,sg*1.36,0,1,1,1,sg*1.05,0),[0x5a6578,0x7c8ea3],{ao:0}); K.add(rbox(4.7,.14,1.42,.06,2),M4(0,3.5,sg*.58,0,1,1,1,sg*.46,0),[0x66728a,0x8a9bb0],{ao:0});}
+    K.add(cylG(.1,.1,4.8,8),M4(0,3.82,0,0,1,1,1,0,Math.PI/2),0x9fb0c4,{ao:0});
+    K.add(rbox(1.5,1.7,.1,.05),M4(0,.85,1.62),0xfdf6e3,{ao:0}); K.add(rbox(1.3,1.5,.08,.04),M4(0,.82,1.66),0xc9342e,{ao:0}); for(const d of [-1,1])K.add(rbox(1.8,.09,.05,.02),M4(0,.82,1.72,0,1,1,1,0,d*.72),0xfdf6e3,{ao:0});
+    for(const sx of [-2.12,2.12,-.8,.8])K.add(rbox(.12,2.3,.12,.04),M4(sx,1.15,1.6),0xfdf6e3,{ao:0}); K.add(rbox(4.3,.12,.1,.04),M4(0,2.3,1.62),0xfdf6e3,{ao:0});
+    K.add(rbox(.7,.6,.08,.04),M4(0,2.85,1.62),0xfdf6e3,{ao:0}); K.add(rbox(.5,.42,.08,.03),M4(0,2.85,1.66),0x3a2a22,{ao:0});},
+  silo(K,x,z,s){K.at(x,GY(x,z),z,0,s||1); K.add(latheG([[1.0,0],[1.0,3.6],[1.06,3.66],[1.06,3.8]],18),null,(px,py)=>Math.floor(py/.6)%2?[.80,.84,.90]:[.72,.77,.84],{ao:.3,aoH:1.2,face:true}); K.add(latheG([[1.08,3.8],[.9,4.3],[.45,4.7],[.04,4.82]],18),null,[0xd9342e,0xff5a4d],{ao:0}); K.add(sphG(.1,1),M4(0,4.9,0),0xfdf6e3,{ao:0});},
+  /* a windmill whose sails turn */
+  windmill(K,x,z,s){const y=GY(x,z); s=s||1; K.at(x,y,z,0,s); K.add(latheG([[1.5,0],[1.42,.4],[1.0,4.2],[1.12,4.3],[1.12,4.5]],16),null,(px,py)=>py<.42?[.6,.58,.56]:[.97,.94,.86],{ao:.3,aoH:1.4,face:true});
+    K.add(latheG([[1.2,4.5],[1.1,4.7],[.6,5.4],[.05,5.75]],16),null,[0xc9342e,0xff5a4d],{ao:0}); K.add(rbox(.6,1.0,.1,.05),M4(0,.6,1.44),0x8f5e33,{ao:0}); K.add(torG(.2,.05,6,14),M4(0,2.6,1.2,0,1,1,1,-.12,0),0x8f5e33,{ao:0});
+    const g=new THREE.Group(), B=new Kit(); g.position.set(x,y+4.55*s,z+1.3*s); g.scale.setScalar(s); g.noBake=true; world.add(g); B.at(0,0,0,0); B.add(cylG(.16,.16,.5,10),M4(0,0,-.1,0,1,1,1,Math.PI/2,0),0x8f5e33,{ao:0}); B.add(sphG(.2,1),M4(0,0,.18),0xffc531,{ao:0});
+    for(let i=0;i<4;i++){const a=i*Math.PI/2+.3; B.add(rbox(.1,2.9,.08,.03),M4(Math.cos(a)*1.5,Math.sin(a)*1.5,.1,0,1,1,1,0,a-Math.PI/2),0x8f5e33,{ao:0}); B.add(rbox(.62,2.1,.04,.02),M4(Math.cos(a)*1.75-Math.sin(a)*.36,Math.sin(a)*1.75+Math.cos(a)*.36,.1,0,1,1,1,0,a-Math.PI/2),0xfdf6e3,{ao:0});}
+    g.add(B.mesh(TOYM.matte)); spin.push({o:g,ax:'z',v:.55});},
+  /* a stretch of post-and-rail fence along a line of points */
+  fence(K,pts,col){K.at(0,0,0,0); for(let i=0;i<pts.length;i++){const a=pts[i], y=GY(a[0],a[1]); K.add(rbox(.14,.86,.14,.04),M4(a[0],y+.38,a[1]),col||0xfdf6e3,{ao:.3,aoH:.4}); if(i===pts.length-1)break; const b=pts[i+1], yb=GY(b[0],b[1]), l=Math.hypot(b[0]-a[0],b[1]-a[1]), ry=Math.atan2(-(b[1]-a[1]),b[0]-a[0]);
+      for(const h of [.32,.62])K.add(rbox(l,.09,.06,.025),M4((a[0]+b[0])/2,(y+yb)/2+h,(a[1]+b[1])/2,ry,1,1,1,0,Math.atan2(yb-y,l)),col||0xfdf6e3,{ao:0});}},
+  hay(K,x,z,turn,s,stack){const y=GY(x,z); K.at(x,y,z,turn,s||1); const c=(px,py,pz)=>{const r=Math.hypot(px,pz), k=.92+.08*Math.sin(r*26); return[.93*k,.76*k,.34*k];}; K.add(latheG([[.02,0],[.62,0],[.66,.06],[.66,.84],[.62,.9],[.02,.9]],16),M4(0,.66,0,0,1,1,1,Math.PI/2,0),c,{aoH:.4,ao:.3});
+    if(stack){K.add(rbox(1.2,.6,.7,.08,2),M4(1.3,.3,.2,.3),[0xd9b24a,0xf0cf66],{aoH:.4}); K.add(rbox(1.2,.6,.7,.08,2),M4(1.25,.9,.15,.1),[0xe3bd55,0xf5d877],{ao:0});}},
+  pumpkin(K,x,z,s,seed){K.at(x,GY(x,z)-.03,z,seed,s||1); K.add(sphG(.34,2),M4(0,.26,0,0,1,.78,1),(px,py,pz)=>{const k=.86+.14*Math.abs(Math.cos(Math.atan2(pz,px)*4)); return[1*k,.52*k,.1*k];},{aoH:.25,ao:.3}); K.add(cylG(.04,.06,.16,5),M4(0,.56,0,0,1,1,1,.2,0),0x4a8a3a,{ao:0}); K.add(sphG(.2,1),M4(.3,.06,.1,0,1,.2,.7),0x3f9a3d,{ao:0});},
+  /* rows of young crops across a patch of soil */
+  crops(K,x,z,turn,w,d,col){const c=Math.cos(turn), s=Math.sin(turn); K.at(0,0,0,0); for(let r=0;r<Math.round(d/.8);r++)for(let i=0;i<Math.round(w/.55);i++){const lx=-w/2+i*.55+.2, lz=-d/2+r*.8+.3, px=x+lx*c+lz*s, pz=z-lx*s+lz*c; if(!TP.free(px,pz,-.4))continue; K.add(sphG(.2,1),M4(px,GY(px,pz)+.14,pz,i,1,.8,1),col||[0x3f9a3d,0x8ad65a],{ao:.2,aoH:.2,sway:.12,ph:i+r});}},
+  tractor(K,x,z,turn){K.at(x,GY(x,z),z,turn); K.add(rbox(1.5,.6,.8,.1,2),M4(.35,.75,0),0xd9342e,{ao:.2,aoH:.9}); K.add(rbox(.9,.8,.86,.1,2),M4(-.6,1.15,0),0xd9342e,{ao:0}); K.add(rbox(.8,.5,.7,.06),M4(-.6,1.3,0),0x9fd7ff,{ao:0}); K.add(rbox(1.0,.08,.96,.03),M4(-.6,1.6,0),0xfdf6e3,{ao:0});
+    for(const sz of [-.5,.5]){K.add(torG(.42,.17,7,16),M4(-.62,.58,sz),0x2b3350,{ao:.2,aoH:.4}); K.add(cylG(.2,.2,.1,10),M4(-.62,.58,sz,0,1,1,1,Math.PI/2,0),0xffc531,{ao:0}); K.add(torG(.24,.11,6,12),M4(.78,.36,sz),0x2b3350,{ao:.2,aoH:.3}); K.add(cylG(.11,.11,.1,8),M4(.78,.36,sz,0,1,1,1,Math.PI/2,0),0xffc531,{ao:0});}
+    K.add(cylG(.05,.05,.6,6),M4(.75,1.3,.2),0x5c6b7a,{ao:0});},
+  scarecrow(K,KT,x,z,turn){const y=GY(x,z); K.at(x,y,z,turn); K.add(cylG(.05,.06,1.9,6),M4(0,.95,0),0x8f5e33,{ao:.3}); K.add(cylG(.045,.045,1.5,6),M4(0,1.35,0,0,1,1,1,0,Math.PI/2),0x8f5e33,{ao:0}); K.add(rbox(.6,.7,.3,.1,2),M4(0,1.25,0),0x2f8fff,{ao:0}); K.add(sphG(.24,1),M4(0,1.86,0),0xf0cf66,{ao:0}); K.add(latheG([[.42,2.0],[.4,2.04],[.22,2.08],[.18,2.3],[.02,2.36]],10),null,0x8a5a2b,{ao:0}); for(const sx of [-.09,.09])K.add(sphG(.035,0),M4(sx,1.9,.22),0x17304d,{ao:0});},
+  cow(K,x,z,turn,seed){K.at(x,GY(x,z),z,turn); const sp=(px,py,pz)=>fbm(px*2.1+seed*3,pz*2.6+py*1.7,seed+3)>.56?[.16,.16,.2]:[.98,.96,.92]; K.add(rbox(1.3,.7,.66,.26,2),M4(0,.82,0),sp,{ao:.2,aoH:.9}); K.add(rbox(.5,.5,.5,.18,2),M4(.82,1.02,0),sp,{ao:0}); K.add(rbox(.3,.24,.36,.1,2),M4(1.08,.9,0),0xffb8cf,{ao:0});
+    for(const sx of [-.42,.42])for(const sz of [-.2,.2])K.add(cylG(.09,.08,.5,6),M4(sx,.26,sz),0xfbf7ee,{ao:.3,aoH:.3}); for(const sz of [-.2,.2]){K.add(sphG(.07,0),M4(.86,1.32,sz),0xfdf6e3,{ao:0}); K.add(sphG(.04,0),M4(1.0,1.1,sz*.9),0x17304d,{ao:0});} K.add(cylG(.03,.02,.5,4),M4(-.72,.8,0,0,1,1,1,0,.4),0xfbf7ee,{ao:0});},
+  sheep(K,x,z,turn){K.at(x,GY(x,z),z,turn,.9); for(const q of [[0,.62,0,.48],[.28,.7,.1,.34],[-.28,.68,-.08,.36],[0,.86,0,.34]])K.add(sphG(1,1),M4(q[0],q[1],q[2],0,q[3],q[3]*.9,q[3]),0xfbf7ee,{ao:.25,aoH:.7}); K.add(rbox(.3,.3,.28,.1,2),M4(.56,.72,0),0x3a3340,{ao:0}); for(const sx of [-.22,.22])for(const sz of [-.14,.14])K.add(cylG(.05,.05,.34,5),M4(sx,.18,sz),0x3a3340,{ao:.3,aoH:.2});},
+  hen(K,x,z,turn){K.at(x,GY(x,z),z,turn); K.add(sphG(.2,1),M4(0,.24,0,0,1.15,1,.9),0xfbf7ee,{ao:.3,aoH:.3}); K.add(sphG(.12,1),M4(.2,.44,0),0xfbf7ee,{ao:0}); K.add(sphG(.05,0),M4(.2,.57,0,0,1,1.3,.6),0xff4d4d,{ao:0}); K.add(cylG(0,.035,.1,4),M4(.33,.43,0,0,1,1,1,0,-Math.PI/2),0xffc531,{ao:0});},
+  /* a duck that paddles about on a pond */
+  duck(x,z,r,ph){const K=new Kit(); K.at(0,0,0,0); K.add(sphG(.2,1),M4(0,.06,0,0,1.3,.8,1),0xffe27a,{ao:0}); K.add(sphG(.12,1),M4(.2,.26,0),0xffe27a,{ao:0}); K.add(rbox(.12,.04,.1,.02),M4(.34,.24,0),0xff8c1a,{ao:0}); const g=K.mesh(TOYM.matte,true,false); world.add(g);
+    TOY.dyn.push({o:g,f:(o,t)=>{const a=ph+t*.35; o.position.set(x+Math.cos(a)*r,SEA+.02+Math.sin(t*3+ph)*.015,z+Math.sin(a)*r*.7); o.rotation.y=-a-Math.PI/2;}});},
+  well(K,x,z){K.at(x,GY(x,z),z,.4); K.add(latheG([[.62,0],[.66,.7],[.6,.76],[.48,.76],[.46,.3]],14),null,(px,py,pz)=>(Math.floor((Math.atan2(pz,px)/6.2832+1)*9+Math.floor(py/.24)*.5)%2)?[.66,.66,.7]:[.56,.57,.62],{aoH:.4,face:true}); for(const sx of [-.56,.56])K.add(rbox(.1,1.4,.1,.03),M4(sx,1.2,0),0x8f5e33,{ao:0});
+    for(const sg of [-1,1])K.add(rbox(1.5,.08,.62,.03),M4(0,2.0,sg*.24,0,1,1,1,sg*.7,0),0xc9342e,{ao:0}); K.add(cylG(.05,.05,1.1,6),M4(0,1.62,0,0,1,1,1,0,Math.PI/2),0x8f5e33,{ao:0});},
+});
+MAPS.farm.toy={light:{sun:0xfff4d8,sunI:.76,sky:0xe6f3ff,ground:0xc9d8a0,skyI:.7}};
+THEME.farm=function(m){
+  const {K,KG,KT,KE}=toyKits(), P=PLAT, N=NODES, rnd=rng32(3737); TOY.opt={track:[0xcf9f66,0x9a6a40]};
+  const fits=(list,r,h)=>{for(const q of list)if(TP.free(q[0],q[1],r)&&!TP.hides(q[0],q[1],h,r)){USED.push([q[0],q[1],r]); return q;} return null;};
+  /* big things first, then fields, then the ground is made to suit them */
+  const mill=[0,-m.b*.92], barn=fits([[-m.a*.56,-m.b*.05],[-m.a*.6,m.b*.3],[m.a*.58,0],[-m.a*1.18,-m.b*1.1]],3.0,4.4)||[-m.a*1.2,-m.b*1.15], pond=[m.a*.05,m.b*1.58]; USED.push([pond[0],pond[1],3.2]);
+  USED.push([mill[0],mill[1],2.4]);
+  const fields=[[-m.a*1.28,m.b*.75,3.4,2.6,.3],[m.a*1.3,m.b*.62,3.2,2.6,-.4],[m.a*1.32,-m.b*.9,3.6,2.8,.2],[-m.a*1.33,-m.b*.35,3.0,2.6,-.2],[-m.a*.62,m.b*1.5,3.6,2.2,.1],[m.a*.7,m.b*1.52,3.4,2.2,-.1]];
+  const T=TOY.T=toyGround(m,{tide:false,inland:true,pal:LANDP.farm,pond:[[pond[0],pond[1],3.2,.55]],
+    plateau:[[-m.a*.75,-m.b*.1,10,1.25],[m.a*.8,-m.b*.45,8.5,.85],[-m.a*1.7,m.b*1.2,9,1.4],[m.a*1.8,-m.b*1.3,10,1.6]],
+    mesa:[[m.a*.55,m.b*.2,3.0,2.8,.8],[-m.a*.5,m.b*.45,2.6,2.4,.7]], beach:[...fields.map(f=>[f[0],f[1],f[2]*.86,f[3]*.86]),[barn[0],barn[1]+1.2,3.4,3.0]],
+    shade:[[barn[0],barn[1],3.4,.35],[mill[0],mill[1],2.2,.35]]});
+  T.pad(P.x,P.z,2.6); T.pad(barn[0],barn[1],3.2); T.pad(mill[0],mill[1],2.0); fields.forEach(f=>T.pad(f[0],f[1],Math.max(f[2],f[3])*.7));
+  N.spots.forEach(i=>{const o=pearlSide(i); T.pad(N[i].x+o[0],N[i].z+o[1],1.1,T.raw(N[i].x,N[i].z,true)); USED.push([N[i].x+o[0],N[i].z+o[1],1.1]);});
+  T.bake(); GY=T.walk;
+  TP.barn(K,barn[0],barn[1],.25,1); {const s=[barn[0]-3.4,barn[1]-.6]; if(TP.free(s[0],s[1],1.1)&&!TP.hides(s[0],s[1],4.8,1.1)){TP.silo(K,s[0],s[1],.9); USED.push([s[0],s[1],1.1]);}}
+  TP.windmill(K,mill[0],mill[1],1.25); TP.duck(pond[0],pond[1],1.5,0); TP.duck(pond[0]+.3,pond[1]-.2,.9,2.6); TP.duck(pond[0]-.4,pond[1]+.2,1.1,4.4); TP.rock(K,pond[0]+3.3,pond[1]-.8,.6,3); TP.rock(K,pond[0]-3.2,pond[1]+.6,.5,7);
+  /* fields outside the path: crops, pumpkins, an orchard, a paddock */
+  TP.crops(K,fields[0][0],fields[0][1],fields[0][4],5.4,4.0); TP.scarecrow(K,KT,fields[0][0],fields[0][1],.4);
+  for(let i=0;i<11;i++){const a=i*2.4, r=.6+((i*5)%4)*.62; TP.pumpkin(K,fields[1][0]+Math.cos(a)*r*1.1,fields[1][1]+Math.sin(a)*r*.8,.8+((i*3)%4)*.14,i);}
+  TP.crops(K,fields[2][0],fields[2][1],fields[2][4],5.8,4.2,[0xd9b24a,0xf5d877]); TP.crops(K,fields[4][0],fields[4][1],fields[4][4],6.0,3.2,[0x4aa64a,0x9be06a]); TP.crops(K,fields[5][0],fields[5][1],fields[5][4],5.6,3.2,[0xe08a2e,0xffc531]);
+  [4,5].forEach(k=>{const f=fields[k], w=f[2]*.95, d=f[3]*.9, c=[[f[0]-w,f[1]-d],[f[0]+w,f[1]-d]], rail=[]; for(let i=0;i<=4;i++)rail.push([mixn(c[0][0],c[1][0],i/4),c[0][1]]); TP.fence(K,rail,0xcf9f63);});
+  {const f=fields[3], c=[[f[0]-2.9,f[1]-2.5],[f[0]+2.9,f[1]-2.5],[f[0]+2.9,f[1]+2.5],[f[0]-2.9,f[1]+2.5],[f[0]-2.9,f[1]-2.5]], rail=[]; for(let i=0;i<4;i++)for(let k=0;k<3;k++)rail.push([mixn(c[i][0],c[i+1][0],k/3),mixn(c[i][1],c[i+1][1],k/3)]); rail.push(c[4]); TP.fence(K,rail); TP.cow(K,f[0]-.9,f[1]-.6,.5,1); TP.cow(K,f[0]+1.1,f[1]+.8,2.6,2); TP.hay(K,f[0]+1.6,f[1]-1.4,.3,.7);}
+  [[-m.a*.25,-m.b*1.3],[m.a*.3,-m.b*1.32],[-m.a*.6,-m.b*1.42],[m.a*.62,-m.b*1.45],[m.a*1.05,-m.b*1.45],[-m.a*1.0,-m.b*1.5]].forEach((q,i)=>{if(TP.free(q[0],q[1],1.2)){TP.tree(K,q[0],q[1],1.05+rnd()*.25,i*1.7,i%2?0xff4d4d:0xffc531); USED.push([q[0],q[1],1.2]);}});
+  /* inside the path, where there is room: trees, hay, a tractor, a well, animals */
+  [['tree',1.3,3.6],['tractor',1.3,1.8],['hay',1.2,1.0],['well',1.0,2.2],['tree',1.3,3.6],['hay',1.0,1.0],['sheep',.6,.9],['sheep',.6,.9],['tree',1.2,3.6],['hen',.3,.4],['hen',.3,.4],['sheep',.6,.9]].forEach((q,i)=>{const h=spot([],q[1]); if(!h||TP.hides(h[0],h[1],q[2],q[1]))return;
+    if(q[0]==='tree')TP.tree(K,h[0],h[1],.95+rnd()*.2,i,i%2?0xff4d4d:0); else if(q[0]==='tractor')TP.tractor(K,h[0],h[1],.6); else if(q[0]==='hay')TP.hay(K,h[0],h[1],i,.85,i===2); else if(q[0]==='well')TP.well(K,h[0],h[1]); else if(q[0]==='sheep')TP.sheep(K,h[0],h[1],i*1.3); else TP.hen(K,h[0],h[1],i*2.1);});
+  /* a white fence along the outside of the path where it is clear, bushes, tufts and flowers everywhere */
+  {const o=loopOutline(1.9); let run=[]; const flush=()=>{if(run.length>2)TP.fence(K,run); run=[];}; o.forEach((p,i)=>{if(i%4)return; if(TP.free(p[0],p[1],.2)&&p[1]<m.b*.35)run.push(p); else flush();}); flush();}
+  let made=0; for(let i=0;i<3000&&made<110;i++){const x=(rnd()-.5)*52, z=(rnd()-.5)*40; if(T.grassAt(x,z)<.8||!TP.free(x,z,.05))continue; made++; if(made%9===0)TP.bush(K,x,z,.6+rnd()*.3,made); else TP.tuft(K,x,z,rnd()*6,made%3===0?[0xff5fa8,0xffffff,0xffc531,0xc9a6ff][(made>>2)%4]:0);}
+  /* flowers thick in two meadows, and trees at the corners where they hide nothing */
+  [[-m.a*1.5,m.b*.2],[m.a*1.55,m.b*.05],[m.a*.1,-m.b*1.5]].forEach((c,j)=>{for(let i=0;i<26;i++){const a=rnd()*6.28, r=rnd()*2.6, x=c[0]+Math.cos(a)*r, z=c[1]+Math.sin(a)*r*.8; if(T.grassAt(x,z)>.8&&TP.free(x,z,.05))TP.tuft(K,x,z,rnd()*6,[0xff5fa8,0xffffff,0xffc531,0xc9a6ff,0xff4d4d][(i+j)%5]);}});
+  [[-m.a*1.75,m.b*1.15],[m.a*1.8,m.b*1.2],[-m.a*1.8,-m.b*.9],[m.a*1.85,-m.b*.4],[-m.a*1.55,-m.b*1.3],[m.a*1.6,-m.b*1.45],[-m.a*1.95,m.b*.3]].forEach((q,i)=>{TP.tree(K,q[0],q[1],1.2+rnd()*.3,i*2.3,i%3?0:0xff4d4d);});
+  /* trees on the far hills */
+  for(let i=0;i<46;i++){const a=i/46*6.283+rnd()*.1, r=31+rnd()*22; TP.farTree(K,Math.cos(a)*r*1.15,Math.sin(a)*r*.9,1.5+rnd()*1.4);}
+  TP.gull(-m.a*1.4,-m.b*1.5,9,9,.4,0); TP.gull(m.a*1.5,m.b*1.2,8,8.5,-.35,3);
 };
 /* ---------- the pearl stall: a big pink clam holding a glowing lavender pearl ----------
    One landmark on every board. It breathes open and shut, opens wide when the camera visits it or a pearl is bought, and when it
@@ -2754,7 +2851,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=true, BUILD=75; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=true, BUILD=76; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
