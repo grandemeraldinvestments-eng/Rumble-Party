@@ -17,7 +17,7 @@ A 3D party board game for 2 to 6 players that runs in a web browser. Players run
 
 The only outside dependency is three.js r128, loaded from cdnjs, plus two Google Fonts.
 
-All seven boards are 3D toy models built in code by the kit inside index.html, and eighteen of the mini games played on a platform stand in 3D scenery built from the same kit (see ART-DIRECTION.md). The other mini games have not been rebuilt yet; BUILD-LOG.md lists them under Build 81.
+All seven boards are 3D toy models built in code by the kit inside index.html, and every mini game is played in a 3D scene built from the same kit (see ART-DIRECTION.md). Eight own-screen puzzle games keep their 2D play areas inside those scenes, and Hedge Maze keeps its dark surround because that is its rule; BUILD-LOG.md has the details under Builds 81 and 82.
 
 Every board opens with an introduction that shows its special rule and where the first pearl is (see INTRO-VIDEOS.md for recorded films).
 
