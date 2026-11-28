@@ -2,8 +2,8 @@
 
 Working notes for the visual overhaul. Branch `visual-overhaul`, based on Build 60 (commit 5a9328b).
 
-## Status at Build 82
-All seven boards are 3D toy models (Island 73, Carnival 75, Farm 76, Volcano 77, Melody Mansion 78, Pinball Paradise 79, Temple 80). Every mini game is played in a 3D scene: platform games through `toyArena()` and the `ARENA` sets, course games through `toyCourse()`, panel games through `tapScene()` and `toyStageSet()`. The painted surround and the painted stall are now only fallbacks. Anything below that says a board is still flat or uses standees describes the game before these builds. BUILD-LOG.md has what each build changed.
+## Status at Build 85
+All seven boards are 3D toy models (Island 73, Carnival 75, Farm 76, Volcano 77, Melody Mansion 78, Pinball Paradise 79, Temple 80). Each board has three shops built beside the path in its own style, kept by Pouch the pelican (Build 84; `SHOPSTYLE`, `shopKeeper()`), a 3D Kite that carries its player to the pearl stall (Build 83), and the twelve platform mini games whose edge is a wall have a physical rim to match their setting (Build 85; `arenaRim()`). Every mini game is played in a 3D scene: platform games through `toyArena()` and the `ARENA` sets, course games through `toyCourse()`, panel games through `tapScene()` and `toyStageSet()`. The painted surround and the painted stall are now only fallbacks. Anything below that says a board is still flat or uses standees describes the game before these builds. BUILD-LOG.md has what each build changed.
 
 ## The look: "boardwalk toybox"
 

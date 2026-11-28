@@ -6,7 +6,8 @@ A 3D party board game for 2 to 6 players that runs in a web browser. Players run
 
 - Seven maps: Island, Carnival, Farm, Volcano, Melody Mansion, Pinball Paradise and Temple of the Golden Titan
 - Forty-seven mini games. Each round plays one of the 39 in the rotation, picked at random; the other eight are short solo games kept for practice and duels
-- Items, shop spaces, chance spaces and special spaces that differ on every map
+- Items, chance spaces and special spaces that differ on every map
+- Three shops on every board, each a little building beside the path with a shopkeeper; everyone who passes is stopped there and can buy
 - Computer opponents
 
 ## Files

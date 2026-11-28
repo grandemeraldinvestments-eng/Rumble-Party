@@ -2384,7 +2384,7 @@ function edgeRule(G){
   if([BOOM,GRAB,HOT,COCO,SPOT,SUMO,PAINT,STOMP,DOORS,LANT,CHAIRS,GTAG].includes(G))return'wall';
   return G.noEdge?'none':'wall';}
 /* the rim as a wall: a player who reaches it is held just inside and loses whatever was carrying them over. A hard shove into it bounces back a little */
-function edgeStop(av,sh){const m=.16, hit=(nx,nz)=>{const k=av.kx*nx+av.kz*nz; if(k>0){av.kx-=nx*k*1.3; av.kz-=nz*k*1.3; if(k>1.5&&av.mine&&!(av.rim>0)){av.rim=.4; SFX.bump();}} const v=av.vx*nx+av.vz*nz; if(v>0){av.vx-=nx*v; av.vz-=nz*v;}};
+function edgeStop(av,sh){const m=.16, hit=(nx,nz)=>{const k=av.kx*nx+av.kz*nz; if(k>0){av.kx-=nx*k*1.3; av.kz-=nz*k*1.3; if(k>1.5&&!(av.rim>0)){av.rim=.4; arenaThud(av,nx,nz); if(av.mine)SFX.bump();}} const v=av.vx*nx+av.vz*nz; if(v>0){av.vx-=nx*v; av.vz-=nz*v;}};
   if(sh.k==='c'){const R=sh.R-m, r=Math.hypot(av.x,av.z); if(r>R){const nx=av.x/r, nz=av.z/r; av.x=nx*R; av.z=nz*R; hit(nx,nz);}}
   else{const h=sh.h*(sh.sc||1)-m; if(av.x>h){av.x=h; hit(1,0);} else if(av.x<-h){av.x=-h; hit(-1,0);} if(av.z>h){av.z=h; hit(0,1);} else if(av.z<-h){av.z=-h; hit(0,-1);}
     const o=sh.hole; if(o){const q=o+m; if(Math.abs(av.x)<q&&Math.abs(av.z)<q){if(Math.abs(av.x)>=Math.abs(av.z)){const s=Math.sign(av.x)||1; av.x=s*q; hit(-s,0);} else{const s=Math.sign(av.z)||1; av.z=s*q; hit(0,-s);}}}}
@@ -2724,6 +2724,9 @@ const SHOPLINES={
 };
 function shopLine(kind,v){let L=SHOPLINES[kind]||SHOPLINES.greet; if(kind==='greet'&&SHOPLINES[S.map]&&Math.random()<.4){L=SHOPLINES[S.map]; kind=S.map;}
   const last=S.sl||(S.sl={}); let i=rand(0,L.length-1); if(L.length>1&&i===last[kind])i=(i+1)%L.length; last[kind]=i; return L[i].replace(/\{(\w+)\}/g,(m,k)=>v&&v[k]!=null?v[k]:'');}
+/* the shopper can tap to hurry the shopkeeper along: each tap ends whatever pause the visit is in */
+let shopTap=0; const shopSeen={};
+const shopWait=async(p,ms)=>{if(p.cpu)return sleep(ms); const n=shopTap, g=gen; await waitFor(()=>shopTap!==n||gen!==g,ms/SPEED);};
 /* the host's side of a visit. landed: the player's move ended exactly on the stop, which earns a gift before the shelves */
 async function shopVisit(p,landed){
   const u=S.ui, at=p.pos, key=(S.tn||0)+':'+at; if(p.sv===key)return; p.sv=key;   /* once a turn at each shop, however the player comes back to it */
@@ -2732,24 +2735,24 @@ async function shopVisit(p,landed){
   const why=id=>sf[id]<=0?'Sold out':id==='kite'&&p.it.includes('kite')?'One at a time':p.it.length>=RARITY.bag?'Bag is full':p.t<ITEMS[id].cost?`Need ${ITEMS[id].cost-p.t} more`:'';
   const set=(st,mood,line,buy)=>{u.shop={n,k:p.k,at,st,mood,line:line||(u.shop&&u.shop.n===n?u.shop.line:''),buy:buy?{id:buy.id,free:buy.free?1:0,n:++buys}:null};};
   u.num=-1; u.follow=p.k; say(`${name} stops at the shop.`); set('in','wave',shopLine(sf.kite>0&&kiteOk(p)?'greetKite':'greet',{name}));
-  await sleep(p.cpu?1500:1300); if(gen!==g)return;
-  if(landed&&p.it.length<RARITY.bag){const id=pickItem('gift',p); grant(p,id); set('buy','cheer',shopLine('gift',{name,item:ITEMS[id].name}),{id,free:1}); say(`${name} stopped right at the shop door: a free ${ITEMS[id].name}!`); await sleep(2600); if(gen!==g)return;}
+  await shopWait(p,p.cpu?1500:1300); if(gen!==g)return;
+  if(landed&&p.it.length<RARITY.bag){const id=pickItem('gift',p); grant(p,id); set('buy','cheer',shopLine('gift',{name,item:ITEMS[id].name}),{id,free:1}); say(`${name} stopped right at the shop door: a free ${ITEMS[id].name}!`); await shopWait(p,2600); if(gen!==g)return;}
   const short=()=>Math.min(...SHOPIDS.filter(id=>sf[id]>0).map(id=>ITEMS[id].cost-p.t).filter(v=>v>0),99);
-  if(p.it.length>=RARITY.bag){set('no','shrug',shopLine('full',{name})); say(`${name}'s bag is full.`); await sleep(p.cpu?1700:2300);}
-  else if(!SHOPIDS.some(can)){const stock=SHOPIDS.some(id=>sf[id]>0&&p.t<ITEMS[id].cost); set('no','shrug',shopLine(stock?'broke':'sold',{name,need:short()})); say(stock?`${name} cannot afford anything today.`:'The shop has nothing left this round.'); await sleep(p.cpu?1700:2400);}
-  else if(p.cpu){const before=p.t, b=cpuShop(p); if(b){paid=before-p.t; set('buy','cheer',shopLine(Math.random()<.5?'buy_'+b:'buy',{name,item:ITEMS[b].name}),{id:b}); say(`${name} buys a ${ITEMS[b].name}.`); await sleep(1900);} else{set('no','talk',shopLine('pass',{name})); await sleep(1100);}}
+  if(p.it.length>=RARITY.bag){set('no','shrug',shopLine('full',{name})); say(`${name}'s bag is full.`); await shopWait(p,p.cpu?1700:2300);}
+  else if(!SHOPIDS.some(can)){const stock=SHOPIDS.some(id=>sf[id]>0&&p.t<ITEMS[id].cost); set('no','shrug',shopLine(stock?'broke':'sold',{name,need:short()})); say(stock?`${name} cannot afford anything today.`:'The shop has nothing left this round.'); await shopWait(p,p.cpu?1700:2400);}
+  else if(p.cpu){const before=p.t, b=cpuShop(p); if(b){paid=before-p.t; set('buy','cheer',shopLine(Math.random()<.5?'buy_'+b:'buy',{name,item:ITEMS[b].name}),{id:b}); say(`${name} buys a ${ITEMS[b].name}.`); await shopWait(p,1900);} else{set('no','talk',shopLine('pass',{name})); await shopWait(p,1100);}}
   else for(;;){
     const list=SHOPIDS.filter(id=>sf[id]>0||id!=='kite');   /* the staples stay on show when they sell out; the Kite is only there when there is one */
     set('open',paid?'point':'talk',paid?shopLine('more',{name}):'');
     askX={shop:{items:list.map(id=>({id,cost:ITEMS[id].cost,stock:sf[id],ok:can(id),why:why(id)})),bal:p.t,bag:p.it.length}};
     const c=await ask(p.k,'Leave the shop',...list.map(id=>ITEMS[id].name)); if(gen!==g)return;
     if(c===0||p.cpu)break; const id=list[c-1];
-    if(!can(id)){set('open','shrug',shopLine('cant',{name,item:ITEMS[id].name})); await sleep(1300); if(gen!==g)return; continue;}   /* the shelf, the price and the bag are checked here, so a late or repeated tap buys nothing */
+    if(!can(id)){set('open','shrug',shopLine('cant',{name,item:ITEMS[id].name})); await shopWait(p,1300); if(gen!==g)return; continue;}   /* the shelf, the price and the bag are checked here, so a late or repeated tap buys nothing */
     p.t-=ITEMS[id].cost; p.sp=(p.sp||0)+ITEMS[id].cost; paid+=ITEMS[id].cost; sf[id]--; grant(p,id);
-    set('buy','cheer',shopLine(Math.random()<.5?'buy_'+id:'buy',{name,item:ITEMS[id].name}),{id}); say(`${name} buys a ${ITEMS[id].name}.`); await sleep(1900); if(gen!==g)return;
+    set('buy','cheer',shopLine(Math.random()<.5?'buy_'+id:'buy',{name,item:ITEMS[id].name}),{id}); say(`${name} buys a ${ITEMS[id].name}.`); await shopWait(p,1900); if(gen!==g)return;
     if(!SHOPIDS.some(can))break;
   }
-  if(gen!==g)return; set('out','bye',shopLine(paid?'byeBuy':'bye',{name})); await sleep(p.cpu?1200:1500); if(gen!==g)return; u.shop=null; say('');
+  if(gen!==g)return; set('out','bye',shopLine(paid?'byeBuy':'bye',{name})); await shopWait(p,p.cpu?1200:1500); if(gen!==g)return; u.shop=null; say('');
 }
 
 /* ---------- what the phones show ---------- */
@@ -2822,6 +2825,7 @@ function shopSync(ui,dt){const X=SHOPX, s=ui.shop, D=X.dom;
     if(first){X.buyN=0; if(V.phase==='board')seq([988,1319],110,'triangle',.045); if(s.k===myK())camMode='follow';}
     if(s.buy&&s.buy.n!==X.buyN){X.buyN=s.buy.n; shopBought(S0,s);}}
   /* the camera stands back on the path side, a little to one side so the shopper is not in the way. While the cards are up it stands further back and looks lower, which lifts the whole shop clear of them */
+  if(!X.tapOn){X.tapOn=1; window.addEventListener('pointerdown',e=>{const q=V&&V.phase==='board'&&V.ui&&V.ui.shop; if(!q||q.k!==myK()||(V.ui.ask&&V.ui.ask.shop)||(e.target.closest&&e.target.closest('button')))return; if(net.host)shopTap++; else if(net.nr)net.nr.presence({stp:Date.now()}).catch(()=>{});});}
   if(s.k===myK()||camMode!=='free'){shopViewFind(S0); const q=shopPose(S0,S0.view||SHOPCAM[0],!!a); camWant(q[0],q[1],q[2],q[3],q[4],q[5],3.4);}
   /* the speech bubble sits over the shopkeeper's head */
   if(!dom.say.hidden){const [x,y]=screenPos(new THREE.Vector3(S0.x+S0.fx*.1,S0.fy+2.55,S0.z+S0.fz*.1)), W=window.innerWidth, hw=Math.min(W*.39,170)+8; dom.say.style.left=Math.max(hw,Math.min(W-hw,x))+'px'; const sc=$('#score'), top=(sc?sc.getBoundingClientRect().bottom:60)+dom.say.offsetHeight+16; dom.say.style.top=Math.max(top,y)+'px';}}   /* never over the scoreboard */
@@ -3043,6 +3047,7 @@ function toyArena(G,sc,sh,base){
   if(!ok){freeScene(env); return false;}
   sc.add(env); MS.dyn=dyn; MS.spin=sp; if(G.under)sc.traverse(o=>{if(o.isMesh&&o.material===AMAT['under-'+G.under])o.visible=false;});
   const L=ARENALT[set], s=sc.sun, h=sc.hemi; if(s&&h&&L){s.color.setHex(L[0]); h.color.setHex(L[1]); h.groundColor.setHex(L[2]); s.shadow.radius=2.6; s.shadow.bias=-.0012; s.shadow.normalBias=.03;}
+  try{arenaRim(G,sc,sh);}catch(err){console.warn('rim',err);}
   return true;}
 /* the results of a mini game arrive with a little ceremony: the rows pop in from first to last, the winner's row glows, confetti falls and the fanfare plays */
 /* a platform game opens with the camera sweeping in from the side while 3, 2, 1 counts down */
@@ -3191,6 +3196,57 @@ function toyStageSet(hint,sc){const kind={'Tap left or right':'pier','Tap the ba
         const st=[]; for(let i=0;i<10;i++){const a=i/10*6.283+Math.PI/2, r=i%2?.9:2.1; st.push([Math.cos(a)*r,Math.sin(a)*r]);} for(const sx of [-1,1]){KG.at(sx*6.6,5.4,-2.2,0,.62); KG.add(flatG(st,.3,.06),M4(0,0,0,0,1,1,1,-Math.PI/2,0),[0xc9962e,0xffe27a],{ao:0}); KE.at(sx*6.6,5.4,-2.2,0,.62); for(let i=0;i<10;i++){const a=i/10*6.283; KE.add(sphG(.16,1),M4(Math.cos(a)*2.9,Math.sin(a)*2.9,.3),[0xfff3b0,0xff9fd0,0x9fe1ff][i%3],{ao:0,ph:i*1.1});}}});}
     else if(kind==='lime'){toyScope(sc,-1.4,A=>{const {K,KT,KE}=A; A.gain=2.4; [-9,-3,3,9].forEach((x,i)=>TP.curtain(KT,K,x,-5.5,0,6.2,11-(i%3?0:.6),[0x7a1020,0xc8283c])); for(const sx of [-1,1]){TP.curtain(KT,K,sx*12.5,-1.5,-sx*.5,4,10,[0x7a1020,0xc8283c]); TP.rigLamp(K,KE,sx*9.5,-3.8,-sx*.4,8);} for(let i=-5;i<=5;i++){K.at(i*1.5,1.4,5.2,0); KE.at(i*1.5,1.4,5.2,0); K.add(cylG(.2,.26,.22,8),M4(0,.11,0),0x17202e,{ao:0}); KE.add(sphG(.16,1),M4(0,.26,0,0,1,.6,1),[0xfff3b0,0xffd27a][Math.abs(i)%2],{ao:0,ph:i*1.3});}});}}
   catch(err){console.warn('stage set',kind,err);}}
+/* ---------- the rim of a platform ----------
+   Twelve of the platform games stop a player at the edge instead of dropping them (see edgeRule). A wall nobody can see would feel like a fault, so each of those
+   platforms now has a real edge to stop against, made for its setting: a ship's rope rail, a padded kerb, a ring of stones, footlights, straw bales, a circus curb,
+   velvet ropes, a parapet with lanterns. They are low, and their posts thin, so nothing hides a player from the camera above. */
+const RIMCOL={rope:0xf2e3c2,brass:[0xc9962e,0xffd45e],wood:[0x7a4e2a,0xb98250]};
+function arenaRim(G,sc,sh){if(G.noDeck||G.zs||G.alone||edgeRule(G)!=='wall'||!toyMats())return;
+  const K=new Kit(), KG=new Kit(), KE=new Kit(), KT=new Kit(), rim=new THREE.Group(), R=sh.R, h=sh.h, sq=sh.k!=='c', dark=G.set==='theatre'||G.set==='night';
+  for(const k of [K,KG,KE,KT])k.at(0,0,0,0);
+  /* points round the edge, d outside it. On a square they run along the four sides */
+  const at=(u,d)=>{if(!sq){const a=u*6.283; return[Math.sin(a)*(R+d),Math.cos(a)*(R+d),a];} const q=((u%1)+1)%1*4, s=Math.floor(q), t=q-s, e=h+d, v=-e+2*e*t; return s===0?[v,-e,0]:s===1?[e,v,Math.PI/2]:s===2?[-v,e,Math.PI]:[-e,-v,-Math.PI/2];};
+  const posts=(n,ht,col,r,top,skip)=>{for(let i=0;i<n;i++){if(skip&&skip(i/n))continue; const p=at(i/n,.12); K.add(cylG(r*.8,r,ht,8),M4(p[0],ht/2,p[1]),col,{ao:0}); if(top)KG.add(sphG(r*1.5,1),M4(p[0],ht+r*.7,p[1]),top,{ao:0});}};
+  const ropes=(n,y,sag,col,rad,skip)=>{for(let i=0;i<n;i++){if(skip&&(skip(i/n)||skip((i+1)/n)))continue; const pts=[]; for(let k=0;k<=6;k++){const t=k/6, p=at((i+t)/n,.12); pts.push([p[0],y-sag*Math.sin(t*Math.PI),p[1]]);} K.add(tubeG(pts,rad||.035,5,false),null,col,{ao:0});}};
+  /* a kerb all the way round: a ring on a round platform, four rounded beams on a square one */
+  const curb=(ht,w,col)=>{if(!sq)K.add(latheG([[R+.02,0],[R+w,0],[R+w+.04,ht*.4],[R+w,ht*.86],[R+w*.5,ht],[R+.06,ht*.86],[R+.02,ht*.3]],72),null,col,{ao:0});
+    else for(let s=0;s<4;s++){const a=at(s/4+.125,w/2); K.add(rbox(s%2?w:2*h+2*w,ht,s%2?2*h+2*w:w,Math.min(w,ht)*.4,2),M4(a[0],ht/2,a[1]),col,{ao:0});}};
+  const stripes=(n,c1,c2)=>(px,py,pz)=>{const u=sq?(Math.abs(px)>Math.abs(pz)?pz:px)/h*n*.25+50:(Math.atan2(px,pz)+Math.PI)/6.283*n; return Math.floor(u)%2?c1:c2;};
+  if(G===BOOM){posts(12,.62,RIMCOL.brass,.055,0xffd45e); ropes(12,.56,.1,RIMCOL.rope,.034); ropes(12,.3,.07,RIMCOL.rope,.028);}
+  else if(G===GRAB){curb(.2,.26,stripes(24,hexC(0xffc531),hexC(0xfff6e6))); for(let s=0;s<4;s++){const p=at(s/4,.2); K.add(cylG(.06,.08,1.1,8),M4(p[0],.55,p[1]),0xfff6e6,{ao:0}); KG.add(sphG(.13,1),M4(p[0],1.16,p[1]),0xff4d4d,{ao:0});}}
+  else if(G===HOT){const n=sq?36:30; for(let i=0;i<n;i++){const p=at(i/n,.16), s=.26+hash2(i,7,1)*.12; K.add(rockG(i%5,1),M4(p[0],s*.42,p[1],i*1.7,s*1.25,s*.7,s*1.05),[0x3a3238,0x6a5a5a],{ao:0});} for(let i=0;i<8;i++){const p=at(i/8+.06,.2); KE.add(cylG(.001,.07,.3,5),M4(p[0],.42,p[1],i),i%2?0xff7a10:0xffc531,{ao:0,ph:i*2});}}
+  else if(G===COCO){const n=26; for(let i=0;i<n;i++){const p=at(i/n,.02+hash2(i,2,1)*.12), s=.14+hash2(i,3,1)*.13, k=i%5; if(k===3){K.add(cylG(.09,.11,1.1,7),M4(p[0],.1,p[1],p[2]+(hash2(i,4,1)-.5)*.5,1,1,1,0,Math.PI/2),[0x8a6a48,0xb99670],{ao:0});}
+      else if(k===4)K.add(latheG([[.02,0],[.1,.012],[.12,.045],[.085,.085],[.035,.11],[.008,.118]],8),M4(p[0],.02,p[1],i,1.8,1.8,1.5,.3,0),i%2?0xffb8cf:0xfff1dc,{ao:0}); else K.add(rockG(i%5,1),M4(p[0],s*.4,p[1],i*2.1,s*1.3,s*.75,s),[0x9a9488,0xd9d3c4],{ao:0});}}
+  else if(G===SPOT){curb(.16,.2,[0xc9962e,0xffd45e]); for(let i=0;i<16;i++){const u=.28+i/16*.44, p=at(u,.16); KG.add(sphG(.12,1),M4(p[0],.2,p[1],p[2],1,1,.7),0x24202a,{ao:0}); KE.add(sphG(.075,1),M4(p[0]-Math.sin(p[2])*.05,.22,p[1]-Math.cos(p[2])*.05),0xfff3b0,{ao:0,ph:i*.9});}}
+  else if(G===SUMO){const n=28; for(let i=0;i<n;i++){const p=at(i/n+.5/n,.1); K.add(cylG(.2,.2,2*(h+.2)*4/n*.92,10),M4(p[0],.17,p[1],p[2],1,.8,1,0,Math.PI/2),(px,py)=>{const k=.9+.1*Math.sin(py*40); return[.93*k,.8*k,.45*k];},{ao:0});} for(let s=0;s<4;s++){const p=at(s/4,.1); KG.add(sphG(.2,1),M4(p[0],.2,p[1],0,1.2,.9,1.2),0xe5484d,{ao:0});}}
+  else if(G===PAINT){curb(.22,.2,[0xdfe6f2,0xffffff]); const o=sh.hole; if(o){for(let s=0;s<4;s++){const e=o-.02, a=s%2?[s===1?e:-e,0]:[0,s===0?-e:e]; K.add(rbox(s%2?.22:2*o+.2,.26,s%2?2*o+.2:.22,.08,2),M4(a[0],.13,a[1]),stripes(16,hexC(0x2f8fff),hexC(0xfff6e6)),{ao:0});}}
+    [[0xff5fa8,.02],[0x35c98a,.27],[0xffc531,.52],[0x8b5cf6,.77]].forEach(q=>{const p=at(q[1],.5); KG.add(cylG(.2,.2,.42,12),M4(p[0],.21,p[1]),0xdfe6f2,{ao:0}); KG.add(cylG(.19,.19,.05,12),M4(p[0],.43,p[1]),q[0],{ao:0});});}
+  else if(G===STOMP)curb(.26,.3,stripes(20,hexC(0xff4d4d),hexC(0xfff6e6)));
+  else if(G===CHAIRS)curb(.24,.3,stripes(24,hexC(0x8b5cf6),hexC(0xffd45e)));
+  else if(G===DOORS){const sk=u=>{const q=((u%1)+1)%1; return q<.24;}; posts(16,.78,RIMCOL.brass,.05,0xffd45e,sk); ropes(16,.7,.14,0xb0243a,.04,sk);}
+  else if(G===LANT||G===GTAG){const col=G===GTAG?0x9fe1ff:0xffc94a, n=G===GTAG?10:8; curb(.22,.3,[0x4a5680,0x8a96c0]); for(let i=0;i<n;i++){const p=at(i/n+.5/n,.2); K.add(cylG(.05,.07,1.0,7),M4(p[0],.5,p[1]),[0x2b3350,0x4a5680],{ao:0}); K.add(rbox(.24,.05,.24,.02),M4(p[0],1.0,p[1]),0x2b3350,{ao:0}); KE.add(rbox(.18,.24,.18,.05),M4(p[0],1.15,p[1]),col,{ao:0,ph:i*1.7}); K.add(latheG([[.17,0],[.1,.08],[.01,.14]],6),M4(p[0],1.28,p[1]),0x2b3350,{ao:0});}}
+  else return;
+  const gain=dark?2.3:1; if(gain!==1)for(const k of [K,KG,KT])for(let i=0;i<k.C.length;i++)k.C[i]=Math.min(1,k.C[i]*gain);
+  if(K.tris){const q=K.mesh(TOYM.matte); rim.add(q);} if(KG.tris)rim.add(KG.mesh(TOYM.gloss,true)); if(KE.tris)rim.add(KE.mesh(TOYM.glow,false,false)); rim.noBake=true; sc.add(rim);
+  /* Ticket Grab's floor shrinks: its kerb closes in with it */
+  if(sq&&MS&&MS.dyn)MS.dyn.push({o:rim,f:o=>{const k=sh.sc||1; if(o.scale.x!==k)o.scale.set(k,1,k);}});}
+
+/* ---------- mini game feedback: stars where players collide, a thud at the rim, a burst when someone is out, numbers that float up when points are scored ---------- */
+const MFX={m:null,pool:[]};
+function mfxInit(){const m=MS; if(!m)return null; if(MFX.m!==m){MFX.m=m; MFX.pool=[]; if(!m.dyn){m.dyn=[]; m.spin=m.spin||[];} m.dyn.push({o:null,f:(o,t,dt)=>mfxStep(dt)});} return m;}
+function mfxPuff(x,y,z,col,n,size,star){const m=mfxInit(); if(!m)return; if(!TOY.puffT){TOY.puffT=glowTex(false); TOY.puffT.keep=true;} if(!TOY.starT){TOY.starT=glowTex(true); TOY.starT.keep=true;}
+  for(let i=0;i<n;i++){let s=MFX.pool.find(q=>q.life<=0); if(!s){if(MFX.pool.length>=44)return; s=new THREE.Sprite(new THREE.SpriteMaterial({map:TOY.puffT,transparent:true,depthWrite:false})); s.life=0; s.renderOrder=20; MFX.pool.push(s); m.scene.add(s);}
+    const a=i/n*6.283+Math.random(), sp=1.5+Math.random()*1.3; s.material.map=star?TOY.starT:TOY.puffT; s.material.color.setHex(col); s.position.set(x,y,z); s.v=[Math.cos(a)*sp,1.3+Math.random()*1.7,Math.sin(a)*sp]; s.life=s.max=.42+Math.random()*.25; s.size=(size||1)*(.36+Math.random()*.26); s.visible=true;}}
+function mfxStep(dt){for(const s of MFX.pool){if(s.life<=0)continue; s.life-=dt; const e=1-Math.max(0,s.life)/s.max; s.position.x+=s.v[0]*dt*(1-e); s.position.y+=(s.v[1]*(1-e)-1.6*e)*dt; s.position.z+=s.v[2]*dt*(1-e); s.scale.setScalar(s.size*(.6+e*1.1)); s.material.opacity=.95*(1-e*e); if(s.life<=0)s.visible=false;}}
+function mfxFloat(x,y,z,txt,col){const m=MFX.m||MS; if(!m||!m.cam||DEMO||document.hidden)return; const v=new THREE.Vector3(x,y,z).project(m.cam), d=document.createElement('div'); d.className='float'; d.textContent=txt; d.style.color=col; d.style.zIndex=30; d.style.left=((v.x+1)/2*window.innerWidth)+'px'; d.style.top=((1-v.y)/2*window.innerHeight)+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),1250);}
+/* a short jolt of the picture, for the player it happens to */
+function mfxShake(){if(DEMO)return; const el=$('#gl'); if(!el||!el.animate)return; el.animate([{transform:'translate(0,0)'},{transform:'translate(-7px,4px)'},{transform:'translate(6px,-5px)'},{transform:'translate(-4px,-2px)'},{transform:'translate(3px,3px)'},{transform:'translate(0,0)'}],{duration:260,easing:'ease-out'});}
+/* the moments the platform engine reports */
+function arenaBump(av,o){const mx=(av.x+o.x)/2, mz=(av.z+o.z)/2; mfxPuff(mx,.9+av.y,mz,0xfff3b0,4,.8,true); if(o.moving&&av.ch&&o.spd>5)av.ch.hit=.28;}
+function arenaThud(av,nx,nz){mfxPuff(av.x+nx*.3,.35,av.z+nz*.3,0xffffff,4,.9);}
+function arenaOut(av,fell){mfxPuff(av.x,(fell?.2:1)+av.y,av.z,fell?0xffffff:0xff6b6b,fell?8:12,1.3,!fell); if(av.mine)mfxShake();}
+function arenaScore(av,c,G){if(G.dec||Math.abs(c)<1)return; mfxFloat(av.x,2+av.y,av.z,(c>0?'+':'')+Math.round(c),c>0?'#ffe27a':'#ff8f8f'); mfxPuff(av.x,1.2+av.y,av.z,c>0?0xffe27a:0xff6b6b,c>0?5:3,.8,true);}
+function arenaWin(av){mfxPuff(av.x,1.4,av.z,0xffe27a,12,1.3,true); if(av.ch)av.ch.cheer=1;}
 /* </TOY3D> */
 function buildWorld(id){
   const m=MAPS[id]||MAPS.island; curMap=id; MAPX=m;
@@ -3637,6 +3693,7 @@ function onPeers(ch){
       if(pr.ir&&pr.ir===S.gid)introRdy[k]=1;
       if(pr.skip&&pr.skip===S.ui.ch)cardSkip=pr.skip;
       if(pr.ks&&S.ui.kite&&pr.ks===S.ui.kite.n&&k===S.ui.kite.k)kiteSkip=pr.ks;
+      if(pr.stp&&pr.stp!==shopSeen[k]){shopSeen[k]=pr.stp; if(S.ui.shop&&S.ui.shop.k===k)shopTap++;}
       if(Array.isArray(pr.a)&&S.mini&&pr.am===S.mini.mid)avIn(k,pr.a);   /* positions carry the number of the mini game they belong to, so one left over from the last game is ignored */
     }
     for(const p of ch.left){
@@ -3985,7 +4042,7 @@ function startGame(prac=-1){
 }
 /* practice: one chosen mini game against computer players, then back to the list */
 /* BUILD goes up by one with every published update, so you can tell which version a phone is running */
-const PRAC_ONLY=false, BUILD=84; let pracN=3; const pracDone=new Set();
+const PRAC_ONLY=false, BUILD=85; let pracN=3; const pracDone=new Set();
 async function practiceRun(gi){const g=GAMES[gi];
   miniRes={}; net.av={}; net.buf={}; S.mini={mid:++S.mid,g:gi,opts:[],tally:[],left:0,seed:rand(1,1e9),phase:'intro',rows:null,prac:1}; S.phase='mini';
   await readyUp(S.p.map(p=>p.k)); S.mini.phase='play';
@@ -4204,7 +4261,7 @@ function arena(G){return async function(ctx){
   if(!demo){window.__arenaMe=me; window.__st=st; net.hs=null; net.av={}; net.buf={}; pad(true,G.jump||G.dash||G.btn,G.btn||(G.dash?'Dash':'Jump'),G.split); if(G.dashes!=null)$('#jumpBtn').textContent='Dash '+G.dashes;}
   const EDGE=edgeRule(G), hint=s=>{$('#hint').textContent=s;}, lives=()=>{if(G.lives)hint('Lives: '+me.lives);}; lives();
   let sb=null, sbT=0; if(G.board){sb=document.createElement('div'); sb.className='sboard'; $('#hint').parentNode.appendChild(sb);}
-  const out=(av,t,fell)=>{av.alive=false; if(av.ch)av.ch.hit=.7; av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); hint(fell?'You fell off!':'You are out!');}};
+  const out=(av,t,fell)=>{av.alive=false; if(av.ch)av.ch.hit=.7; arenaOut(av,!!fell); av.gone=.6; av.fell=!!fell; av.moving=false; if(G.surv)av.score=Math.round(t*10)/10; if(av.mine){SFX.loss(); hint(fell?'You fell off!':'You are out!');}};
   if(G.view)G.view(m.cam,me,.016,st);   /* so the opening view is right during the countdown */
   if(!demo){arenaSweep(m,st,G); await countdown($('#n'));}
   let t=0,pubT=0,endT=-1,hudN=null,hudB=null;
@@ -4235,7 +4292,7 @@ function arena(G){return async function(ctx){
           // shoving: whoever is walking pushes whoever is standing; two walkers push each other
           if(!G.alone)for(const o of avs){if(o===av||!o.alive||Math.abs(av.y-o.y)>.6)continue; const dx=av.x-o.x,dz=av.z-o.z,d=Math.hypot(dx,dz);
             if(d<.8){const ov=.8-d,k=o.moving?(av.moving?.5:1):(av.moving?.3:.5),nx=d>.01?dx/d:1,nz=d>.01?dz/d:0; av.x+=nx*ov*k; av.z+=nz*ov*k;
-              if(av.bump<=0&&(o.moving||av.moving)){av.bump=.4; if(o.moving){const pw=3.4*Math.min(2,Math.max(1,o.spd/4.6))*(G.shove||1); av.kx=nx*pw; av.kz=nz*pw;} if(av.mine)SFX.bump();}}}
+              if(av.bump<=0&&(o.moving||av.moving)){av.bump=.4; if(o.moving){const pw=3.4*Math.min(2,Math.max(1,o.spd/4.6))*(G.shove||1); av.kx=nx*pw; av.kz=nz*pw;} arenaBump(av,o); if(av.mine)SFX.bump();}}}
           if(G.post){const r=Math.hypot(av.x,av.z); if(r<G.post){if(r<.01){av.x=G.post; av.z=0;} else{av.x*=G.post/r; av.z*=G.post/r;}}}
           if(G.move)G.move(av,st,t);
           if(j&&av.y===0&&G.jump&&(!G.canJump||G.canJump(av,st))){av.vy=6.5; if(av.mine)SFX.hop();}
@@ -4246,13 +4303,13 @@ function arena(G){return async function(ctx){
           else{const c=G.check(av,st,t,true,dt);
             if(c==='hit'){if(av.inv>0){} else if(av.lives>1){av.lives--; av.inv=1.6; if(av.mine){SFX.loss(); lives();}} else out(av,t,false);}
             else if(c==='fall')out(av,t,true);
-            else if(c==='win'){av.done=true; av.moving=false; if(av.mine){SFX.win(); hint('You made it!'); endT=t+.9;}}
-            else if(typeof c==='number'&&c){av.score=Math.max(0,av.score+c); if(av.mine&&!G.quiet){if(c>0)SFX.gain(); else SFX.loss();}}}
+            else if(c==='win'){av.done=true; av.moving=false; arenaWin(av); if(av.mine){SFX.win(); hint('You made it!'); endT=t+.9;}}
+            else if(typeof c==='number'&&c){av.score=Math.max(0,av.score+c); arenaScore(av,c,G); if(av.mine&&!G.quiet){if(c>0)SFX.gain(); else SFX.loss();}}}
         }
       }else{
         const a=net.av[av.k];
         if(a){const q=avAt(av.k),dx=q[0]-av.x,dz=q[1]-av.z,d=Math.hypot(dx,dz); av.moving=d>dt*.9&&av.alive; if(d>dt*.9)av.face=Math.atan2(dx,dz); av.x=q[0]; av.z=q[1]; av.y=q[2]; av.score=a[4]; if(G.sub&&a.length>5)G.sub(av,a,st);
-          if(av.alive&&!a[3]){av.alive=false; av.gone=.6; av.fell=G.allFall||!sh.inside(av.x,av.z);}}
+          if(av.alive&&!a[3]){av.alive=false; av.gone=.6; av.fell=G.allFall||!sh.inside(av.x,av.z); if(av.ch)av.ch.hit=.7; arenaOut(av,av.fell);}}
         if(av.alive)G.check(av,st,t,false,dt);
       }
       av.spd+=(Math.hypot(av.x-ox,av.z-oz)/Math.max(dt,.001)-av.spd)*Math.min(1,dt*10); if(av.y!==av.ly){av.dy=av.y-av.ly; av.ly=av.y;}
@@ -4266,7 +4323,7 @@ function arena(G){return async function(ctx){
       if(net.host&&!G.alone){patch.cpu={}; avs.forEach(a=>{if(a.cpu)patch.cpu[a.k]=pk(a);});} if(net.host&&G.host)patch.hs=st.hs; net.nr.presence(patch).catch(()=>{});}
     if(sb){sbT-=dt; if(sbT<=0){sbT=.25; sb.innerHTML=avs.slice().sort((a,b)=>G.asc?a.score-b.score:b.score-a.score).map(a=>`<span style="--c:${CAST[V.p[a.k].i].c}"${a.mine?' class="me"':''}>${CAST[V.p[a.k].i].name} <b>${a.score.toFixed(1)}</b></span>`).join('');}}
     {const nv=String(G.num?G.num(st,t):G.left?Math.max(0,(st.max||G.max)-t).toFixed(1):G.surv?(me.alive?t:me.score).toFixed(1):G.dec?me.score.toFixed(1):me.score), bv=Math.max(0,1-t/(st.max||G.max)).toFixed(3); if(nv!==hudN){hudN=nv; $('#n').textContent=nv;} if(bv!==hudB){hudB=bv; $('#bar').style.transform=`scaleX(${bv})`;}}   /* the page is only touched when the number on it changes */
-    if(endT<0&&t>1.5&&!G.alone&&avs.filter(a=>a.alive).length<=1)endT=t+1.4;   // last one standing ends the game
+    if(endT<0&&t>1.5&&!G.alone&&avs.filter(a=>a.alive).length<=1){endT=t+1.4; avs.forEach(a=>{if(a.alive&&a.ch){a.ch.cheer=1; mfxPuff(a.x,1.6,a.z,0xffe27a,10,1.2,true);}});}   // last one standing ends the game, and gets a moment to celebrate
     if(G.alone&&endT<0&&!me.alive)endT=t+1;
     if(t>=(st.max||G.max)||(endT>0&&t>=endT))return 1;
   };

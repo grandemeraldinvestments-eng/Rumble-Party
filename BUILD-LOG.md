@@ -810,6 +810,33 @@ Checked
 - Two phones online: the joined player shopped while the host watched, both ended in the same state; then the shopper closed the game mid-visit and the game went on 1.5 seconds later.
 - All 21 shops photographed from the counter and from the game camera; the shop screen photographed upright and sideways at phone size.
 
+## Build 85
+Mini game platforms get a real edge, and the games answer back when something happens.
+
+A real edge to stop against
+- Build 83 made the rim of twelve platform games a wall instead of a drop. A wall nobody can see feels like a fault, so each of those platforms now has a physical edge, made for its setting and kept low so it never hides a player from the camera.
+- Boom Hop: brass posts and two rope rails round the ship's deck. Ticket Grab: a striped padded kerb with corner posts, which closes in with the floor when it shrinks. Hot Planks: a ring of dark stones with embers. Coconut Drop: pebbles, shells and driftwood along the waterline. Spotlight: a gold stage lip with footlights along the front. Sumo Shove: straw bales with red knots at the corners. Paint Fight: a white kerb outside, a tiled kerb round the paint pool, and paint tins at the corners. Stomp and Musical Chairs: a striped circus curb. Trap Doors: velvet ropes on brass posts along the three open sides. Lantern Match and Ghost Hot Potato: a stone parapet with lantern posts.
+- The three games about staying on (Slippery Slope, Cannonball Kickoff, Crumble Deck) keep their open edges.
+
+Feedback (in the shared platform engine, so every platform game has it)
+- Two players collide: stars fly from between them, and a hard shove staggers the one who took it.
+- A player is driven into the rim: a thud and a puff of dust.
+- Someone is knocked out: a burst of red stars, or a white puff if they fell, and the picture jolts for the player it happened to. Players on other phones see the same burst.
+- Points scored: the number floats up over the player in gold, or red when points are lost.
+- The last one standing, and anyone who reaches the finish, cheers in a shower of stars for the moment before the game ends.
+
+Shops
+- The shopper can tap the screen to hurry the shopkeeper along: each tap ends the pause the visit is in (the greeting, the thanks, the goodbye).
+
+Not changed
+- Cameras, rules, timing, scoring and what is sent between phones are as they were. The eight own-screen puzzle games and the course vehicles are as Build 82 left them.
+
+Checked
+- Twelve platform games photographed with their new edges.
+- A player walked at the rim again in five games after the change: held in four, dropped in Slippery Slope.
+- Three phones online in Ghost Hot Potato: the same result table and the same seed on every phone. The scores in it were the host's fallbacks, because three software-drawn phones on one machine run too slowly for the host to collect scores in time (a known limit, under Known limits in the roadmap). The same game played to the end on one machine gave ordinary scores and no errors. Ticket Grab had started on all three phones when the test's time ran out.
+- A shop visit hurried with two taps was over in under a second.
+
 ## Mini games
 
 **Shared deck (everyone on one deck at once)**
